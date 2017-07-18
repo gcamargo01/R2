@@ -1,0 +1,35 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<html>
+<head>
+<title>gc.r2.svc.core.api package</title>
+</head>
+<body>
+<p>
+R2 Service application program interface.
+</p>
+
+<p>
+    <u>List of different kind of R2 modules implementations</u>
+</p>
+
+{@link uy.com.r2.core.api.SimpleService} - A simple interface to implement e service. 
+It is a {@link uy.com.r2.core.api.Module} with one main method: <br/>
+&nbsp; SvcResponse <b>call</b>( SvcRequest) <p/>
+
+{@link uy.com.r2.kernel.api.AsyncService} - The better way to implement a service module, 
+it handles request and response in two times, with the methods:<br/>
+&nbsp; SvcMessage <b>onRequest</b>( SvcRequest) <br/>
+&nbsp; SvcRequest <b>onResponse</b>( SvcRequest) <p/>
+
+
+    <u>Each service request or response is represented as a: </u>
+</p>
+
+{@link uy.com.r2.kernel.api.SvcRequest}  - Service request message information: Service, Data, ...<br/>
+{@link uy.com.r2.kernel.api.SvcResponse}  - Response message, with a ResultCode: <br>
+&nbsp; Zero - A normal response <br>
+&nbsp; Positive - A kind of error condition, example: Not found <br>
+&nbsp; Negative - Fatal error, some infrastructure is failing <br>
+
+</body>
+</html>

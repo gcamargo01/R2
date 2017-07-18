@@ -1,0 +1,106 @@
+/* SvcMessage.java */
+package uy.com.r2.core.api;
+
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
+/** Base class of message invocation 
+ * {@link uy.com.r2.kernel.api.SvcRequest}
+ * and message response 
+ * {@link uy.com.r2.kernel.api.SvcResponse}.
+ * @author G.Camargo
+ */
+public abstract class SvcMessage {
+    private final Map<String,List<Object>> payload;
+    
+    /** Constructor.
+     * @param data Message data map
+     */
+    public SvcMessage( Map<String,List<Object>> data) {
+        if( data == null) {
+            data = new HashMap();
+        }
+        this.payload = data;
+    }
+    
+    /** Get the data contents.
+     * @return Map of Lists
+     */
+    public Map<String,List<Object>> getPayload( ) {
+        return payload;
+    }
+    
+    /** Extract the first element with this name form data.
+     * @param field Data name to extract or null = any one
+     * @return Object or null
+     */
+    public Object get( String field) {
+        if( field == null && payload != null && !payload.isEmpty()) {
+            field = ( String)payload.keySet().toArray()[ 0];
+        }    
+        List<Object> lo = payload.get( field);
+        if( lo == null || lo.isEmpty()) {
+            return null;
+        }
+        return lo.get( 0);
+    }
+    
+    /** Add a new element to data map.
+     * @param field Data name to addToData
+     * @param obj Object 
+     * @return Data
+     */
+    public Map<String,List<Object>> add( String field, Object obj) {
+        List<Object> l;
+        if( !payload.containsKey( field)) {
+            l = new LinkedList();
+            payload.put( field, l);
+        } else {
+            l = payload.get( field);
+        }
+        l.add( obj);
+        return payload;
+    }
+
+    /** Replace or insert this element to data map.
+     * @param field Data name to addToData
+     * @param obj Object 
+     * @return Data
+     */
+    public Map<String,List<Object>> put( String field, Object obj) {
+        List<Object> l = new LinkedList();
+        if( payload.containsKey( field) /*&& !data.get( field).isEmpty()*/) {
+            payload.remove( field);
+        }
+        payload.put( field, l);
+        return payload;
+    }
+    
+    /** Add a new element to data map.
+     * @param payload Previous data or null
+     * @param field Data name to addToData
+     * @param obj Object 
+     * @return Data
+     */
+    public static Map<String,List<Object>> addToPayload( 
+            Map<String,List<Object>> payload, String field, Object obj) {
+        List<Object> l;
+        if( payload == null) {
+            payload = new HashMap();
+        }    
+        if( ( !payload.containsKey( field)) || payload.get( field).isEmpty()) {
+            l = new LinkedList();
+            l.add( obj);
+            payload.put( field, l);
+        } else {
+            l = payload.get( field);
+            l.add( obj);
+        }
+        return payload;
+    }
+    
+}
+
+
