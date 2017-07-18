@@ -10,8 +10,8 @@
   <name>R2 Service Framework</name>
 
   <modules>
-<!--    
     <module>R2-api</module>
+<!--    
     <module>R2-impl</module>
     <module>R2-demo</module>
     <module>R2-web</module>
