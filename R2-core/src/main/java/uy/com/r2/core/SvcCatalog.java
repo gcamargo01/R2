@@ -1,4 +1,4 @@
-/* Core.java */
+/* SvcCatalog.java */
 package uy.com.r2.core;
 
 import java.net.URL;
@@ -31,12 +31,10 @@ public class SvcCatalog implements Module {
 
     private boolean stopping = false;
     private final HashMap<String,ServiceInfo> modules;
-    private final HashMap<String,Object> running;
     
     private SvcCatalog() {  // Private constructor.
         modules = new HashMap();
         modules.put( CATALOG_NAME, new ServiceInfo( CATALOG_NAME, this));
-        running = new HashMap();
     }  
     
     /** Get the Catalog instance.
@@ -105,8 +103,7 @@ public class SvcCatalog implements Module {
             throws Exception {
         // setup modules map
         if( modules.containsKey( moduleName)) {
-            throw new Exception( "Module '" + moduleName 
-                    + "' was already installed.");
+            throw new Exception( "Module '" + moduleName + "' is already installed.");
         }
         ServiceInfo mi = new ServiceInfo( moduleName, moduleImpl);
         modules.put( moduleName, mi);
@@ -148,7 +145,7 @@ public class SvcCatalog implements Module {
     public void uninstallModule( String moduleName) throws Exception {
         LOG.trace( "uninstallModule " + moduleName);
         if( CATALOG_NAME.equals( moduleName)) {
-            LOG.info( "Invalid Kernel module action, ignored");
+            LOG.info( "Module " + moduleName + " can't be uninstalled, ignored");
             return;
         }
         ServiceInfo mi = modules.get( moduleName);
