@@ -26,7 +26,7 @@ public interface Module {
      */
     public Map<String,Object> getStatusVars();
 
-    /** Stop execution ns release all the allocated resources. */
+    /** Stop execution and release all the allocated resources. */
     public void shutdown();
 
 }

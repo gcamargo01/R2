@@ -166,7 +166,7 @@ public class SvcRequest extends SvcMessage implements Serializable, Cloneable {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append( "REQUEST ");
-        sb.append(getRequestId());
+        sb.append( getRequestId());
         sb.append( " ");
         if( getAmount() != 0) {
             sb.append( getCurrency());
