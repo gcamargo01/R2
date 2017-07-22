@@ -21,7 +21,7 @@ public interface Module {
 
     /** Get the status report of the module.
      * It may occurs at any time to get the current status of the module.
-     * Tha variables may include: Version, ServiceLevel, LastErrors, ...
+     * The variables may include: Version, ServiceLevel, LastErrors, ...
      * @return Variable and value map
      */
     public Map<String,Object> getStatusVars();
