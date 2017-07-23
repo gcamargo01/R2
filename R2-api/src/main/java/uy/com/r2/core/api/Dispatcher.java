@@ -6,6 +6,14 @@ package uy.com.r2.core.api;
  */
 public interface Dispatcher extends Module {
     
+    /** Start the execution of a request.
+     * This method is used by end-point implementation, for example a remote client.
+     * Or some module is starting a new execution.
+     * @param req Request to dispatch
+     * @return SvcResponse or error packed as a response 
+     */
+    public SvcResponse call( SvcRequest req);   
+
     /** Dispatch the execution of a specified service.
      * This method is used by modules that explicit set the next Service to run.
      * @param moduleName Service module name
@@ -23,10 +31,12 @@ public interface Dispatcher extends Module {
     public SvcResponse callNext( SvcRequest req)
             throws Exception;
 
-    /** Process a message from an asynchronous module.
+    /** Process a message from an asynchronous service implementation.
+     * The AsyncService returned NULL when was called, and now this is the event
+     * to notify that there are a message to process.
      * @param msg Request or Response from the module
      */
     public void onMessage( SvcMessage msg);
-    
+
 } 
 
