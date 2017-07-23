@@ -98,10 +98,8 @@ public class Configuration {
      * @throws Exception Parsing error
      */
     public int getInt( String key, int defValue) throws Exception {
-        if( !cfg.containsKey( key)) {
-            return defValue;
-        }
-        return (int)Double.parseDouble( getString( key));
+        String s = getString( key, Integer.toString( defValue ));
+        return (int)Double.parseDouble( s);
     }
 
     /** Integer getter.

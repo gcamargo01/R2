@@ -142,14 +142,6 @@ public class SvcResponse extends SvcMessage implements Serializable {
         return responseTime;
     }
     
-   /** Get the key information of the request.
-     * @return String
-     */
-    @Override
-    public String getRequestId( ) {
-        return request.getRequestId();
-    }    
-        
     /** Re-calculate the response time.
      */
     public void updateResponseTime( ) {
@@ -162,9 +154,16 @@ public class SvcResponse extends SvcMessage implements Serializable {
      */
     @Override
     public String toString() {
-        return ( ( resultCode >= 0)? "RESPONSE ":  "ERROR-RESPONSE ") + 
-                request.getRequestId() + " " + responseTime + 
-                "mS " + resultCode + "  " + getPayload().toString();
+        StringBuilder sb = new StringBuilder();  
+        sb.append( ( resultCode >= 0)? "RESPONSE ":  "ERROR-RESPONSE ");
+        sb.append( getRequestId());
+        sb.append( ' ');
+        sb.append( responseTime);
+        sb.append( "mS ");
+        sb.append( resultCode);
+        sb.append( ' ');
+        sb.append( getPayload());
+        return sb.toString();
     }
 
 }

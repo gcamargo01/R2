@@ -14,6 +14,7 @@ import java.util.Map;
  */
 public abstract class SvcMessage {
     private final Map<String,List<Object>> payload;
+    protected String requestId;
     
     /** Constructor.
      * @param data Message data map
@@ -104,7 +105,9 @@ public abstract class SvcMessage {
     /** Get the key information of the request.
      * @return String
      */
-    public abstract String getRequestId( );
+    public String getRequestId( ) {
+        return requestId;
+    };
     
 }
 

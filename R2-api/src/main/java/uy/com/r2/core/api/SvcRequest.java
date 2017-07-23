@@ -66,6 +66,16 @@ public class SvcRequest extends SvcMessage implements Serializable, Cloneable {
         this.amount = 0d;
         this.currency = null;
         this.requestTime = System.currentTimeMillis();
+        StringBuilder sb = new StringBuilder();
+        sb.append( service);
+        sb.append( '@');
+        sb.append( clientNode);
+        sb.append( '.');
+        sb.append( Integer.toString( sessionNr));
+        sb.append( '#');
+        sb.append(Integer.toString( nodeRqNr));
+        super.requestId = sb.toString();
+
     }
     
     /** Clone itself. To isolate multiple messages.
@@ -120,22 +130,6 @@ public class SvcRequest extends SvcMessage implements Serializable, Cloneable {
      */
     public String getClientNode( ) {
         return clientNode;
-    }
-
-    /** Get the key information of the request.
-     * @return String
-     */
-    @Override
-    public String getRequestId( ) {
-        StringBuilder sb = new StringBuilder();
-        sb.append( service);
-        sb.append( '@');
-        sb.append( clientNode);
-        sb.append( '.');
-        sb.append( Integer.toString( sessionNr));
-        sb.append( '#');
-        sb.append(Integer.toString( nodeRqNr));
-        return sb.toString();
     }
 
     /** Get the amount from the request.
