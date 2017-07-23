@@ -68,6 +68,7 @@ public class SimpleDispatcher implements Dispatcher, CoreModule {
             LOG.warn( "May be an error, not runningPipeline found " + req);
             return call( req);
         }
+        rp.add( moduleName);
         // Run to the end
         return rp.getFinalResponse();
     }
@@ -89,7 +90,9 @@ public class SimpleDispatcher implements Dispatcher, CoreModule {
         if( rp == null) {
             throw new Exception( "callNext( " + req.getRequestId() + ") can't find RunningPipeline");
         }
-        return callService( rp.getNextName(), req);
+        rp.next();
+        // Run to the end
+        return rp.getFinalResponse();
     }
     
     /** Get the status report.

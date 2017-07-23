@@ -16,9 +16,9 @@ import uy.com.r2.core.api.SvcResponse;
 public class RunningPipeline {
     private static final Logger LOG = Logger.getLogger( RunningPipeline.class);
     private final SvcCatalog core = SvcCatalog.getCatalog();
-    private final String moduleNames[];
     private final SvcRequest req0;
     private final String reqAndModules;
+    private String moduleNames[];
     private int index;
     private SvcMessage msg;
     
@@ -92,8 +92,20 @@ public class RunningPipeline {
     /** Get the next module name to run.
      * @return Module name
      */
-    String getNextName() {
+    String next() {
         return moduleNames[ ++index];
+    }
+
+    /** Put a new one to run.
+     * @param moduleName The module to run now
+     */
+    void add( String moduleName) {
+        if( index >= moduleName.length()) {  // Expand the array
+           String nmn[] = new String[ index + 10];
+           System.arraycopy( moduleNames, 0, nmn, 0, moduleNames.length);
+           moduleNames = nmn;
+        }
+        moduleNames[ ++index] = moduleName;
     }
     
     /** Blocking method to get the final response.
@@ -129,5 +141,5 @@ public class RunningPipeline {
         sb.append( msg.toString());
         return sb.toString();
     }
-    
+
 }
