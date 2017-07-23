@@ -93,7 +93,7 @@ public class RunningPipeline {
      * @return Module name
      */
     String getNextName() {
-        return moduleNames[ index + 1];
+        return moduleNames[ ++index];
     }
     
     /** Blocking method to get the final response.

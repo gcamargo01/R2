@@ -64,7 +64,8 @@ public class SimpleDispatcher implements Dispatcher, CoreModule {
         }
         // Verify RunningPipeline
         RunningPipeline rp = runPipeMap.get( req.getRequestId());
-        if( rp == null) {
+        if( rp == null) {  
+            LOG.warn( "May be an error, not runningPipeline found " + req);
             return call( req);
         }
         // Run to the end
@@ -78,6 +79,9 @@ public class SimpleDispatcher implements Dispatcher, CoreModule {
      */
     @Override
     public SvcResponse callNext( SvcRequest req) throws Exception {
+        if( LOG.isDebugEnabled()) {
+            LOG.debug("callNext( req. " + req + " )");
+        }
         if( req == null) {
             throw new Exception( "callNext with Null request", new NullPointerException());
         }
