@@ -18,6 +18,7 @@ public class RunningPipeline {
     private final SvcCatalog core = SvcCatalog.getCatalog();
     private final String moduleNames[];
     private final SvcRequest req0;
+    private final String reqAndModules;
     private int index;
     private SvcMessage msg;
     
@@ -26,17 +27,26 @@ public class RunningPipeline {
      * @param modules Modules names separated by comma (,)
      * @param req Request to process
      */
-    public RunningPipeline( String modules, SvcRequest req) {
+    RunningPipeline( String modules[], SvcRequest req) {
         //this.msgId = req.getRequestId();
-        this.moduleNames = modules.split( ",");
+        this.moduleNames = modules;
         this.req0 = req;
         this.index = 0;
         this.msg = req;
-        LOG.debug( "new RunningPipeline( " + req.getRequestId() + " ) " + toString());
+        StringBuilder sb = new StringBuilder();
+        sb.append( req0.getRequestId());
+        sb.append( ": ");
+        for( String m: moduleNames) {
+            sb.append( m);
+            sb.append( ',');
+        }
+        sb.append( '[');
+        this.reqAndModules = sb.toString();
+        //LOG.debug( "new RunningPipeline( " + req.getRequestId() + " ) " + toString());
     }
     
     /** Running */
-    public void run () {
+    void run () {
         if( LOG.isDebugEnabled()) {
             LOG.debug("run --- " + toString());
         }
@@ -47,7 +57,7 @@ public class RunningPipeline {
                     throw new Exception( "No next module on " + toString());
                 }
                 String moduleName = moduleNames[ index];
-                ServiceInfo mi = core.getModuleInfo( moduleName);
+                ModuleInfo mi = core.getModuleInfo( moduleName);
                 if( mi == null) {
                     throw new Exception( "Module '" + moduleName + "' not installed on " 
                             + toString());
@@ -75,26 +85,28 @@ public class RunningPipeline {
     /** Process a message from an asynchronous module.
      * @param msg Request or Response from the module
      */
-    public void onMessage( SvcMessage msg) {
+    void onMessage( SvcMessage msg) {
         this.msg = msg;
     }
     
     /** Get the next module name to run.
      * @return Module name
      */
-    public String getNextName() {
+    String getNextName() {
         return moduleNames[ index + 1];
     }
     
     /** Blocking method to get the final response.
      * @return SvcResponse
      */
-    public SvcResponse getFinalResponse() {
+    SvcResponse getFinalResponse() {
         while( index >= 0) {
             run();
-            try {
-                Thread.sleep( 10);
-            } catch ( InterruptedException ex ) { }
+            if( index >= 0) {
+                try {
+                    Thread.sleep( 10);
+                } catch ( InterruptedException ex ) { }
+            }
         }
         if( !( msg instanceof SvcResponse )) {
             Exception x = new Exception( "Cast error running " + toString());
@@ -111,13 +123,7 @@ public class RunningPipeline {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append( req0.getRequestId());
-        sb.append( ": ");
-        for( String m: moduleNames) {
-            sb.append( m);
-            sb.append( ',');
-        }
-        sb.append( '[');
+        sb.append( reqAndModules);
         sb.append( index);
         sb.append( "] ");
         sb.append( msg.toString());

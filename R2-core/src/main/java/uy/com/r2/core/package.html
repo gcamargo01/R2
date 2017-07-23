@@ -10,14 +10,18 @@ R2 Service support core implementations.
 Here are tree main components: 
 <p>
     
-{@link uy.com.r2.core.SvcCatalog} The catalog of services, with methods to 
-install, remove and update modules. 
+{@link uy.com.r2.core.SvcCatalog} The catalog of services is unique (singleton), 
+it hast methods to install, remove and update modules. 
 <p>
 
-{@link uy.com.r2.core.ServiceInfo} The service module info structure.
+{@link uy.com.r2.core.ServiceInfo} The service module structure to hold information and status 
+of each module.
 <p>
 
-{@link uy.com.r2.core.RunningPipeline} The sequence of service modules to run and its status.
+{@link uy.com.r2.core.SimpleDispatcher} The module to dispatch and control execution.
+<p>
+
+{@link uy.com.r2.core.RunningPipeline} The sequence of service modules to run and current status.
 <p>
 
 {@link uy.com.r2.core.MBeanConfigurator} JMX dynamic MBean to control the system from jconsole.

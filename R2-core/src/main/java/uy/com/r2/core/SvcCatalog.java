@@ -22,40 +22,43 @@ import uy.com.r2.core.api.Module;
  * which is user by the modules itself.
  * @author G.Camargo
  */
-public class SvcCatalog implements Module {
-    private static final String CATALOG_NAME = SvcCatalog.class.getSimpleName();
-    private static final String DISPATCHER_NAME = "Dispatcher";
+public class SvcCatalog implements CoreModule {
+    public static final String CATALOG_NAME = SvcCatalog.class.getSimpleName();
+    public static final String DISPATCHER_NAME = Dispatcher.class.getSimpleName();
+    
     private static final Logger LOG = Logger.getLogger(SvcCatalog.class);
-    private static SvcCatalog core = null;
-    private static Dispatcher dispatcher = null;
+    private static final Object LOCK = new Object();
+    private static SvcCatalog catalog = null;
+    private static Dispatcher dispatcher = new SimpleDispatcher();
 
     private boolean stopping = false;
-    private final HashMap<String,ServiceInfo> modules;
+    private final HashMap<String,ModuleInfo> modules;
     
     private SvcCatalog() {  // Private constructor.
         modules = new HashMap();
-        modules.put( CATALOG_NAME, new ServiceInfo( CATALOG_NAME, this));
+        modules.put( CATALOG_NAME, new ModuleInfo( CATALOG_NAME, this));
     }  
     
     /** Get the Catalog instance.
      * This class is a singleton.
      * @return Kernel 
      */
-    public static synchronized SvcCatalog getCatalog() {
-        if( core == null) {
-            core = new SvcCatalog();
+    public static SvcCatalog getCatalog() {
+        if( catalog != null) {
+            return catalog;
         }
-        return core;
+        synchronized( LOCK) {
+            if( catalog == null) {
+                catalog = new SvcCatalog();
+            }
+        }
+        return catalog;
     }
 
     /** Get a Dispatcher instance.
      * @return Dispatcher instance
      */
     public static Dispatcher getDispatcher() {
-        if( dispatcher != null) {  
-            return dispatcher;
-        }
-        dispatcher = ( Dispatcher)( ( core.modules.get( DISPATCHER_NAME)).getImplementation());
         return dispatcher;
     }
 
@@ -72,7 +75,7 @@ public class SvcCatalog implements Module {
         String className = "" + cfg.getString( "class");
         LOG.trace( "installModule " + moduleName + " " + className);
         // Kernel name used, set its configuration
-        if( CATALOG_NAME.equals( moduleName)) {
+        if( CATALOG_NAME.equals( moduleName) || DISPATCHER_NAME.equals( moduleName)) {
             return;
         }
         // Load from the net
@@ -105,7 +108,7 @@ public class SvcCatalog implements Module {
         if( modules.containsKey( moduleName)) {
             throw new Exception( "Module '" + moduleName + "' is already installed.");
         }
-        ServiceInfo mi = new ServiceInfo( moduleName, moduleImpl);
+        ModuleInfo mi = new ModuleInfo( moduleName, moduleImpl);
         modules.put( moduleName, mi);
         // setup configuration
         updateConfiguration( moduleName, cfg);
@@ -123,7 +126,7 @@ public class SvcCatalog implements Module {
         }
         LOG.trace( "updateConfiguration " + moduleName + " " + cfg.toString());
         // setConfiguration
-        ServiceInfo mi = modules.get( moduleName);
+        ModuleInfo mi = modules.get( moduleName);
         if( mi == null) {
             installModule( moduleName, cfg);
         } else if( !mi.isTheSameClass( cfg)                    // If diff class
@@ -148,7 +151,7 @@ public class SvcCatalog implements Module {
             LOG.info( "Module " + moduleName + " can't be uninstalled, ignored");
             return;
         }
-        ServiceInfo mi = modules.get( moduleName);
+        ModuleInfo mi = modules.get( moduleName);
         if( mi == null) {
             throw new Exception( "Module '" + moduleName + "' not found");
         }
@@ -161,7 +164,7 @@ public class SvcCatalog implements Module {
      * @param moduleName Module name
      * @return InstalledModule
      */
-    public ServiceInfo getModuleInfo( String moduleName) {
+    public ModuleInfo getModuleInfo( String moduleName) {
         return modules.get( moduleName);
     } 
     
@@ -179,17 +182,6 @@ public class SvcCatalog implements Module {
         return stopping;
     }
 
-    /** Get the status report.
-     * @return Map of status variables
-     */
-    @Override
-    public Map<String,Object> getStatusVars() {
-        Map<String,Object> m = new TreeMap();
-        m.put( "Version", "$Revision: 1.1 $");
-        m.put( "ModuleNames", getModuleNames());
-        return m;
-    }
-    
     /** Get the configuration descriptors of this module.
      * Each module must implement this method to give complete information about 
      * its configurable items.
@@ -203,6 +195,33 @@ public class SvcCatalog implements Module {
         return l;        
     }
 
+    /** Startup.
+     * @param cfg Module configuration
+     * @throws Exception Unexpected error that must be warned
+     */
+    @Override
+    public void startup( Configuration cfg) throws Exception {
+        if( cfg.isChanged()) {
+            try {
+                dispatcher = (Dispatcher)Class.forName( cfg.getString( "Dispatcher")).newInstance();
+                modules.put( DISPATCHER_NAME, new ModuleInfo( DISPATCHER_NAME, dispatcher));
+            } catch( Exception x) {
+                LOG.warn( "can't instance Dispatcher", x);
+            }    
+        }
+    }
+    
+    /** Get the status report.
+     * @return Map of status variables
+     */
+    @Override
+    public Map<String,Object> getStatusVars() {
+        Map<String,Object> m = new TreeMap();
+        m.put( "Version", "$Revision: 1.1 $");
+        m.put( "ModuleNames", getModuleNames());
+        return m;
+    }
+    
     /** Release all the allocated resources. */
     @Override
     public void shutdown() {
@@ -219,5 +238,5 @@ public class SvcCatalog implements Module {
             } catch ( Exception ex) { }
         }
     }    
-    
+
 }

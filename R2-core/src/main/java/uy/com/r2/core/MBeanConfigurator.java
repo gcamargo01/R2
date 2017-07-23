@@ -26,12 +26,12 @@ public class MBeanConfigurator implements DynamicMBean {
     private final HashMap<String,ConfigItemDescriptor> cfgDescMap;
     private final HashMap<String,String> cfgChgdValues = new HashMap<String,String>();
     
-    public static void moduleUpdate( String moduleName) {
+    static void moduleUpdate( String moduleName) {
         if( firstTime) {
             firstTime = false;
             moduleUpdate( SvcCatalog.class.getSimpleName());
         }
-        ServiceInfo mi = SvcCatalog.getCatalog().getModuleInfo( moduleName);
+        ModuleInfo mi = SvcCatalog.getCatalog().getModuleInfo( moduleName);
         List<ConfigItemDescriptor> cfgDescs = mi.getConfigDescriptors();
         if( cfgDescs == null) {
             cfgDescs = new LinkedList<ConfigItemDescriptor>();
@@ -54,7 +54,7 @@ public class MBeanConfigurator implements DynamicMBean {
         }
     }
     
-    public static void moduleUndeploy( String moduleName) {
+    static void moduleUndeploy( String moduleName) {
         // JMX
         try {
             MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
@@ -66,7 +66,7 @@ public class MBeanConfigurator implements DynamicMBean {
         }
     }
     
-    public MBeanConfigurator( String moduleName, String description, List<ConfigItemDescriptor> cfgList
+    MBeanConfigurator( String moduleName, String description, List<ConfigItemDescriptor> cfgList
             ) throws Exception {
         this.moduleName = moduleName;
         this.description = description;
@@ -97,7 +97,7 @@ public class MBeanConfigurator implements DynamicMBean {
             return cfgChgdValues.get( name);
         }
         // then go for Configuration values
-        ServiceInfo mi = SvcCatalog.getCatalog().getModuleInfo( moduleName);
+        ModuleInfo mi = SvcCatalog.getCatalog().getModuleInfo( moduleName);
         String value = "" + mi.getConfiguration().getString( name);
         log.trace( moduleName + ".get(" + name + "):" + value);
         return value;
@@ -152,7 +152,7 @@ public class MBeanConfigurator implements DynamicMBean {
         log.debug( "invoke " + moduleName + "." + methodName);
         Object result = "";
         try {
-            ServiceInfo mi = SvcCatalog.getCatalog().getModuleInfo( moduleName);
+            ModuleInfo mi = SvcCatalog.getCatalog().getModuleInfo( moduleName);
             if( methodName.equals( "Apply and Save" )) {
                 log.info( moduleName + ".Apply");
                 Configuration cfg = mi.getConfiguration();
