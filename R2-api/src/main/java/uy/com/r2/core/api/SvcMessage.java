@@ -6,10 +6,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-/** Base class of message invocation 
- * {@link uy.com.r2.core.api.SvcRequest}
- * and message response 
- * {@link uy.com.r2.core.api.SvcResponse}.
+/** Abstract base class of invocation {@link uy.com.r2.core.api.SvcRequest}
+ * and message {@link uy.com.r2.core.api.SvcResponse}.
+ * It hast a "payload" data stored ia a Multi-Map (Map of Lists).
  * @author G.Camargo
  */
 public abstract class SvcMessage {
