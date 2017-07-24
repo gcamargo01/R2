@@ -5,22 +5,22 @@ A set of interfaces to break down the business critical server in modules,
 like microservices, reaching this benefits:
 
 * Modular approach
-        - Easy to develop, in a pipeline of microservices
-        - Easy to make unitary tests, and easy to simulate complex situations
-        - Easy to detect and diagnose failures
-        - Full re-usable modules (no need to compile, just declare to re-use)
+        * Easy to develop, in a pipeline of microservices
+        * Easy to make unitary tests, and easy to simulate complex situations
+        * Easy to detect and diagnose failures
+        * Full re-usable modules (no need to compile, just declare to re-use)
 * High availability services
-        - Modules can be replaced on-line (hot deploy)
-        - Continuios service level monitoring by tracking key information
-        - Centralized and documented system configuration 
-        - On-line monitoring facility, to analize suspect modules (resources leakage)
-        - Clustering, HA container frendly
-        - Secure and robust (modules that avoid hacking)
+        * Modules can be replaced on-line (hot deploy)
+        * Continuios service level monitoring by tracking key information
+        * Centralized and documented system configuration 
+        * On-line monitoring facility, to analize suspect modules (resources leakage)
+        * Clustering, HA container frendly
+        * Secure and robust (modules that avoid hacking)
 * Lightway
-        - Extremly scalable (1M module executions per second in a Raspberry PI)
-        - Optional non blocking implementations (asyncronous services)
-        - Optional java stand-alone implementation (no container required)
-        - Extemly simple to use (just implement a Interface)
+        * Extremly scalable (more than 1M module executions per second)
+        * Optional non blocking implementations (asyncronous services)
+        * Optional java stand-alone implementation (no container required)
+        * Extemly simple to use (just implement a Interface)
 
 This extensible architecture may change the way we develop applications, and mantaing it
 along de time: One time development, after that just re-use o create a better one. 
