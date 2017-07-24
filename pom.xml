@@ -11,9 +11,10 @@
 
   <modules>
     <module>R2-api</module>
-<!--    
     <module>R2-core</module>
-    <module>R2-demo</module>
+    <module>R2-jstd</module>
+    <module>R2-ejb3</module>
+<!--    
     <module>R2-web</module>
 -->    
   </modules>
