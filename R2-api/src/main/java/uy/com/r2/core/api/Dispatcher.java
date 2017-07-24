@@ -16,11 +16,11 @@ public interface Dispatcher extends Module {
 
     /** Dispatch the execution of a specified service.
      * This method is used by modules that explicit set the next Service to run.
-     * @param moduleName Service module name
+     * @param serviceName Service module name
      * @param req Request to dispatch
      * @return SvcResponse or error packed as a response 
      */
-    public SvcResponse callService( String moduleName, SvcRequest req);   
+    public SvcResponse callService( String serviceName, SvcRequest req);   
     
     /** Dispatch the execution of the next service.
      * Call next service module. Its is only known by the Dispatcher.
