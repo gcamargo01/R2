@@ -23,7 +23,7 @@ public class JsonDeployer implements Runnable {
     private static enum FileStatus { FSNew, FSReload, FSIdle};
 
     private boolean stopping = false;
-    private final SvcCatalog kernel = SvcCatalog.getCatalog();
+    private final SvcCatalog catalog = SvcCatalog.getCatalog();
     private File folder = new File( ".");
     private int wait = 5000; 
     private TreeMap<String,FileInfo> filesMap = new TreeMap();
@@ -106,7 +106,7 @@ public class JsonDeployer implements Runnable {
                 }
                 // Wait a second
                 Thread.sleep( wait);
-                if( kernel.isStopping()) {  
+                if( catalog.isStopping()) {  
                     stopping = true;
                 }
             } while( !stopping);
@@ -119,6 +119,7 @@ public class JsonDeployer implements Runnable {
             undeploy( fn);
         }
         filesMap = new TreeMap();
+        LOG.debug( "Stop.");
     }
     
     /** Deploy service module.
@@ -131,11 +132,11 @@ public class JsonDeployer implements Runnable {
             String moduleName = file2ModuleName( fileName);
             if( getClass().getName().equals( cfg.getString( "class")) 
                     && cfg.getBoolean( "Shutdown")) {
-                    stop();
-                    filesMap.remove( fileName);
+                stop();
+                filesMap.remove( fileName);
                 return;
             }
-            kernel.installModule( moduleName, cfg);
+            catalog.installModule( moduleName, cfg);
         } catch ( Throwable ex) {
             LOG.warn( "Deploy error on '" + fileName + "', " + ex, ex );
         }
@@ -148,7 +149,7 @@ public class JsonDeployer implements Runnable {
         try {
             LOG.debug( "undeploy " + fileName);
             String moduleName = file2ModuleName( fileName);
-            kernel.uninstallModule( moduleName);
+            catalog.uninstallModule( moduleName);
         } catch ( Throwable ex ) {
             LOG.warn( "Undeploy error on " + fileName + ", " + ex, ex );
         }
@@ -163,7 +164,7 @@ public class JsonDeployer implements Runnable {
             LOG.debug( "redeploy " + fileName);
             String moduleName = file2ModuleName( fileName);
             Configuration cfg = loadCfg( fileName);
-            kernel.updateConfiguration( moduleName, cfg);
+            catalog.updateConfiguration( moduleName, cfg);
         } catch ( Throwable ex ) {
             LOG.warn( "Redeploy error on '" + fileName + "', " + ex, ex );
         }
