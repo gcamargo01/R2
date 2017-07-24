@@ -1,0 +1,13 @@
+{
+    "class": "uy.com.r2.svc.tools.SimulateClientCaller",
+    "TestTime": 0,
+    "TestThreads": 15,
+    "TestIterations": 10000.00,
+    "Service": "TestS1",
+    "SleepTime": 0,
+    "Messages": "The data 1,Other data,One more 3",
+    "DumpStatus": "true"
+}    
+
+
+
