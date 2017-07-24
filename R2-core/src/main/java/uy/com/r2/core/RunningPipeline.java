@@ -18,6 +18,7 @@ public class RunningPipeline {
     private final SvcCatalog core = SvcCatalog.getCatalog();
     private final SvcRequest req0;
     private final String reqAndModules;
+    private final Object lock = new Object();
     private String moduleNames[];
     private int index;
     private SvcMessage msg;
@@ -47,35 +48,32 @@ public class RunningPipeline {
     
     /** Running */
     void run () {
-        if( LOG.isDebugEnabled()) {
-            LOG.debug("run --- " + toString());
-        }
         try {
-            while( index >= 0) {
-                if( index >= moduleNames.length) {
-                    index = moduleNames.length - 1;
-                    throw new Exception( "No next module on " + toString());
+            if( index >= moduleNames.length) {
+                index = moduleNames.length - 1;
+                throw new Exception( "No next module on " + toString());
+            }
+            String moduleName = moduleNames[ index];
+            ModuleInfo mi = core.getModuleInfo( moduleName);
+            if( mi == null) {
+                throw new Exception( "Module '" + moduleName + "' not installed on " 
+                        + toString());
+            }
+            msg = mi.processMessage( msg);
+            if( msg == null) {  // Nothing to do here, wait some msg
+                synchronized( lock) {
+                    lock.wait();
                 }
-                String moduleName = moduleNames[ index];
-                ModuleInfo mi = core.getModuleInfo( moduleName);
-                if( mi == null) {
-                    throw new Exception( "Module '" + moduleName + "' not installed on " 
-                            + toString());
-                }
-                msg = mi.processMessage( msg);
-                if( msg == null) { 
-                    return;
-                } else if( msg instanceof SvcRequest) {   // Its a request
-                    ++index;
-                } else if( msg instanceof SvcResponse) {  // Its a response
-                    --index;
-                } else {   // Invalid message
-                    throw new Exception( "Invalid response " + msg + " on " 
-                            + toString());
-                }
+                return;
+            } else if( msg instanceof SvcRequest) {   // Its a request
+                ++index;
+            } else if( msg instanceof SvcResponse) {  // Its a response
+                --index;
+            } else {   // Invalid message
+                throw new Exception( "Invalid response " + msg + " on " + toString());
             }
         } catch( Exception x) {
-            LOG.warn( "run failed", x);
+            LOG.warn( "run failed on " + index, x);
             SvcMessage r = ( msg instanceof SvcRequest)? msg: req0;
             msg = new SvcResponse( "" + x,
                     SvcResponse.RES_CODE_EXCEPTION, x, (SvcRequest)r);
@@ -86,7 +84,10 @@ public class RunningPipeline {
      * @param msg Request or Response from the module
      */
     void onMessage( SvcMessage msg) {
-        this.msg = msg;
+        synchronized( lock) {
+            this.msg = msg;
+            lock.notifyAll();
+        }
     }
     
     /** Get the next module name to run.
@@ -111,14 +112,26 @@ public class RunningPipeline {
     /** Blocking method to get the final response.
      * @return SvcResponse
      */
+    /** Blocking method to get the response from the current service.
+     * @return SvcResponse
+     */
+    SvcResponse getResponse() {
+        int actualIndex = index;
+        while( index >= actualIndex) {
+            run();
+        }
+        if( !( msg instanceof SvcResponse )) {
+            Exception x = new Exception( "Cast error running " + toString());
+            LOG.warn( "run failed: " + toString(), x);
+            return new SvcResponse( "Ended running pipe w/o SvcResponse " + toString()
+                    , SvcResponse.RES_CODE_EXCEPTION, new Exception( ""), req0);
+        }
+        return (SvcResponse)msg;
+    }
+    
     SvcResponse getFinalResponse() {
         while( index >= 0) {
             run();
-            if( index >= 0) {
-                try {
-                    Thread.sleep( 10);
-                } catch ( InterruptedException ex ) { }
-            }
         }
         if( !( msg instanceof SvcResponse )) {
             Exception x = new Exception( "Cast error running " + toString());
