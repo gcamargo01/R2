@@ -190,6 +190,7 @@ public class ModuleInfo {
     }
     
     SvcMessage processMessage( SvcMessage msg) {
+        /*
         if( LOG.isDebugEnabled() && msg != null) {
             if( msg instanceof SvcRequest) {
                 LOG.debug( "processMessage >>> " + moduleName + " " + msg);
@@ -197,6 +198,7 @@ public class ModuleInfo {
                 LOG.debug( "processMessage <<< " + moduleName + " " + msg);
             }        
         }
+        */
         SvcRequest invoc = ( msg instanceof SvcRequest) ? 
                 (SvcRequest)msg:
                 ((SvcResponse)msg).getRequest();
@@ -209,6 +211,11 @@ public class ModuleInfo {
             AsyncService as = ( monitorImpl != null)? monitorImpl: asyncImpl;
             if( msg instanceof SvcRequest) {
                 msg = as.onRequest( invoc, cfg);
+                /* 
+                if( LOG.isDebugEnabled() && msg instanceof SvcResponse) {
+                    LOG.debug( "processMessage <<| " + moduleName + " " + msg);
+                } 
+                */
             } else if( msg instanceof SvcResponse) {
                 msg = as.onResponse( (SvcResponse)msg, cfg);
             }        
