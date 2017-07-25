@@ -1,4 +1,4 @@
-/* ServiceMonitor.java */
+/* SvcMonitor.java */
 package uy.com.r2.svc.tools;
 
 import java.text.SimpleDateFormat;
