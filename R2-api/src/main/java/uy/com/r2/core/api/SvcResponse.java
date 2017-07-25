@@ -26,7 +26,7 @@ public class SvcResponse extends SvcMessage implements Serializable {
     /** Not found. */
     public static final int RES_CODE_NOT_FOUND = 100;
 
-    public static final String MSG_TOPPED = "Too many concurrent threads";
+    public static final String MSG_TOPPED = "Too many concurrent ";
     public static final String MSG_TIMEOUT = "Timeout";
     public static final String MSG_INVALID_MODULE = "Not registered module ";
     public static final String MSG_INVALID_SERVICE = "Does not implement service named ";
@@ -35,7 +35,7 @@ public class SvcResponse extends SvcMessage implements Serializable {
     private final SvcRequest request;
     private transient int responseTime;
     
-    /** Succcessful response conctructor with data.
+    /** Successful response constructor with data.
      * Should be instanced right in the event of the response.
      * @param data Message data or null
      * @param resultCode Error code, 0 is ok, 
