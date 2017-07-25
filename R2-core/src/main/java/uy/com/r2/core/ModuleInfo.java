@@ -158,9 +158,9 @@ public class ModuleInfo {
             monitorImpl = null;
         }
         // Update config
-        this.cfg = cfg.clone();
+        this.cfg = cfg.clone(); 
         if( moduleImpl instanceof CoreModule) {  
-            ( (CoreModule)moduleImpl).startup( cfg);
+            ( (CoreModule)moduleImpl).startup( this.cfg);
         }
     }
     
