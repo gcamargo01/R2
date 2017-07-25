@@ -36,6 +36,8 @@ public class ModuleInfo {
     private int limitActiveCount = Integer.MAX_VALUE;
     private int activeCount = 0;
     private int topActiveCount = 0;
+    private int count = 0;
+    private int errorCount = 0;
     
     /** Constructor
      * @param name Module name
@@ -48,7 +50,7 @@ public class ModuleInfo {
             this.asyncImpl = (AsyncService)impl;
         } else if( impl instanceof SimpleService){
             this.asyncImpl = new WrapAsAsyncService( (SimpleService)impl); 
-        } else {
+        } else {  // CoreModule
             this.asyncImpl = null;
         }
     }    
@@ -103,7 +105,7 @@ public class ModuleInfo {
         cdl.add( new ConfigItemDescriptor( "Monitor", ConfigItemDescriptor.BOOLEAN,
                "Wrap module with SvcMonitor to get statistics and acitvity", "false"));
         cdl.add( new ConfigItemDescriptor( "TimeOut", ConfigItemDescriptor.BOOLEAN,
-               "Time out of this module", "" + DEFAULT_TIME_OUT));
+               "Time out of this module", null));
         // Set default values 
         for( ConfigItemDescriptor cd: cdl) {
             if( cd.getDefaultValue() != null &&           // has a default value
@@ -146,10 +148,10 @@ public class ModuleInfo {
         topActiveCount = 0;
         // Apply generic configuration
         if( cfg.containsKey( "LimitActiveThreads")) {
-            limitActiveCount = cfg.getInt( "limitActiveThreads");
+            limitActiveCount = cfg.getInt( "LimitActiveThreads");
             concCtrl = true;
         }
-        if( cfg.getBoolean( "Monitor")) {
+        if( cfg.getBoolean( "Monitor") && asyncImpl != null) {
             LOG.trace( "Monitor instanced on " + moduleName);
             monitorImpl = new SvcMonitor( asyncImpl, moduleName);
         } else {
@@ -158,15 +160,17 @@ public class ModuleInfo {
         // Update config
         this.cfg = cfg.clone();
         if( moduleImpl instanceof CoreModule) {  
-           ( (CoreModule)moduleImpl).startup( cfg);
+            ( (CoreModule)moduleImpl).startup( cfg);
         }
     }
     
     /** Running instances accounting, if can add one more. */
     boolean takeOne() {
         if( concCtrl) {
+            LOG.trace( "activeCount ***** " + activeCount + " " + Thread.currentThread().getName());
             synchronized( lockConcCtrl) {  
-                if( activeCount > limitActiveCount) {
+                if( activeCount >= limitActiveCount) {
+                    LOG.trace( "NO takeOne ***** " + activeCount);
                     return false;
                 }
                 ++activeCount;
@@ -174,6 +178,7 @@ public class ModuleInfo {
                     topActiveCount = activeCount;
                 }
             }
+            LOG.trace( "activeCount ok ------ " + activeCount);
         }
         return true;
     }
@@ -186,6 +191,7 @@ public class ModuleInfo {
                     --activeCount;
                 }
             }
+            LOG.trace( "activeCount relsease ------ " + activeCount);
         }
     }
     
@@ -199,36 +205,43 @@ public class ModuleInfo {
             }        
         }
         */
-        SvcRequest invoc = ( msg instanceof SvcRequest) ? 
+        SvcRequest req = ( msg instanceof SvcRequest) ? 
                 (SvcRequest)msg:
                 ((SvcResponse)msg).getRequest();
+        SvcResponse resp = null;
         if( !takeOne()) {  // Too many running instances, cancel!
-            LOG.warn( "Too many concurrent active instances " + moduleName);
-            return new SvcResponse( SvcResponse.MSG_TOPPED, 
-                SvcResponse.RES_CODE_TOPPED, null, invoc);
+            ++count;
+            ++errorCount;
+            LOG.warn( "Too many concurrent active " + moduleName + " " + topActiveCount);
+            return new SvcResponse( SvcResponse.MSG_TOPPED + moduleName, 
+                SvcResponse.RES_CODE_TOPPED, null, req);
         }
         try {
             AsyncService as = ( monitorImpl != null)? monitorImpl: asyncImpl;
             if( msg instanceof SvcRequest) {
-                msg = as.onRequest( invoc, cfg);
+                ++count;
+                msg = as.onRequest( req, cfg);
                 /* 
                 if( LOG.isDebugEnabled() && msg instanceof SvcResponse) {
                     LOG.debug( "processMessage <<| " + moduleName + " " + msg);
                 } 
                 */
             } else if( msg instanceof SvcResponse) {
-                msg = as.onResponse( (SvcResponse)msg, cfg);
+                msg = resp = as.onResponse( (SvcResponse)msg, cfg);
             }        
         } catch( SvcException ex) {
             String s = ex.getMessage() + " on module '" + moduleName + "'";
             LOG.warn( s, ex);
-            msg = new SvcResponse( s, ex.getErrorCode(), ex, invoc);
+            msg = resp = new SvcResponse( s, ex.getErrorCode(), ex, req);
         } catch( Exception ex) {
             String s = "Unexpected error on module '" + moduleName + "' " + ex;
             LOG.warn( s, ex);
-            msg = new SvcResponse( s, SvcResponse.RES_CODE_EXCEPTION, ex, invoc);
+            msg = resp = new SvcResponse( s, SvcResponse.RES_CODE_EXCEPTION, ex, req);
         } finally {
             releaseOne();
+            if( resp != null && resp.getResultCode() < 0) {
+                ++errorCount;
+            }
         }
         return msg;
     }
@@ -236,6 +249,9 @@ public class ModuleInfo {
     /** Report module status plus active count */
     Map<String,Object> getStatusVars() {
         Map<String,Object> m = new TreeMap<String,Object>();
+        m.put( "Count", count);
+        m.put( "ErrorCount", errorCount);
+        m.put( "ServiceLevel", 1 - errorCount / ( count + 0.000001));
         if( concCtrl) {
             m.put( "ActiveCount", activeCount);
             m.put( "TopActiveCount", topActiveCount);
