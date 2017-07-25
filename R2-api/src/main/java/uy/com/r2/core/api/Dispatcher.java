@@ -28,15 +28,15 @@ public interface Dispatcher extends Module {
      * @return SvcResponse or error packed as a response 
      * @throws Exception Cant find Next module
      */
-    public SvcResponse callNext( SvcRequest req)
-            throws Exception;
+    public SvcResponse callNext( SvcRequest req) throws Exception;
 
     /** Process a message from an asynchronous service implementation.
      * The AsyncService returned NULL when was called, and now this is the event
      * to notify that there are a message to process.
      * @param msg Request or Response from the module
+     * @throws Exception Cant find module to dispatch
      */
-    public void onMessage( SvcMessage msg);
+    public void onMessage( SvcMessage msg) throws Exception;
 
 } 
 
