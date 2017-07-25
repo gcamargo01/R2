@@ -18,7 +18,7 @@ import uy.com.r2.core.api.SvcResponse;
 
 
 /** Direct and simple dispatcher.
- * This is a minimal dispatcher, it uses the same thread and blocks it.
+ * This is a minimal dispatcher, it uses only one thread.
  * @author G.Camargo
  */
 public class SimpleDispatcher implements Dispatcher, CoreModule {
@@ -29,7 +29,6 @@ public class SimpleDispatcher implements Dispatcher, CoreModule {
     private String defaultServicePipeline[] = "Null9,Null8,Null7,Null6,Null5,Null4,Null3,Null2,Null1,Null0,Loop".split( ","); // !!!!
             //= "";
     private Map<String,String> servicePipelinesMap = new HashMap();
-    private int onMessageFailedCount = 0;
       
     SimpleDispatcher( ) { }
     
@@ -117,8 +116,6 @@ public class SimpleDispatcher implements Dispatcher, CoreModule {
     @Override
     public Map<String,Object> getStatusVars() {
         Map<String,Object> map = new TreeMap<String,Object>();
-        map.put( "Version", "$Revision: 1.1 $");
-        map.put( "OnMessageFailedCount", "" + onMessageFailedCount);
         Set<String> s = kernel.getModuleNames();
         s.remove( SvcCatalog.DISPATCHER_NAME); // Avoid Loop, it is the Dispatcher
         for( String m: kernel.getModuleNames()) {
@@ -132,14 +129,17 @@ public class SimpleDispatcher implements Dispatcher, CoreModule {
     
     /** Process a response from an asynchronous module.
      * @param msg Response or Request from the module
+     * @throws Exception Can't find RunningPipeline
      */
     @Override
-    public void onMessage( SvcMessage msg) {
+    public void onMessage( SvcMessage msg) throws Exception {
         LOG.debug( "onMessage " + msg);
         RunningPipeline rp = runPipeMap.get( msg.getRequestId());
         if( rp == null) {
-            LOG.debug( "Can't find " + msg.getRequestId() + " on msg " + msg);
-            ++onMessageFailedCount;
+            Exception x = new Exception( "Can't find " + msg.getRequestId() 
+                    + " to dispatch onMessage " + msg);
+            LOG.debug( x.getMessage(), x);
+            throw x;
         } else {
             rp.onMessage( msg);
         }
@@ -168,9 +168,6 @@ public class SimpleDispatcher implements Dispatcher, CoreModule {
     public void startup( Configuration cfg ) throws Exception {
         defaultServicePipeline = cfg.getString( "DefaultServicePipeline").split( ",");
         servicePipelinesMap = cfg.getStringMap( "ServicePipeline.*");
-        if( cfg.isChanged()) {
-            onMessageFailedCount = 0;
-        }
     }
     
     /** Release all the allocated resources. */
