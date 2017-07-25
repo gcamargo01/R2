@@ -3,7 +3,6 @@ package uy.com.r2.svc.tools;
 
 import java.util.List;
 import java.util.LinkedList;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 import org.apache.log4j.Logger;
@@ -55,6 +54,7 @@ public class Echo implements AsyncService {
         if( LOG.isTraceEnabled()) {
             LOG.trace( req.toString());
         }
+        /**/
         setConfiguration( cfg);
         if( time > 0) {
             int t = new Random().nextInt( time);
@@ -89,9 +89,7 @@ public class Echo implements AsyncService {
      */
     @Override
     public Map<String, Object> getStatusVars() {
-        Map<String,Object> m = new HashMap<String,Object>();
-        m.put( "Version", "$Revision: 1.1 $");
-        return m;
+        return null;
     }
 
     /** Release all the allocated resources. */

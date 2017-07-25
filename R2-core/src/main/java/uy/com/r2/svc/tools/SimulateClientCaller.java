@@ -95,7 +95,7 @@ public class SimulateClientCaller implements CoreModule {
             Thread.sleep( time = testTime);
         } else {
             while( activeWorkers > 0) {
-                Thread.sleep( 1000);
+                Thread.sleep( 250);
                 LOG.warn( "activeWorkers=" + activeWorkers + " " + iterations + " / " + testIterations);
             }
         } 
@@ -130,7 +130,6 @@ public class SimulateClientCaller implements CoreModule {
     @Override
     public Map<String, Object> getStatusVars() {
         Map<String,Object> m = new HashMap<String,Object>();
-        m.put( "Version", "$Revision: 1.1 $");
         m.put( "TotalIterations", iterations);
         m.put( "TotalResponseTime", responseTimeSum);
         m.put( "Threads", testThreads);
@@ -163,7 +162,7 @@ public class SimulateClientCaller implements CoreModule {
         public void run() {
             while( !stopTest) {
                 int it0;
-                int range = 1000;
+                int range = 10; //00;   !!!!
                 synchronized( lock) {
                     if( iterations >= testIterations) {
                         break;

@@ -41,7 +41,7 @@ public class NullService implements SimpleService {
     public SvcResponse call( SvcRequest req, Configuration cfg) throws Exception {
         /*
         // Test error
-        if( !req.getServiceName().equals( "Nothing")) {
+        if( !req.getServiceName().equals( "GiveAnError")) {
             throw new SvcException( SvcResponse.MSG_INVALID_SERVICE
                     + req.getServiceName(), SvcResponse.RES_CODE_INVALID_SERVICE);
         } 

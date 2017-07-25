@@ -37,6 +37,7 @@ public class SvcMonitor implements AsyncService, SimpleService {
     private int invocationsCount = 0;
     private int errorsCount = 0;
     private int timeoutCount = 0;
+    private int responseOnReqCount = 0;
     private int avgResponseTime = 0;
     private int lastResponseTime = 0;
     private int maxResponseTime = 0;
@@ -85,6 +86,7 @@ public class SvcMonitor implements AsyncService, SimpleService {
             invocationsCount = 0;
             errorsCount = 0;
             timeoutCount = 0;
+            responseOnReqCount = 0;
             avgResponseTime = 0;
             lastResponseTime = 0;
             maxResponseTime = 0;
@@ -130,6 +132,7 @@ public class SvcMonitor implements AsyncService, SimpleService {
             ++timeoutCount;
         }
         if( r instanceof SvcResponse) {
+            ++responseOnReqCount;
             SvcResponse rr = (SvcResponse)r;
             if( rr.getResultCode() < 0) {
                 ++errorsCount;
@@ -207,9 +210,10 @@ public class SvcMonitor implements AsyncService, SimpleService {
     @Override
     public Map<String, Object> getStatusVars() {
         Map<String,Object> m = new TreeMap<String,Object>();
-        m.put( "Invocations", invocationsCount);
-        m.put( "Errors", "" + errorsCount);
-        m.put( "TimeOuts", "" + timeoutCount);
+        m.put( "Count", invocationsCount);
+        m.put( "ErrorCount", errorsCount);
+        m.put( "TimeOuts", timeoutCount);
+        m.put( "ResponseOnReqCount", responseOnReqCount);
         m.put( "LastResponseTime", lastResponseTime);
         m.put( "AvgResponseTime", avgResponseTime);
         m.put( "MaxResponseTime", maxResponseTime);

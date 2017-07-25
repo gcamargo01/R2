@@ -19,7 +19,6 @@ import uy.com.r2.core.api.SvcException;
  * @author G.Camargo
  */
 public class NullAsyncService implements AsyncService {
-    private final static String SVC_GIVEANERROR = "GiveAnError";
     private final static Logger LOG = Logger.getLogger(NullAsyncService.class);
      
     /** Get the configuration descriptors of this module.
@@ -51,7 +50,7 @@ public class NullAsyncService implements AsyncService {
     public SvcMessage onRequest( SvcRequest req, Configuration cfg) throws Exception {
         /*
         // Service implementation test
-        if( req.getServiceName().equals( SVC_GIVEANERROR)) {
+        if( req.getServiceName().equals( "GiveAnError")) {
             throw new SvcException( SvcResponse.MSG_INVALID_SERVICE
                     + req.getServiceName(), SvcResponse.RES_CODE_INVALID_SERVICE);
         }    
