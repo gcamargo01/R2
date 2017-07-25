@@ -155,7 +155,7 @@ public class SvcResponse extends SvcMessage implements Serializable {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();  
-        sb.append( ( resultCode >= 0)? "RESPONSE ":  "ERROR-RESPONSE ");
+        sb.append( ( resultCode >= 0)? "RESPONSE ": "ERROR-RESPONSE ");
         sb.append( getRequestId());
         sb.append( ' ');
         sb.append( responseTime);
