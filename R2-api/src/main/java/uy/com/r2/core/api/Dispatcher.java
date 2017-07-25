@@ -1,7 +1,7 @@
 /* Dispatcher.java */
 package uy.com.r2.core.api;
 
-/** Interface to call and manage execution of some service modules intances.
+/** Interface to call and manage execution of some service modules instances.
  * @author G.Camargo
  */
 public interface Dispatcher extends Module {
