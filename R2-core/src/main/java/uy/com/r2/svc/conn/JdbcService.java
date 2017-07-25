@@ -21,6 +21,9 @@ import uy.com.r2.core.api.SvcMessage;
 
 
 /** JDBC service module.
+ * Its a very interesting idea to make a service just writing its query,
+ * but it need some work to be really useful, as it can be.
+ * This is a reference implementation !!!!.
  * @author G.Camargo
  */
 public class JdbcService implements AsyncService {

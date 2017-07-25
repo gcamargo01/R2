@@ -21,6 +21,7 @@ import uy.com.r2.core.api.SvcMessage;
 
 /** HTTP client connector.
  * It invokes a HTTP service to getDataField the response.
+ * This is a reference implementation !!!!.
  * @author G.Camargo
  */
 public class HttpClient implements AsyncService {
