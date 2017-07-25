@@ -47,7 +47,9 @@ public class SimpleDispatcher implements Dispatcher, CoreModule {
         RunningPipeline rp = new RunningPipeline( modsToRun, req);
         runPipeMap.put( req.getRequestId(), rp);
         // Run to the end
-        return rp.getFinalResponse();
+        SvcResponse resp = rp.getFinalResponse();
+        runPipeMap.remove( req.getRequestId());
+        return resp;
     }
     
     /** Dispatch the execution of a specified service.
@@ -116,6 +118,7 @@ public class SimpleDispatcher implements Dispatcher, CoreModule {
     @Override
     public Map<String,Object> getStatusVars() {
         Map<String,Object> map = new TreeMap<String,Object>();
+        map.put( "RunningPipelines", runPipeMap.size());
         Set<String> s = kernel.getModuleNames();
         s.remove( SvcCatalog.DISPATCHER_NAME); // Avoid Loop, it is the Dispatcher
         for( String m: kernel.getModuleNames()) {
