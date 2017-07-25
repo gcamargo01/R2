@@ -167,10 +167,8 @@ public class ModuleInfo {
     /** Running instances accounting, if can add one more. */
     boolean takeOne() {
         if( concCtrl) {
-            LOG.trace( "activeCount ***** " + activeCount + " " + Thread.currentThread().getName());
             synchronized( lockConcCtrl) {  
                 if( activeCount >= limitActiveCount) {
-                    LOG.trace( "NO takeOne ***** " + activeCount);
                     return false;
                 }
                 ++activeCount;
@@ -178,7 +176,6 @@ public class ModuleInfo {
                     topActiveCount = activeCount;
                 }
             }
-            LOG.trace( "activeCount ok ------ " + activeCount);
         }
         return true;
     }
@@ -191,7 +188,6 @@ public class ModuleInfo {
                     --activeCount;
                 }
             }
-            LOG.trace( "activeCount relsease ------ " + activeCount);
         }
     }
     
