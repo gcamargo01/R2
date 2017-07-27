@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>uy.com.r2</groupId>
+        <artifactId>R2</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+
+    <groupId>uy.com.r2</groupId>
+    <artifactId>R2-ejb-sample</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>R2-ejb-sample</name>
+    <description>R2 EJB3 sample service</description>
+
+    <modules>
+        <module>R2-ejb-ejb</module>
+        <module>R2-ejb-ear</module>
+    </modules>
+
+    <properties>
+        <!-- EAP component version management BOM -->
+        <version.jboss.bom.eap>7.0.0.GA</version.jboss.bom.eap>
+
+        <!-- WildFly Maven plug-in to deploy your WAR to a local JBoss EAP container -->
+        <version.wildfly.maven.plugin>1.0.2.Final</version.wildfly.maven.plugin>
+
+        <!-- EAP component version management BOM -->
+        <version.jboss.bom.eap>7.0.0.GA</version.jboss.bom.eap>
+    </properties>
+
+    <!--
+    <dependencyManagement>
+        <dependencies>
+            - Define the version of the EJB jar so that we don't need
+                to repeat ourselves in every module -
+            <dependency>
+                <groupId>org.jboss.quickstarts.eap</groupId>
+                <artifactId>jboss-ejb-in-ear-ejb</artifactId>
+                <version>${project.version}</version>
+                <type>ejb</type>
+            </dependency>
+
+            - Define the version of the WAR so that we don't need to repeat
+                ourselves in every module -
+            <dependency>
+                <groupId>org.jboss.quickstarts.eap</groupId>
+                <artifactId>jboss-ejb-in-ear-web</artifactId>
+                <version>${project.version}</version>
+                <type>war</type>
+                <scope>compile</scope>
+            </dependency>
+
+            - JBoss distributes a complete set of Java EE APIs including a Bill
+                of Materials (BOM). A BOM specifies the versions of a "stack" (or a collection)
+                of artifacts. We use this here so that we always get the correct versions
+                of artifacts. Here we use the jboss-eap-javaee7 stack (you can
+                read this as the JBoss stack of the Java EE APIs and related components.  -
+            <dependency>
+                <groupId>org.jboss.bom</groupId>
+                <artifactId>jboss-eap-javaee7</artifactId>
+                <version>${version.jboss.bom.eap}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+    -->
+        
+    <build>
+        <plugins>
+                <!-- The WildFly plug-in deploys your ear to a local JBoss EAP container -->
+                <!-- Due to Maven's lack of intelligence with EARs we need
+                    to configure the WildFly Maven plug-in to skip deployment for all modules.
+                    We then enable it specifically in the ear module. -->
+            <plugin>
+                <groupId>org.wildfly.plugins</groupId>
+                <artifactId>wildfly-maven-plugin</artifactId>
+                <version>${version.wildfly.maven.plugin}</version>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
+
