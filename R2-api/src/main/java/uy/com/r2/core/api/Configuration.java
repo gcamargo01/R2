@@ -4,13 +4,15 @@ package uy.com.r2.core.api;
 import java.net.URL;
 import java.util.Map;
 import java.util.TreeMap;
+import java.io.Serializable;
 
 /** Module configuration.
  * A Map of environment settings, each one with its own 
  * {@link uy.com.r2.core.api.ConfigItemDescriptor} and actual value.
  * @author G.Camargo
  */
-public class Configuration {
+public class Configuration implements Serializable{
+    private static final long serialVersionUID = 1L;
     
     private Map<String,Object>cfg = new TreeMap<>();
     private boolean changed = true;
