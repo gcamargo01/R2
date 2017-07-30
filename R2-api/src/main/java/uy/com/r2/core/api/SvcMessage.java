@@ -1,6 +1,7 @@
 /* SvcMessage.java */
 package uy.com.r2.core.api;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -11,7 +12,8 @@ import java.util.Map;
  * It hast a "payload" data stored ia a Multi-Map (Map of Lists).
  * @author G.Camargo
  */
-public abstract class SvcMessage {
+public abstract class SvcMessage implements Serializable {
+    private static final long serialVersionUID = 1L;
     private final Map<String,List<Object>> payload;
     protected String requestId;
     
