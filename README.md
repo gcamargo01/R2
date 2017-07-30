@@ -1,5 +1,5 @@
 # R2
-An easy way to develop back-end systems
+An easy way to expose back-end 24x7 services
 
 A set of interfaces to break down the business critical server in modules, 
 like microservices, reaching this benefits:
