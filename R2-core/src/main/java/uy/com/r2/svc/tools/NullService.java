@@ -59,7 +59,6 @@ public class NullService implements SimpleService {
     public Map<String, Object> getStatusVars() {
         Map<String,Object> m = new HashMap<String,Object>();
         m.put( "Version", "$Revision: 1.1 $");
-        // ...
         return m;
     }
 
