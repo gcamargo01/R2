@@ -6,7 +6,6 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import org.apache.log4j.Logger;
 import uy.com.r2.core.api.ConfigItemDescriptor;
@@ -24,10 +23,8 @@ import uy.com.r2.core.api.SvcResponse;
 public class SimpleDispatcher implements Dispatcher, CoreModule {
     private static final Logger LOG = Logger.getLogger( SimpleDispatcher.class);
     
-    private static final SvcCatalog kernel = SvcCatalog.getCatalog();
     private final ConcurrentHashMap<String,RunningPipeline> runPipeMap = new ConcurrentHashMap();
-    private String defaultServicePipeline[] = "Null9,Null8,Null7,Null6,Null5,Null4,Null3,Null2,Null1,Null0,Loop".split( ","); // !!!!
-            //= "";
+    private String defaultServicePipeline[] = new String[ 0];
     private Map<String,String> servicePipelinesMap = new HashMap();
       
     SimpleDispatcher( ) { }
@@ -119,14 +116,6 @@ public class SimpleDispatcher implements Dispatcher, CoreModule {
     public Map<String,Object> getStatusVars() {
         Map<String,Object> map = new TreeMap<String,Object>();
         map.put( "RunningPipelines", runPipeMap.size());
-        Set<String> s = kernel.getModuleNames();
-        s.remove( SvcCatalog.DISPATCHER_NAME); // Avoid Loop, it is the Dispatcher
-        for( String m: kernel.getModuleNames()) {
-            Map<String,Object> sv = kernel.getModuleInfo( m).getStatusVars();
-            for( String ks: sv.keySet()) {
-                map.put( m + "." + ks, sv.get( ks));
-            }
-        }
         return map;
     } 
     
@@ -157,7 +146,7 @@ public class SimpleDispatcher implements Dispatcher, CoreModule {
     public List<ConfigItemDescriptor> getConfigDescriptors() {
         LinkedList<ConfigItemDescriptor> l = new LinkedList();
         l.add( new ConfigItemDescriptor( "DefaultServicePipeline", ConfigItemDescriptor.STRING,
-                "Services to dispatcher separated by comma (,)", null));
+                "Default services to dispatche separated by comma (,)", null));
         l.add( new ConfigItemDescriptor( "ServicePipeline.*", ConfigItemDescriptor.STRING,
                 "Services to dispatcher separated by comma (,)", null));
         return l;        
