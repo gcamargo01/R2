@@ -10,6 +10,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import org.apache.log4j.Logger;
 import uy.com.r2.core.api.Dispatcher;
 import uy.com.r2.core.api.ConfigItemDescriptor;
@@ -110,6 +111,7 @@ public class SvcCatalog implements CoreModule {
      */
     public void installModule( String moduleName, Module moduleImpl, Configuration cfg) 
             throws Exception {
+        LOG.info( "installModule " + moduleName + " " + cfg.toString());
         // setup modules map
         if( modules.containsKey( moduleName)) {
             throw new Exception( "Module '" + moduleName + "' is already installed.");
@@ -130,10 +132,10 @@ public class SvcCatalog implements CoreModule {
         if( cfg == null) {
             cfg = new Configuration();
         }
-        LOG.trace( "updateConfiguration " + moduleName + " " + cfg.toString());
+        LOG.info( "updateConfiguration " + moduleName + " " + cfg.toString());
         // setConfiguration
         ModuleInfo mi = modules.get( moduleName);
-        if( mi == null) {
+        if( mi == null) {  // New module
             installModule( moduleName, cfg);
         } else if( !mi.isTheSameClass( cfg)                    // If diff class
                 && mi.getConfiguration().containsKey( "class") // && has cfg 
@@ -153,7 +155,7 @@ public class SvcCatalog implements CoreModule {
      * @throws Exception Not found 
      */
     public void uninstallModule( String moduleName) throws Exception {
-        LOG.trace( "uninstallModule " + moduleName);
+        LOG.info( "uninstallModule " + moduleName);
         if( CATALOG_NAME.equals( moduleName) || DISPATCHER_NAME.equals( moduleName)) {
             LOG.info( "Module " + moduleName + " can't be uninstalled, ignored");
             return;
@@ -179,7 +181,8 @@ public class SvcCatalog implements CoreModule {
      * @return Set of Strings
      */
     public Set<String> getModuleNames( ) {
-        return modules.keySet();
+        // return ordered clone
+        return new TreeSet( modules.keySet());
     } 
     
     /** Test if system is shutting down.
