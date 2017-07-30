@@ -1,8 +1,4 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+/* RunningPipeline.java */
 package uy.com.r2.core;
 
 import org.apache.log4j.Logger;
@@ -43,7 +39,7 @@ public class RunningPipeline {
         }
         sb.append( '[');
         this.reqAndModules = sb.toString();
-        //LOG.debug( "new RunningPipeline( " + req.getRequestId() + " ) " + toString());
+        //LOG.trace( "new RunningPipeline( " + req.getRequestId() + " ) " + toString());
     }
     
     /** Running */
