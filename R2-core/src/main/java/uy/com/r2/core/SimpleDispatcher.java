@@ -148,7 +148,7 @@ public class SimpleDispatcher implements Dispatcher, CoreModule {
         l.add( new ConfigItemDescriptor( "DefaultServicePipeline", ConfigItemDescriptor.STRING,
                 "Default services to dispatche separated by comma (,)", null));
         l.add( new ConfigItemDescriptor( "ServicePipeline.*", ConfigItemDescriptor.STRING,
-                "Services to dispatcher separated by comma (,)", null));
+                "Services to dispatcher by node, separated by comma (,)", null));
         return l;        
     }
 
