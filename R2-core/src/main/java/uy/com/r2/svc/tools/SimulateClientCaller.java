@@ -37,6 +37,7 @@ public class SimulateClientCaller implements CoreModule {
     private int iterations = 0;
     private int responseTimeSum = 0;
     private String serviceName;
+    private String node = "TEST";
     private final Object lock = new Object();
     
     /** Get the configuration descriptors of this module.
@@ -59,6 +60,8 @@ public class SimulateClientCaller implements CoreModule {
                 "Module name to be tested", null));
         l.add( new ConfigItemDescriptor( "Service", ConfigItemDescriptor.STRING,
                 "Service name to be called", null));
+        l.add( new ConfigItemDescriptor( "Node", ConfigItemDescriptor.STRING,
+                "Client node name used in the test", "TEST"));
         l.add( new ConfigItemDescriptor( "InvocationTimeout", ConfigItemDescriptor.INTEGER,
                 "time-out in mS", null));
         l.add( new ConfigItemDescriptor( "DumpStatus", ConfigItemDescriptor.BOOLEAN,
@@ -80,6 +83,7 @@ public class SimulateClientCaller implements CoreModule {
         }
         moduleName = cfg.getString( "Next");
         serviceName = cfg.getString( "Service");
+        node = cfg.getString( "Node");
         invocationTimeout = cfg.getInt( "InvocationTimeout", 1000);
         // reset statistics
         iterations = 0;
@@ -183,7 +187,7 @@ public class SimulateClientCaller implements CoreModule {
                         Map<String,List<Object>> data = SvcMessage.addToPayload( null, "Data", m);
                         SvcMessage.addToPayload( data, "ItCount", i);
                         SvcMessage.addToPayload( data, "ThName", getName());
-                        SvcRequest rq = new SvcRequest( "TEST", i, 0, serviceName, data, invocationTimeout);
+                        SvcRequest rq = new SvcRequest( node, i, 0, serviceName, data, invocationTimeout);
                         //long t0 = System.currentTimeMillis();
                         long t0 = System.nanoTime();
                         //SvcResponse rp = SvcCatalog.getDispatcher().callService( moduleName, rq);

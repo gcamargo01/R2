@@ -68,20 +68,20 @@ public class SvcMonitor implements AsyncService, SimpleService {
      */
     @Override
     public List<ConfigItemDescriptor> getConfigDescriptors() {
-        log.debug( name + " getConfigDescriptors");
         List<ConfigItemDescriptor> l = svc.getConfigDescriptors();
         if( l == null) {
             l = new LinkedList();
         }
+        log.info( name + " getConfigDescriptors: " + l);
         l.add( new ConfigItemDescriptor( "MonitorLastNr", ConfigItemDescriptor.BOOLEAN, 
                 "Keep last messages to show it", "0"));
         return l;
     }
     
     private void setConfiguration( Configuration cfg) throws Exception {
-        log.trace( name + " Configuration " + cfg);
         // Resest statistics
         if( cfg.isChanged()) {
+            log.info( name + " New Configuration " + cfg);
             setupTime = System.currentTimeMillis();
             invocationsCount = 0;
             errorsCount = 0;
