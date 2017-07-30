@@ -110,11 +110,11 @@ public class JsonDeployer implements Runnable {
                     stopping = true;
                 }
             } while( !stopping);
-            LOG.debug( "Stopping...");
         } catch( Exception x) {
             LOG.error( "Fatal error stop Deployer" , x);
         }
         // Undeploy in reverse order
+        LOG.info( "Undeploy all...");
         for( String fn : filesMap.descendingKeySet()) {
             undeploy( fn);
         }
@@ -207,8 +207,8 @@ public class JsonDeployer implements Runnable {
      * @throws Exception Unexpected error
      */
     public void stop() throws Exception {
+        LOG.info( "Stop requested...");
         stopping = true;
-        LOG.trace( "Stop requested...");
     }
     
     /** Entry point to Deployer.
