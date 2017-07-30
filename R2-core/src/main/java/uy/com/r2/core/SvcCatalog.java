@@ -29,7 +29,7 @@ public class SvcCatalog implements CoreModule {
     private static final Logger LOG = Logger.getLogger(SvcCatalog.class);
     private static final Object LOCK = new Object();
     private static SvcCatalog catalog = null;
-    private static Dispatcher dispatcher = new SimpleDispatcher();
+    private static Dispatcher dispatcher = null;
 
     private boolean stopping = false;
     private final HashMap<String,ModuleInfo> modules;
@@ -37,6 +37,8 @@ public class SvcCatalog implements CoreModule {
     private SvcCatalog() {  // Private constructor.
         modules = new HashMap();
         modules.put( CATALOG_NAME, new ModuleInfo( CATALOG_NAME, this));
+        dispatcher = new SimpleDispatcher();
+        modules.put( DISPATCHER_NAME, new ModuleInfo( DISPATCHER_NAME, dispatcher));
     }  
     
     /** Get the Catalog instance.
@@ -74,8 +76,12 @@ public class SvcCatalog implements CoreModule {
         }
         String className = "" + cfg.getString( "class");
         LOG.trace( "installModule " + moduleName + " " + className);
-        // Kernel name used, set its configuration
-        if( CATALOG_NAME.equals( moduleName) || DISPATCHER_NAME.equals( moduleName)) {
+        // Sepecial names Catalog & Deployer
+        if( CATALOG_NAME.equals( moduleName)) {
+            return;
+        }
+        if( DISPATCHER_NAME.equals( moduleName)) {
+            updateConfiguration( DISPATCHER_NAME, cfg);
             return;
         }
         // Load from the net
@@ -131,7 +137,8 @@ public class SvcCatalog implements CoreModule {
             installModule( moduleName, cfg);
         } else if( !mi.isTheSameClass( cfg)                    // If diff class
                 && mi.getConfiguration().containsKey( "class") // && has cfg 
-                && !CATALOG_NAME.equals( moduleName)) {           // && not Kernel
+                && !DISPATCHER_NAME.equals( moduleName)        // && not dispatcher
+                && !CATALOG_NAME.equals( moduleName)) {        // && not this
             uninstallModule( moduleName);     
             mi.setConfiguration( cfg);        // Do not re-enter
             installModule( moduleName, cfg);
@@ -147,7 +154,7 @@ public class SvcCatalog implements CoreModule {
      */
     public void uninstallModule( String moduleName) throws Exception {
         LOG.trace( "uninstallModule " + moduleName);
-        if( CATALOG_NAME.equals( moduleName)) {
+        if( CATALOG_NAME.equals( moduleName) || DISPATCHER_NAME.equals( moduleName)) {
             LOG.info( "Module " + moduleName + " can't be uninstalled, ignored");
             return;
         }
@@ -204,7 +211,6 @@ public class SvcCatalog implements CoreModule {
         if( cfg.isChanged()) {
             try {
                 dispatcher = (Dispatcher)Class.forName( cfg.getString( "Dispatcher")).newInstance();
-                modules.put( DISPATCHER_NAME, new ModuleInfo( DISPATCHER_NAME, dispatcher));
             } catch( Exception x) {
                 LOG.warn( "can't instance Dispatcher", x);
             }    
@@ -216,10 +222,17 @@ public class SvcCatalog implements CoreModule {
      */
     @Override
     public Map<String,Object> getStatusVars() {
-        Map<String,Object> m = new TreeMap();
-        m.put( "Version", "$Revision: 1.1 $");
-        m.put( "ModuleNames", getModuleNames());
-        return m;
+        Map<String,Object> map = new TreeMap();
+        map.put( "ModuleNames", getModuleNames());
+        Set<String> mns = getModuleNames();
+        mns.remove( SvcCatalog.CATALOG_NAME);  // Avoid Loop
+        for( String n: mns) {
+            Map<String,Object> v = getModuleInfo( n).getStatusVars();
+            for( String k: v.keySet()) {
+                map.put( n + "." + k, v.get( k));
+            }
+        }
+        return map;
     }
     
     /** Release all the allocated resources. */
