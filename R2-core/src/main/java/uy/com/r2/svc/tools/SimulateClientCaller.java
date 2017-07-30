@@ -105,7 +105,7 @@ public class SimulateClientCaller implements CoreModule {
         time = responseTimeSum / testThreads;
         Thread.sleep( 1);  // Let all finalize
         if( cfg.getBoolean( "DumpStatus")) {
-            Map<String,Object> m = SvcCatalog.getDispatcher().getStatusVars();
+            Map<String,Object> m = SvcCatalog.getCatalog().getStatusVars();
             for( String k: m.keySet()) {
                 LOG.warn( "Status " + k + "=" + m.get( k));
             }
