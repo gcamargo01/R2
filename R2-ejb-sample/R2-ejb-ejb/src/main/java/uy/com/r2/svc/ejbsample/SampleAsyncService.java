@@ -21,32 +21,31 @@ public class SampleAsyncService implements AsyncService {
     
     @Override
     public SvcMessage onRequest( SvcRequest req, Configuration cfg) throws Exception {
-        LOG.debug( "arranca invocacion " + req);
+        LOG.debug( "arranca invocacion " + req + " " + cfg);
         req.put( "DatoInvocacion", "" + this.toString());
-        if( cfg.getBoolean( "ExceptionInvocacion")) {
+        if( cfg.getBoolean( "ExceptionOnRequest")) {
             throw new Exception( "Exception inventado");
         }    
-        try {
-            Thread.sleep( cfg.getInt( "Tmp"));
-        } catch( Exception xx) { }
-        if( cfg.getBoolean( "Eco")) {
-            req.put( "Dato", 0);
-        }    
-        LOG.debug( "finaliza invoacion " + req);
+        if( cfg.getInt( "Tmp") > 0) {
+            try {
+                Thread.sleep( cfg.getInt( "Tmp"));
+            } catch( Exception xx) { }
+        }
         return req;
     } 
 
     @Override
     public SvcResponse onResponse( SvcResponse resp, Configuration cfg) throws Exception {
-        LOG.debug( "arranca respuesta " + resp);
-        if( cfg.getBoolean( "ExceptionRespuesta")) {
+        LOG.debug( "arranca respuesta " + resp + " " + cfg);
+        if( cfg.getBoolean( "ExceptionOnresponse")) {
             throw new Exception( "Exception inventado");
         }    
-        try {
-            Thread.sleep( cfg.getInt( "Tmp"));
-        } catch( Exception xx) { }
+        if( cfg.getInt( "Tmp") > 0) {
+            try {
+                Thread.sleep( cfg.getInt( "Tmp"));
+            } catch( Exception xx) { }
+        }
         resp.put( "DatpRespuesta", "" + this.toString());
-        LOG.debug( "finaliza respuesta " + resp);
         return resp;
     } 
 
