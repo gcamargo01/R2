@@ -42,7 +42,7 @@ public class RunningPipeline {
         //LOG.trace( "new RunningPipeline( " + req.getRequestId() + " ) " + toString());
     }
     
-    /** Running */
+    /** Running step, process one module a time */
     void run () {
         try {
             if( index >= moduleNames.length) {

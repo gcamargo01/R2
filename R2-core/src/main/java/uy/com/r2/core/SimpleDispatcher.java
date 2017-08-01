@@ -17,7 +17,8 @@ import uy.com.r2.core.api.SvcResponse;
 
 
 /** Direct and simple dispatcher.
- * This is a minimal dispatcher, it uses only one thread.
+ * It uses only one thread. The thread given by it's caller is used to
+ * run the service modules pipeline.
  * @author G.Camargo
  */
 public class SimpleDispatcher implements Dispatcher, CoreModule {
@@ -33,6 +34,7 @@ public class SimpleDispatcher implements Dispatcher, CoreModule {
      * @param req Request to dispatch
      * @return SvcResponse or error packed as a response 
      */
+    @Override
     public SvcResponse call( SvcRequest req) {
         // Build the Running pipe
         String modsToRun[];
