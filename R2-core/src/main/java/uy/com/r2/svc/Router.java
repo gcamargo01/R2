@@ -15,14 +15,14 @@ import uy.com.r2.core.api.Configuration;
 import uy.com.r2.core.api.SvcMessage;
 
 
-/** This module determines which node invoke next.
- * It is based on a service-module map. the default module is the "Next" one.
+/** A special service module to control which service is called next.
+ * It is based on a service-module map. If no one is found, the default action
+ * is run the next defined by the Dispatcher pipeline.
  * @author G.Camargo
  */
 public class Router implements AsyncService {
     private static final Logger log = Logger.getLogger( Router.class);
-    private HashMap<String,ServiceInfo> servMods = new HashMap();
-    private HashMap<String,String> nextSvcs = null;
+    private HashMap<String,ServiceInfo> defRoutes = new HashMap();
     
     /** Get the configuration descriptors of this module.
      * @return ConfigItemDescriptor List
@@ -39,16 +39,17 @@ public class Router implements AsyncService {
         if( cfg.isChanged()) {
             return;
         }
-        servMods = new HashMap();
+        defRoutes = new HashMap();
         Map<String,String> sm = cfg.getStringMap( "Service.*");
         for( String k: sm.keySet()) {
             String sn = k.substring( 8); 
-            log.debug( "Service " + sn + " = " + sm.get( k));
-            ServiceInfo dm = new ServiceInfo( sn, sm.get( k));
-            servMods.put( sn, dm);
+            String sd = sm.get( k);
+            log.debug( "Service " + sn + " = " + sd);
+            ServiceInfo dm = new ServiceInfo( sn, sd);
+            defRoutes.put( sn, dm);
             // Verifica si esta instanciado
             if( SvcCatalog.getCatalog().getModuleInfo( cfg.getString( sn)) == null) {
-                log.warn( "Service routed not installed " + sn);
+                log.warn( "Defined service not found " + sd + " for service " + sn);
             }
         }
     }
@@ -68,13 +69,13 @@ public class Router implements AsyncService {
     @Override
     public SvcMessage onRequest( SvcRequest req, Configuration cfg) throws Exception {
         setConfiguration( cfg);
-        ServiceInfo ds = servMods.get( req.getServiceName());
+        ServiceInfo ds = defRoutes.get( req.getServiceName());
         SvcResponse resp;
         if( ds == null) {
-            resp = SvcCatalog.getDispatcher().callService( nextSvcs.get( ""), req);
+            return req;  // Lets go on
         } else {
             ++ds.uses;
-            resp = SvcCatalog.getDispatcher().callService( nextSvcs.get( ds.moduleName), req);
+            resp = SvcCatalog.getDispatcher().callService( ds.moduleName, req);
             if( resp.getResultCode() < 0) {
                 ++ds.errors;
             }
@@ -101,8 +102,8 @@ public class Router implements AsyncService {
     @Override
     public Map<String, Object> getStatusVars() {
         HashMap<String, Object> map = new HashMap<String, Object>();
-        for( String s: servMods.keySet()) {
-            servMods.get( s).addStatus( map);
+        for( String s: defRoutes.keySet()) {
+            defRoutes.get( s).addStatus( map);
         }
         return map;
     }
