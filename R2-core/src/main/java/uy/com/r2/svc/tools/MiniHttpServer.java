@@ -25,7 +25,7 @@ import uy.com.r2.core.api.SvcRequest;
 import uy.com.r2.core.api.SvcResponse;
 
 /**
- * Mini HTTP server from remote R2 Server calls.
+ * Mini HTTP server, to process remote commands.
  *
  * @author G.Camargo
  */
