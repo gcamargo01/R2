@@ -16,7 +16,7 @@ like microservices, reaching this benefits:
     * On-line monitoring facility, to analize suspect modules (resources leakage)
     * Clustering, HA container frendly
     * Secure and robust (modules that avoid hacking)
-* Lightway
+* Lightweight
     * Extremly scalable (more than 1M module executions per second)
     * Optional non blocking implementations (asyncronous services)
     * Optional java stand-alone implementation (no container required)
