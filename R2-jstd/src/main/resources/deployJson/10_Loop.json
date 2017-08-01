@@ -1,6 +1,7 @@
 {
     "class": "uy.com.r2.svc.tools.Echo",
-    "Time": "100",
+    //"Time": 100,
+    "Time": 0,
     "ConcurrentCtrl": "false",
     "Monitor": false,
     "MonitorLastNr": "13"

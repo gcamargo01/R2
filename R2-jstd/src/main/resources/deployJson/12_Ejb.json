@@ -1,0 +1,10 @@
+{
+    "class": "uy.com.r2.svc.ejb3.EjbAsyncProxy",
+    "AppName": "R2-ejb-sample",
+    "EjbRemoteServer": "R2-ejb-ejb",
+    "ServiceImpl": "SampleAsyncService",
+    "ConcurrentCtrl": false,
+    "Monitor": false,
+    "MonitorLastNr": 0
+}    
+

@@ -1,0 +1,6 @@
+{
+    "DefaultServicePipeline": "NullA9,NullA8,NullA7,NullA6,NullA5,NullA4,Null3,Null2,Null1,Null0,Loop",
+    "ServicePipeline.TestEJB": "Ejb,Ejb,Ejb,Ejb,Ejb,Ejb,Ejb,Ejb,Ejb,Ejb,Loop",
+    "ServicePipeline.Test10": "Null0,Null0,Null0,Null0,Null0,Null0,Null0,Null0,Null0,Null0,Loop"
+}    
+
