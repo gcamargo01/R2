@@ -22,7 +22,7 @@ import uy.com.r2.svc.tools.SvcMonitor;
  * To be used only in this package. 
  * @author Gustavo Camargo
  */
-public class ModuleInfo {
+public class ModuleInfo implements Module {
     private final static Logger LOG = Logger.getLogger(ModuleInfo.class);
     private final static int DEFAULT_TIME_OUT = 10000;
     private final String moduleName;
@@ -69,13 +69,6 @@ public class ModuleInfo {
         return ( monitorImpl != null)? monitorImpl: moduleImpl;
     }
     
-    /** Get the actual module configuration.
-     * @return Properties
-     */
-    Configuration getConfiguration() {
-        return cfg;
-    }
-
     /** Test if is the same implementation class.
      * @return Same implementation
      */
@@ -86,11 +79,18 @@ public class ModuleInfo {
         return cfg.getString( "class").equals( cfg2.getString( "class"));
     }
 
+    /** Get the actual module configuration.
+     * @return Properties
+     */
+    public Configuration getConfiguration() {
+        return cfg;
+    }
+
     /** Set the new module configuration.
      * @param cfg New configuration
      * @throws Exception Unexpected error
      */
-    void setConfiguration( Configuration cfg) throws Exception {
+    public void setConfiguration( Configuration cfg) throws Exception {
         // Add generic config descriptors
         List<ConfigItemDescriptor> cdl = getImplementation().getConfigDescriptors();
         if( cdl == null) {
@@ -116,29 +116,27 @@ public class ModuleInfo {
         // Log config status
         if( LOG.isTraceEnabled()) {
             Map<String,String> cfgItems = cfg.getStringMap( "*");
-            LOG.trace( "Config: #### " + moduleName);
-            LOG.trace( "Config: ## Module implementation class");
-            LOG.trace( "Config: class=" + moduleImpl.getClass().getName());
+            LOG.trace( "Config: " + moduleName + " class=" + moduleImpl.getClass().getName());
             cfgItems.remove( "class");
             for( ConfigItemDescriptor cd: cdl) {
                 if( !cd.getKey().contains( "*")) {    // Simple cfg.
                     if( cfg.containsKey( cd.getKey())) {
-                        LOG.trace( "Config: ## " + cd.getDescription());
-                        LOG.trace( "Config: " + cd.getKey() + "=" + cfg.getString( cd.getKey()));
+                        LOG.trace( "Config:   " + cd.getDescription());
+                        LOG.trace( "Config:   " + cd.getKey() + "=" + cfg.getString( cd.getKey()));
                         cfgItems.remove( cd.getKey());
                     }
                 } else {
                     for( String k: cfg.getStringMap( cd.getKey()).keySet()) {
-                        LOG.trace( "Config: ## " + cd.getDescription());
+                        LOG.trace( "Config:   " + cd.getDescription());
                         String kk = cd.getKey().replace( "*", k);
-                        LOG.trace( "Config: " + kk + "=" + cfg.getString( kk));
+                        LOG.trace( "Config:   " + kk + "=" + cfg.getString( kk));
                         cfgItems.remove( kk);
                     }
                 }
             }
             for( String k: cfgItems.keySet()) {
-               LOG.trace( "Config: ## Not recognized configuration:");
-               LOG.trace( "Config: " + k + "=" + cfg.getString( k));
+               LOG.trace( "Config: Not recognized configuration! :");
+               LOG.trace( "Config:   " + k + "=" + cfg.getString( k));
             }
         }
         // Reset status
@@ -177,6 +175,16 @@ public class ModuleInfo {
         }
         return true;
     }
+
+    /*
+    int getTimeOut() {
+        try {
+            return cfg.getInt( "TimeOut", DEFAULT_TIME_OUT);
+        } catch( Exception x) {
+            return DEFAULT_TIME_OUT;
+        }
+    }
+    */
 
     /** Decrement running instances accounting. */
     void releaseOne() {
@@ -240,9 +248,12 @@ public class ModuleInfo {
         return msg;
     }
 
-    /** Report module status plus active count */
-    Map<String,Object> getStatusVars() {
-        Map<String,Object> m = new TreeMap<String,Object>();
+    /** Report module status plus active count.
+     * @return Status vars Map 
+     */
+    @Override
+    public Map<String,Object> getStatusVars() {
+        Map<String,Object> m = new TreeMap();
         m.put( "Count", count);
         m.put( "ErrorCount", errorCount);
         m.put( "ServiceLevel", 1 - errorCount / ( count + 0.000001));
@@ -257,20 +268,20 @@ public class ModuleInfo {
         return m;        
     }
     
-    int getTimeOut() {
-        try {
-            return cfg.getInt( "TimeOut", DEFAULT_TIME_OUT);
-        } catch( Exception x) {
-            return DEFAULT_TIME_OUT;
-        }
-    }
-
-    List<ConfigItemDescriptor> getConfigDescriptors() {
+    /** Get configuration descriptors. */
+    @Override
+    public List<ConfigItemDescriptor> getConfigDescriptors() {
         List<ConfigItemDescriptor> l = getImplementation().getConfigDescriptors();
         if( l == null) {
             l = new LinkedList();
         }
         return l;
+    }
+
+    /** Stop service. */
+    @Override
+    public void shutdown() {
+        getImplementation().shutdown();
     }
     
     /** SimpleService wrapper as a AsyncService. */

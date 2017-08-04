@@ -26,7 +26,7 @@ public class MBeanConfigurator implements DynamicMBean {
     private final HashMap<String,ConfigItemDescriptor> cfgDescMap;
     private final HashMap<String,String> cfgChgdValues = new HashMap<String,String>();
     
-    static void moduleUpdate( String moduleName) {
+    public static void moduleUpdate( String moduleName) {
         if( firstTime) {
             firstTime = false;
             moduleUpdate( SvcCatalog.class.getSimpleName());
@@ -54,7 +54,7 @@ public class MBeanConfigurator implements DynamicMBean {
         }
     }
     
-    static void moduleUndeploy( String moduleName) {
+    public static void moduleUndeploy( String moduleName) {
         // JMX
         try {
             MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
