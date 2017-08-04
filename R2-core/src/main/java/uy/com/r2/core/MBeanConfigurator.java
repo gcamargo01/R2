@@ -14,7 +14,7 @@ import org.apache.log4j.Logger;
 import uy.com.r2.core.api.ConfigItemDescriptor;
 import uy.com.r2.core.api.Configuration;
 
-/** Dynamic MBean to configure.
+/** Dynamic MBean to control system configuration and status vars from JMX console.
  */
 public class MBeanConfigurator implements DynamicMBean {
     
