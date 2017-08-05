@@ -97,7 +97,7 @@ public class RunningPipeline {
      * @param moduleName The module to run now
      */
     void add( String moduleName) {
-        if( index >= moduleName.length()) {  // Expand the array
+        if( index >= moduleNames.length) {  // Expand the array
            String nmn[] = new String[ index + 10];
            System.arraycopy( moduleNames, 0, nmn, 0, moduleNames.length);
            moduleNames = nmn;
