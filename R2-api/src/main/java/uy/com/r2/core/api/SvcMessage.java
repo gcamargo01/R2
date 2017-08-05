@@ -72,10 +72,11 @@ public abstract class SvcMessage implements Serializable {
      * @return Data
      */
     public Map<String,List<Object>> put( String field, Object obj) {
-        List<Object> l = new LinkedList();
-        if( payload.containsKey( field) /*&& !data.get( field).isEmpty()*/) {
+        if( payload.containsKey( field)) {
             payload.remove( field);
         }
+        List<Object> l = new LinkedList();
+        l.add( obj);
         payload.put( field, l);
         return payload;
     }
