@@ -109,7 +109,7 @@ public class ModuleInfo implements Module {
             if( cd.getDefaultValue() != null &&           // has a default value
                     ( !cd.getKey().contains( "*")) &&     // Simple cfg. 
                     ( !cfg.containsKey( cd.getKey()))) {  // w/o given value in cfg
-                LOG.trace( moduleName + " set default " + cd.getKey() + "=" + cd.getDefaultValue());
+                //LOG.trace( moduleName + " set default " + cd.getKey() + "=" + cd.getDefaultValue());
                 cfg.put( cd.getKey(), cd.getDefaultValue());
             }
         }    
@@ -121,13 +121,13 @@ public class ModuleInfo implements Module {
             for( ConfigItemDescriptor cd: cdl) {
                 if( !cd.getKey().contains( "*")) {    // Simple cfg.
                     if( cfg.containsKey( cd.getKey())) {
-                        LOG.trace( "Config:   " + cd.getDescription());
+                        LOG.trace( "Config:   // " + cd.getDescription());
                         LOG.trace( "Config:   " + cd.getKey() + "=" + cfg.getString( cd.getKey()));
                         cfgItems.remove( cd.getKey());
                     }
                 } else {
                     for( String k: cfg.getStringMap( cd.getKey()).keySet()) {
-                        LOG.trace( "Config:   " + cd.getDescription());
+                        LOG.trace( "Config:   // " + cd.getDescription());
                         String kk = cd.getKey().replace( "*", k);
                         LOG.trace( "Config:   " + kk + "=" + cfg.getString( kk));
                         cfgItems.remove( kk);

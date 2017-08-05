@@ -16,7 +16,7 @@ import uy.com.r2.core.api.Dispatcher;
 import uy.com.r2.core.api.ConfigItemDescriptor;
 import uy.com.r2.core.api.Configuration;
 import uy.com.r2.core.api.Module;
-//import uy.com.r2.svc.tools.SvcManager;
+import uy.com.r2.svc.tools.SvcManager;
 
 /** Service modules catalog.
  * This module is only to be user locally, except getDispatcher() 
@@ -111,6 +111,9 @@ public class SvcCatalog implements CoreModule {
      */
     public void installModule( String moduleName, Module moduleImpl, Configuration cfg) 
             throws Exception {
+        if( cfg == null) {
+            cfg = new Configuration();
+        }
         LOG.info( "installModule " + moduleName + " " + cfg.toString());
         // setup modules map
         if( modules.containsKey( moduleName)) {
@@ -146,7 +149,7 @@ public class SvcCatalog implements CoreModule {
             installModule( moduleName, cfg);
         } else {
              mi.setConfiguration( cfg);
-             //SvcManager.onModuleUpdate( moduleName);
+             SvcManager.onModuleUpdate( moduleName);
         }
     }
      
