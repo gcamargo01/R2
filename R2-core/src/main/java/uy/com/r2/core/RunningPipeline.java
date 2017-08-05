@@ -13,7 +13,7 @@ public class RunningPipeline {
     private static final Logger LOG = Logger.getLogger( RunningPipeline.class);
     private final SvcCatalog core = SvcCatalog.getCatalog();
     private final SvcRequest req0;
-    private final String reqAndModules;
+    private final String toStrPrefix;
     private final Object lock = new Object();
     private String moduleNames[];
     private int index;
@@ -25,7 +25,6 @@ public class RunningPipeline {
      * @param req Request to process
      */
     RunningPipeline( String modules[], SvcRequest req) {
-        //this.msgId = req.getRequestId();
         this.moduleNames = modules;
         this.req0 = req;
         this.index = 0;
@@ -33,21 +32,16 @@ public class RunningPipeline {
         StringBuilder sb = new StringBuilder();
         sb.append( req0.getRequestId());
         sb.append( ": ");
-        for( String m: moduleNames) {
-            sb.append( m);
-            sb.append( ',');
-        }
-        sb.append( '[');
-        this.reqAndModules = sb.toString();
+        this.toStrPrefix = sb.toString();
         //LOG.trace( "new RunningPipeline( " + req.getRequestId() + " ) " + toString());
     }
     
     /** Running step, process one module a time */
     void run () {
         try {
-            if( index >= moduleNames.length) {
-                index = moduleNames.length - 1;
-                throw new Exception( "No next module on " + toString());
+            LOG.trace( "run index=" + index);
+            if( index >= moduleNames.length || moduleNames[ index] == null) {
+                throw new Exception( "Ended pipeline on " + toString());
             }
             String moduleName = moduleNames[ index];
             ModuleInfo mi = core.getModuleInfo( moduleName);
@@ -102,7 +96,7 @@ public class RunningPipeline {
            System.arraycopy( moduleNames, 0, nmn, 0, moduleNames.length);
            moduleNames = nmn;
         }
-        moduleNames[ ++index] = moduleName;
+        moduleNames[ index] = moduleName;
     }
     
     /** Blocking method to get the final response.
@@ -144,7 +138,12 @@ public class RunningPipeline {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append( reqAndModules);
+        sb.append( toStrPrefix);
+        for( String m: moduleNames) {
+            sb.append( m);
+            sb.append( ',');
+        }
+        sb.append( '[');
         sb.append( index);
         sb.append( "] ");
         sb.append( msg.toString());

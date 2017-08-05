@@ -1,7 +1,6 @@
 /* SimpleDispatcher.java */
 package uy.com.r2.core;
 
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.TreeMap;
@@ -24,9 +23,11 @@ import uy.com.r2.core.api.SvcResponse;
 public class SimpleDispatcher implements Dispatcher, CoreModule {
     private static final Logger LOG = Logger.getLogger( SimpleDispatcher.class);
     
-    private final ConcurrentHashMap<String,RunningPipeline> runPipeMap = new ConcurrentHashMap();
+    // Current running pipeline
+    private final Map<String,RunningPipeline> runningPipelines = new ConcurrentHashMap();
+    private Map<String,String[]> defPipes = new ConcurrentHashMap();
+    private Map<String,String> nodePipes = new ConcurrentHashMap();
     private String defaultServicePipeline[] = new String[ 0];
-    private Map<String,String> servicePipelinesMap = new HashMap();
       
     SimpleDispatcher( ) { }
     
@@ -36,18 +37,23 @@ public class SimpleDispatcher implements Dispatcher, CoreModule {
      */
     @Override
     public SvcResponse call( SvcRequest req) {
-        // Build the Running pipe
-        String modsToRun[];
-        if( servicePipelinesMap.containsKey( req.getClientNode())) {
-            modsToRun = servicePipelinesMap.get( req.getClientNode()).split( ",");           
-        } else {
-            modsToRun = defaultServicePipeline;
+        // Get the defined pipe to use
+        String modsToRun[] = defaultServicePipeline;
+        String rpn = nodePipes.get( req.getClientNode());
+        if( rpn != null) {   // Defined RunningPipe by name
+            String[] mtr = defPipes.get(  rpn);
+            if( mtr == null) {
+                LOG.warn( "RunningPipeline name '" + rpn + "' undefined, using default");
+            } else {
+                modsToRun = mtr;
+            }
         }
+        // Build the Running pipe
         RunningPipeline rp = new RunningPipeline( modsToRun, req);
-        runPipeMap.put( req.getRequestId(), rp);
+        runningPipelines.put( req.getRequestId(), rp);
         // Run to the end
         SvcResponse resp = rp.getFinalResponse();
-        runPipeMap.remove( req.getRequestId());
+        runningPipelines.remove( req.getRequestId());
         return resp;
     }
     
@@ -59,25 +65,27 @@ public class SimpleDispatcher implements Dispatcher, CoreModule {
      */
     @Override
     public SvcResponse callService( String serviceName, SvcRequest req) {
-        /*
+        /**/
         if( LOG.isDebugEnabled()) {
-            LOG.debug("callService( " + serviceName + " req. " + req + " )");
+            LOG.debug( "callService( " + serviceName + " req. " + req + " )");
         }
-        */
+        /**/
         // Verify RunningPipeline
-        RunningPipeline rp = runPipeMap.get( req.getRequestId());
+        RunningPipeline rp = runningPipelines.get( req.getRequestId());
         if( rp == null) {
-            return newExceptionResponse("Failed callService( " + serviceName 
-                    + "), RunningPipeline not found from " + req, req);
+            LOG.debug( "Pipeline not found, create one for " + serviceName);
+            rp = new RunningPipeline( new String[ 0], req);
+            //return newExceptionResponse("Failed callService( " + serviceName 
+            //        + "), RunningPipeline not found from " + req, req);
         }
         rp.add( serviceName);
         // Run 
         SvcResponse resp = rp.getResponse();
-        /*
+        /**/
         if( LOG.isDebugEnabled()) {
             LOG.debug("callService( " + serviceName + ") resp. =  " + resp);
         }
-        */
+        /**/
         return resp;
     }
     
@@ -91,23 +99,23 @@ public class SimpleDispatcher implements Dispatcher, CoreModule {
         if( req == null) {
             throw new Exception( "callNext with Null request", new NullPointerException());
         }
-        RunningPipeline rp = runPipeMap.get( req.getRequestId());
+        RunningPipeline rp = runningPipelines.get( req.getRequestId());
         if( rp == null) {
             throw new Exception( "callNext( " + req.getRequestId() + ") can't find RunningPipeline");
         }
         String nm = rp.next();
-        /*
+        /**/
         if( LOG.isDebugEnabled()) {
             LOG.debug( "callNext " + nm + "(" +  req + " )");
         }
-        */
+        /**/
         // Run 
         SvcResponse resp = rp.getResponse();
-        /*
+        /**/
         if( LOG.isDebugEnabled()) {
             LOG.debug( "callNext " + nm + " resp. =  " + resp);
         }
-        */
+        /**/
         return resp;
     }
     
@@ -117,7 +125,7 @@ public class SimpleDispatcher implements Dispatcher, CoreModule {
     @Override
     public Map<String,Object> getStatusVars() {
         Map<String,Object> map = new TreeMap<String,Object>();
-        map.put( "RunningPipelines", runPipeMap.size());
+        map.put( "RunningPipelinesCount", runningPipelines.size());
         return map;
     } 
     
@@ -128,7 +136,7 @@ public class SimpleDispatcher implements Dispatcher, CoreModule {
     @Override
     public void onMessage( SvcMessage msg) throws Exception {
         LOG.debug( "onMessage " + msg);
-        RunningPipeline rp = runPipeMap.get( msg.getRequestId());
+        RunningPipeline rp = runningPipelines.get( msg.getRequestId());
         if( rp == null) {
             Exception x = new Exception( "Can't find " + msg.getRequestId() 
                     + " to dispatch onMessage " + msg);
@@ -137,6 +145,21 @@ public class SimpleDispatcher implements Dispatcher, CoreModule {
         } else {
             rp.onMessage( msg);
         }
+    }
+    
+    /** Startup.
+     * @param cfg Module configuration
+     * @throws Exception Unexpected error that must be warned
+     */
+    @Override
+    public void startup( Configuration cfg ) throws Exception {
+        defaultServicePipeline = cfg.getString( "DefaultServicePipeline").split( ",");
+        defPipes = new ConcurrentHashMap();
+        Map<String,String> rps = cfg.getStringMap( "Pipeline.*");
+        for( String n: rps.keySet()) {
+            defPipes.put(  n, rps.get( n).split( ","));
+        }
+        nodePipes = cfg.getStringMap( "Node.*");
     }
     
     /** Get the configuration descriptors of this module.
@@ -148,22 +171,14 @@ public class SimpleDispatcher implements Dispatcher, CoreModule {
     public List<ConfigItemDescriptor> getConfigDescriptors() {
         LinkedList<ConfigItemDescriptor> l = new LinkedList();
         l.add( new ConfigItemDescriptor( "DefaultServicePipeline", ConfigItemDescriptor.STRING,
-                "Default services to dispatche separated by comma (,)", null));
-        l.add( new ConfigItemDescriptor( "ServicePipeline.*", ConfigItemDescriptor.STRING,
-                "Services to dispatcher by node, separated by comma (,)", null));
+                "Default services to dispatch separated by comma (,)", null));
+        l.add( new ConfigItemDescriptor( "Pipeline.*", ConfigItemDescriptor.STRING,
+                "Defined services to dispatch separated by comma (,) by Pipe-Name, ", null));
+        l.add( new ConfigItemDescriptor( "Node.*", ConfigItemDescriptor.STRING,
+                "Pipe-Name to use, by Client Node", null));
         return l;        
     }
 
-    /** Startup.
-     * @param cfg Module configuration
-     * @throws Exception Unexpected error that must be warned
-     */
-    @Override
-    public void startup( Configuration cfg ) throws Exception {
-        defaultServicePipeline = cfg.getString( "DefaultServicePipeline").split( ",");
-        servicePipelinesMap = cfg.getStringMap( "ServicePipeline.*");
-    }
-    
     /** Release all the allocated resources. */
     @Override
     public void shutdown() {
