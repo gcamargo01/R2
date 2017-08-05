@@ -14,7 +14,7 @@ import org.apache.log4j.Logger;
 import uy.com.r2.core.api.ConfigItemDescriptor;
 import uy.com.r2.core.api.Configuration;
 
-/** Dynamic MBean to control system configuration and status vars from JMX console.
+/** Dynamic MBean to control system configuration and status variables from JMX console.
  */
 public class MBeanConfigurator implements DynamicMBean {
     
@@ -70,11 +70,21 @@ public class MBeanConfigurator implements DynamicMBean {
             ) throws Exception {
         this.moduleName = moduleName;
         this.description = description;
-        cfgDescMap = new HashMap<String,ConfigItemDescriptor>();
+        cfgDescMap = new HashMap();
         cfgDescMap.put( "class", new ConfigItemDescriptor( "class", ConfigItemDescriptor.STRING, 
                 "R2 Module implementation class", "null"));
         for( ConfigItemDescriptor cd: cfgList) {
-            cfgDescMap.put( cd.getKey(), cd);
+            if( !cd.getKey().contains( "*")) {  // Simple config items
+                cfgDescMap.put( cd.getKey(), cd);
+            } else {                            // Multiple entry values
+                cfgDescMap.put( cd.getKey(), cd);
+                Configuration cfg = SvcCatalog.getCatalog().getModuleInfo( moduleName).getConfiguration();
+                for( String k: cfg.getStringMap( cd.getKey()).keySet()) {
+                    String kk = cd.getKey().replace( "*", k);
+                    cfgDescMap.put( kk, cd);
+                    //LOG.trace( "Config:   " + kk + "=" + cfg.getString( kk));
+                }
+            }
         }
     }
 
