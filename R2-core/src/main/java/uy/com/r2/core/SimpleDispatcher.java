@@ -43,7 +43,7 @@ public class SimpleDispatcher implements Dispatcher, CoreModule {
         if( rpn != null) {   // Defined RunningPipe by name
             String[] mtr = defPipes.get(  rpn);
             if( mtr == null) {
-                LOG.warn( "RunningPipeline name '" + rpn + "' undefined, using default");
+                return newExceptionResponse( "RunningPipeline name '" + rpn + "' undefined", req);
             } else {
                 modsToRun = mtr;
             }
@@ -54,6 +54,64 @@ public class SimpleDispatcher implements Dispatcher, CoreModule {
         // Run to the end
         SvcResponse resp = rp.getFinalResponse();
         runningPipelines.remove( req.getRequestId());
+        return resp;
+    }
+    
+    /** Dispatch the next module service call.
+     * @param req Request to dispatch
+     * @return SvcResponse or error packed as a response 
+     * @throws Exception Cant find Next 
+     */
+    @Override
+    public SvcResponse callNext( SvcRequest req) throws Exception {
+        if( req == null) {
+            throw new Exception( "callNext with Null request", new NullPointerException());
+        }
+        RunningPipeline rp = runningPipelines.get( req.getRequestId());
+        if( rp == null) {
+            return newExceptionResponse( "callNext( " + req.getRequestId() + ") can't find RunningPipeline", req);
+        }
+        String nm = rp.next();
+        /**/
+        if( LOG.isDebugEnabled()) {
+            LOG.debug( "callNext " + nm + "(" +  req + " )");
+        }
+        /**/
+        // Run 
+        SvcResponse resp = rp.getResponse();
+        /**/
+        if( LOG.isDebugEnabled()) {
+            LOG.debug( "callNext " + nm + " resp. =  " + resp);
+        }
+        /**/
+        return resp;
+    }
+    
+    /** Dispatch the execution of a service pipeline by its name.
+     * @param pipe Service pipeline name
+     * @param req Request to dispatch
+     * @return SvcResponse or error packed as a response 
+     */
+    @Override
+    public SvcResponse callPipeline( String pipe, SvcRequest req) {
+        /**/
+        if( LOG.isDebugEnabled()) {
+            LOG.debug( "callPipeline( " + pipe + " req. " + req + " )");
+        }
+        /**/
+        // Search Pipeline
+        String rpns[] = defPipes.get( pipe);
+        if( rpns == null) {
+            return newExceptionResponse( "Can't find pipeline name '" + pipe + "' to request " + req, req);
+        }
+        // Run 
+        RunningPipeline rp = new RunningPipeline( rpns, req);
+        SvcResponse resp = rp.getResponse();
+        /**/
+        if( LOG.isDebugEnabled()) {
+            LOG.debug("callPipeline( " + pipe + ") resp. =  " + resp);
+        }
+        /**/
         return resp;
     }
     
@@ -84,36 +142,6 @@ public class SimpleDispatcher implements Dispatcher, CoreModule {
         /**/
         if( LOG.isDebugEnabled()) {
             LOG.debug("callService( " + serviceName + ") resp. =  " + resp);
-        }
-        /**/
-        return resp;
-    }
-    
-    /** Dispatch the next module service call.
-     * @param req Request to dispatch
-     * @return SvcResponse or error packed as a response 
-     * @throws Exception Cant find Next 
-     */
-    @Override
-    public SvcResponse callNext( SvcRequest req) throws Exception {
-        if( req == null) {
-            throw new Exception( "callNext with Null request", new NullPointerException());
-        }
-        RunningPipeline rp = runningPipelines.get( req.getRequestId());
-        if( rp == null) {
-            throw new Exception( "callNext( " + req.getRequestId() + ") can't find RunningPipeline");
-        }
-        String nm = rp.next();
-        /**/
-        if( LOG.isDebugEnabled()) {
-            LOG.debug( "callNext " + nm + "(" +  req + " )");
-        }
-        /**/
-        // Run 
-        SvcResponse resp = rp.getResponse();
-        /**/
-        if( LOG.isDebugEnabled()) {
-            LOG.debug( "callNext " + nm + " resp. =  " + resp);
         }
         /**/
         return resp;
