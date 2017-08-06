@@ -134,9 +134,15 @@ public class ModuleInfo implements Module {
                     }
                 }
             }
-            for( String k: cfgItems.keySet()) {
-               LOG.trace( "Config: Undefined configuration!: " + k);
-               LOG.trace( "Config:   " + k + "=" + cfg.getString( k));
+            if( LOG.isDebugEnabled()) {
+                for( String k: cfgItems.keySet()) {
+                   LOG.trace( "Config:   " + k + "=" + cfg.getString( k));
+                   try {
+                       throw new Exception( "Config: Undefined configuration!: " + k);                       
+                   } catch( Exception x) {
+                       LOG.trace( "" + x, x);
+                   }
+                }
             }
         }
         // Reset status
