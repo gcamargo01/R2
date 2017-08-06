@@ -8,7 +8,8 @@ public interface Dispatcher extends Module {
     
     /** Start the execution of a request.
      * This method is used by end-point implementation, for example a remote client.
-     * Or some module is starting a new execution.
+     * The pipeline of services to be executed depends on the Node configuration 
+     * in the Dispatcher (Node.XXXX=Pipe1) or the DefaultServicePipeline.
      * @param req Request to dispatch
      * @return SvcResponse or error packed as a response 
      */
@@ -26,7 +27,6 @@ public interface Dispatcher extends Module {
      * @param pipe Service pipeline name
      * @param req Request to dispatch
      * @return SvcResponse or error packed as a response 
-     * @throws Exception Cant find Next module
      */
     public SvcResponse callPipeline( String pipe, SvcRequest req) throws Exception;
 
@@ -35,6 +35,7 @@ public interface Dispatcher extends Module {
      * @param serviceName Service module name
      * @param req Request to dispatch
      * @return SvcResponse or error packed as a response 
+     * @deprecated Use callPipeline
      */
     public SvcResponse callService( String serviceName, SvcRequest req);   
    
