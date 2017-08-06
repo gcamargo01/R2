@@ -98,14 +98,18 @@ public class SvcDeployer implements AsyncService {
     @Override
     public SvcMessage onRequest( SvcRequest req, Configuration cfg) throws Exception {
         updateCfg( cfg);
+        LOG.trace( "onRequest " + req + " " + cfg);
         // Is there a command?
         if( req.getServiceName().startsWith( PREFIX)) {
             String cmd = req.getServiceName().substring( PREFIX.length());
             String md = "" + req.get( "Module");
+            Configuration c = new Configuration();  // distint configuration
             for( String k: req.getPayload().keySet()) {
-                cfg.put( k, req.get( k));  // Put single value
+                if( !k.equals( "Module")) {
+                    c.put( k, req.get( k));  // Put single value
+                }
             }
-            Object r = command( cmd, md, cfg);
+            Object r = command( cmd, md, c);
             SvcResponse resp = new SvcResponse( 0, req);
             if( r != null) {
                 resp.put( "Response", r);

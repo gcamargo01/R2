@@ -415,7 +415,6 @@ public class SvcManager implements AsyncService, CoreModule {
             c = new Configuration();
             c.put( "DefaultServicePipeline", "MiniHttpServer,DeSerializer,SvcDeployer," 
                     + "SvcManager,Replicator,FileServices,Serializar,HttpClient");
-            c.put( "Monitor", true);
             deploy( SvcCatalog.DISPATCHER_NAME, c);
 
             c = new Configuration();
@@ -430,13 +429,13 @@ public class SvcManager implements AsyncService, CoreModule {
             c.put( "ToSerial", false);
             c.put( "ProcessRequest", false);
             deploy( "DeSerializer", c);
-
+/*
             c = new Configuration();
             c.put( "class", FilePathSynchronizer.class.getName());
             c.put( "Path.lib", "lib");
             c.put( "RemoteServer", remoteUrl);
             deploy( "Replicator", c);
-
+*/
             c = new Configuration();
             c.put( "class", FileServices.class.getName());
             deploy( "FileServices", c);
