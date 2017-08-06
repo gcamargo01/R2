@@ -18,7 +18,7 @@ import uy.com.r2.core.api.AsyncService;
 import uy.com.r2.core.api.ConfigItemDescriptor;
 import uy.com.r2.core.api.Configuration;
 import uy.com.r2.core.api.SvcMessage;
-import uy.com.r2.svc.FilePathSynchronizer;
+//import uy.com.r2.svc.FilePathSynchronizer;
 import uy.com.r2.svc.FileServices;
 import uy.com.r2.svc.Json;
 import uy.com.r2.svc.conn.HttpClient;
@@ -29,7 +29,6 @@ import uy.com.r2.svc.conn.HttpClient;
  * @author G.Camargo
  */
 public class SvcManager implements AsyncService, CoreModule {
-    private static final String PREFIX = SvcManager.class.getSimpleName() + "_";
     private static final String SVC_GETSERVICESLIST = "GetServicesList";
     private static final String SVC_GETSERVERSLIST  = "GetServersList";
     private static final String SVC_ADDSERVER       = "AddServer";
@@ -54,10 +53,9 @@ public class SvcManager implements AsyncService, CoreModule {
     private int localPort = 0;
     private String localNodeName = "localhost";
     private String masterNodeName = null;
-    private Map<String,String> knownServers = new TreeMap<String,String>();
+    private Map<String,String> knownServers = new TreeMap();
     private int keepAliveTimeOut = 10000;
     private int keepAliveWait = 5000;
-    private boolean hasNext = true;
     private int receivedCommands = 0;
     private int errorsOnCommands = 0;
     private int tx = 0;
@@ -74,7 +72,7 @@ public class SvcManager implements AsyncService, CoreModule {
      */
     @Override
     public List<ConfigItemDescriptor> getConfigDescriptors() {
-        LinkedList<ConfigItemDescriptor> l = new LinkedList<ConfigItemDescriptor>();
+        LinkedList<ConfigItemDescriptor> l = new LinkedList();
         l.add( new ConfigItemDescriptor( "RemoteUrl", ConfigItemDescriptor.URL,
                 "URL of a known server", null));
         l.add( new ConfigItemDescriptor( "Port", ConfigItemDescriptor.INTEGER,
@@ -121,7 +119,6 @@ public class SvcManager implements AsyncService, CoreModule {
         masterNodeName = cfg.getString( "MasterServer", null);
         knownServers = cfg.getStringMap( "Server.*");
         knownServers.put( localNodeName, localUrl);
-        hasNext = cfg.containsKey( "Next");
         LOG.debug( "ServerName: " + localNodeName);
         LOG.debug( "knownServers: " + knownServers);
         if( firstTime) {
@@ -143,22 +140,14 @@ public class SvcManager implements AsyncService, CoreModule {
      */
     @Override
     public SvcMessage onRequest( SvcRequest req, Configuration cfg) throws Exception {
-        // Is there a command?
-        if( req.getServiceName().startsWith( PREFIX)) {
-            String cmd = req.getServiceName().substring( PREFIX.length());
-            Object r = command( cmd, req.get( "Name"), req.get( "Url"));
-            SvcResponse resp = new SvcResponse( 0, req);
-            if( r != null) {
-                resp.put( "Response", r);
-            }    
-            LOG.trace( "Command response: " + resp);
-            return resp;
-        } else if( !hasNext) {
-             return new SvcResponse( "No Next and nothing to do.", 
-                     SvcResponse.RES_CODE_INVALID_MODULE, req);
-        }
-        // Not a command, go on, return the same req.
-        return req;
+        String cmd = req.getServiceName();
+        Object r = command( cmd, req.get( "Name"), req.get( "Url"));
+        SvcResponse resp = new SvcResponse( 0, req);
+        if( r != null) {
+            resp.put( "Response", r);
+        }    
+        LOG.trace( "Command response: " + resp);
+        return resp;
     }
 
     /** Process a response phase.
@@ -176,7 +165,7 @@ public class SvcManager implements AsyncService, CoreModule {
         SvcRequest req = resp.getRequest();
         if( req.getServiceName().equals( SVC_GETSERVICESLIST)) {
             for( String s: SERVICES) {
-                resp.add( "Services", PREFIX + s);
+                resp.add( "Services", s);
             }
         } 
         return resp;  // nothing to do
@@ -221,7 +210,7 @@ public class SvcManager implements AsyncService, CoreModule {
                 updateDestinations();
                 break;
             case SVC_GETMASTER: 
-                TreeMap<String,Object> m = new TreeMap<String,Object>();
+                TreeMap<String,Object> m = new TreeMap();
                 m.put( "Name", masterNodeName);
                 m.put( "Url", knownServers.get( masterNodeName));
                 resp = m;
@@ -271,9 +260,12 @@ public class SvcManager implements AsyncService, CoreModule {
                 stop = true;
                 catalog.shutdown();
                 break;
+            case SVC_GETSERVICESLIST:
+                resp = "";
+                break;
             default:
                 ++errorsOnCommands;
-                throw new Exception( "Invalid command: " + cmd); 
+                resp = "Invalid SvcMgr command: " + cmd; 
             }
         } catch( Exception x) {
             LOG.info( "Command failed: " + cmd + " " + sn + " " + param, x);
@@ -413,8 +405,8 @@ public class SvcManager implements AsyncService, CoreModule {
             Configuration c;
             
             c = new Configuration();
-            c.put( "DefaultServicePipeline", "MiniHttpServer,DeSerializer,SvcDeployer," 
-                    + "SvcManager,Replicator,FileServices,Serializar,HttpClient");
+            c.put( "DefaultServicePipeline", "DeSerializer,SvcDeployer,SvcManager");
+            c.put( "Pipeline.SvcManager", "FileServices,Serializer,HttpClient");
             deploy( SvcCatalog.DISPATCHER_NAME, c);
 
             c = new Configuration();

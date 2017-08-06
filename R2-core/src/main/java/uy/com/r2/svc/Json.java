@@ -20,6 +20,7 @@ import uy.com.r2.core.api.SvcResponse;
  * @author G.Camargo
  */
 public class Json implements AsyncService {
+    public static final String SERIALIZED = "Serialized";
     private static final Logger log = Logger.getLogger( Json.class);
     private Gson mapper = new Gson();
     private boolean toSerial = true;
@@ -77,11 +78,11 @@ public class Json implements AsyncService {
         }
         if( toSerial) {
             // Add or replace a "Data" field with JSON
-            req.put( "Serial", toJSON( req.getPayload()));
+            req.put( SERIALIZED, toJSON( req.getPayload()));
         } else {
             // Take one field Data an serialize it
             Map<String, List<Object>> r;
-            r = fromJSON( "" + req.get( "Serial"));
+            r = fromJSON( "" + req.get( SERIALIZED));
             req = req.clone( r);
         }
         return req;
@@ -104,12 +105,12 @@ public class Json implements AsyncService {
         if( toSerial) {
             // Take one field Data an serialize it
             Map<String, List<Object>> r;
-            r = fromJSON( "" + res.get( "Serial"));
+            r = fromJSON( "" + res.get( SERIALIZED));
             res = res.clone( r);
-            res.getPayload().remove( "Serial");
+            res.getPayload().remove( SERIALIZED);
         } else {
             // Add or replace a "Serial" field with JSON
-            res.put( "Serial", toJSON( res.getPayload()));
+            res.put( SERIALIZED, toJSON( res.getPayload()));
         }
         return res;
     }
@@ -119,8 +120,7 @@ public class Json implements AsyncService {
      */
     @Override
     public Map<String, Object> getStatusVars() {
-        Map<String,Object> m = new HashMap<String,Object>();
-        m.put( "Version", "$Revision: 1.1 $");
+        Map<String,Object> m = new HashMap();
         m.put( "ParsedChars", parsedCount);
         m.put( "GeneratedChars", generatedCount);
         return m;

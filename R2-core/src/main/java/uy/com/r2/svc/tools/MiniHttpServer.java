@@ -153,7 +153,7 @@ public class MiniHttpServer implements CoreModule {
                 log.warn( thr + " dispatch error " + ex, ex);
             }     
             // Prepare and send HTTP response
-            String response = "" + resp.get( "Data");
+            String response = "" + resp.get( "Serialized");
             t.getResponseHeaders().add( "ResultCode", "" + resp.getResultCode());
             t.sendResponseHeaders( 200, response.length());
             OutputStream os = t.getResponseBody();
