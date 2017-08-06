@@ -38,16 +38,16 @@ public class RunningPipeline {
     
     /** Running step, process one module a time */
     void run () {
+        String moduleName = null;
         try {
-            LOG.trace( "run index=" + index);
             if( index >= moduleNames.length || moduleNames[ index] == null) {
-                throw new Exception( "Ended pipeline on " + toString());
+                throw new Exception( "Ended service pipeline " + moduleNames);
             }
-            String moduleName = moduleNames[ index];
+            moduleName = moduleNames[ index];
+            LOG.trace( "run index=" + index + " " + moduleName + " " + msg);
             ModuleInfo mi = core.getModuleInfo( moduleName);
             if( mi == null) {
-                throw new Exception( "Module '" + moduleName + "' not installed on " 
-                        + toString());
+                throw new Exception( "Module '" + moduleName + "' not installed"); 
             }
             msg = mi.processMessage( msg);
             if( msg == null) {  // Nothing to do here, wait some msg
@@ -60,13 +60,15 @@ public class RunningPipeline {
             } else if( msg instanceof SvcResponse) {  // Its a response
                 --index;
             } else {   // Invalid message
-                throw new Exception( "Invalid response " + msg + " on " + toString());
+                throw new Exception( "Invalid response: " + msg);
             }
         } catch( Exception x) {
-            LOG.warn( "run failed on " + index, x);
+            x = new Exception( "" + x + " on " + toString(), x);
+            LOG.warn( "" + x, x);
             SvcMessage r = ( msg instanceof SvcRequest)? msg: req0;
-            msg = new SvcResponse( "" + x,
-                    SvcResponse.RES_CODE_EXCEPTION, x, (SvcRequest)r);
+            msg = new SvcResponse( "" + x, SvcResponse.RES_CODE_EXCEPTION, x, 
+                    (SvcRequest)r);
+            --index;
         }
     }
     
