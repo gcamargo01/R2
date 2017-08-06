@@ -36,7 +36,7 @@ It forces to acquire requirements needed to bring services 24x7, while hiding it
 Some years ago I was trying to make an easier approach to distributed systems based
 on microservices modules, linked in a pipeline and deployed by the container.
 This idea incorporates the best of both worlds: 
- - Extreme simplicity, full performance, diagnostics, full re-usable modules in a 
+ - Extremely simplicity, full performance, diagnostics, full re-usable modules in a 
  java standalone application.
  - The powe of the container: High availability, Hot deploy, Multiple versions of the
 same objects running together. 
@@ -45,9 +45,11 @@ That means real 24x7 services, in business critical application servers.
 
 But it leaves two open questions:
 
-1.  Is possible to bring all that benefits without problems? Or a container using some facility 
-can do it better?
-2.  And of course, even a little bug in this code may have a serious impact on exposed services. 
+1. Is it possible to obtain all the benefits without getting obstacles in our way? Or is it a better idea 
+to use a container with POJOs (JBOSS, Spring, Camel)?
+
+2.  And of course, this project requires a proof of concept, and a lot of work in order to reach the 
+required level of reliability to be used in the real world.
 
 
 This is my invitation to participate in this open source project. 
