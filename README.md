@@ -24,8 +24,8 @@ like microservices, in order to acquire this benefits:
 
 This extensible architecture may change the way we develop applications, and maintain it
 along de time: One time development, after that just re-use o create a better one. 
-When we have a lot of people developing components, and changing people, it's a good 
-idea to keep it simple, and never correct a module, just do it better. 
+When we have a huge develoment team, with changing people, it's a good idea to keep it simple, 
+and never correct a module, just do it better. 
 
 And is a good practice to rule a simple and complete interface to the developer team.
 It forces to acquire requirements needed to bring services 24x7, while hiding its complexity.
