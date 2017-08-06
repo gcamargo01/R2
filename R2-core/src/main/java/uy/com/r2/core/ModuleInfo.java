@@ -135,7 +135,7 @@ public class ModuleInfo implements Module {
                 }
             }
             for( String k: cfgItems.keySet()) {
-               LOG.trace( "Config: Not recognized configuration! :");
+               LOG.trace( "Config: Undefined configuration!: " + k);
                LOG.trace( "Config:   " + k + "=" + cfg.getString( k));
             }
         }
