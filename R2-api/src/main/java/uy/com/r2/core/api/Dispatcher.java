@@ -13,15 +13,7 @@ public interface Dispatcher extends Module {
      * @return SvcResponse or error packed as a response 
      */
     public SvcResponse call( SvcRequest req);   
-
-    /** Dispatch the execution of a specified service.
-     * This method is used by modules that explicit set the next Service to run.
-     * @param serviceName Service module name
-     * @param req Request to dispatch
-     * @return SvcResponse or error packed as a response 
-     */
-    public SvcResponse callService( String serviceName, SvcRequest req);   
-    
+ 
     /** Dispatch the execution of the next service.
      * Call next service module. Its is only known by the Dispatcher.
      * @param req Request to dispatch
@@ -30,6 +22,22 @@ public interface Dispatcher extends Module {
      */
     public SvcResponse callNext( SvcRequest req) throws Exception;
 
+    /** Dispatch the execution of a service pipeline by its name.
+     * @param pipe Service pipeline name
+     * @param req Request to dispatch
+     * @return SvcResponse or error packed as a response 
+     * @throws Exception Cant find Next module
+     */
+    public SvcResponse callPipeline( String pipe, SvcRequest req) throws Exception;
+
+    /** Dispatch the execution of a specified service.
+     * This method is one that explicit set the next Service to run.
+     * @param serviceName Service module name
+     * @param req Request to dispatch
+     * @return SvcResponse or error packed as a response 
+     */
+    public SvcResponse callService( String serviceName, SvcRequest req);   
+   
     /** Process a message from an asynchronous service implementation.
      * The AsyncService returned NULL when was called, and now this is the event
      * to notify that there are a message to process.
