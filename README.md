@@ -38,7 +38,7 @@ on microservices modules, linked in a pipeline and deployed by the container.
 This idea incorporates the best of both worlds: 
  - Extreme simplicity, full performance, diagnostics, full re-usable modules in a 
  java standalone application.
- - The powe of de container: High availability, Hot deploy, Multiple versions of the
+ - The powe of the container: High availability, Hot deploy, Multiple versions of the
 same objects running together. 
 That means real 24x7 services, in business critical application servers.
 
