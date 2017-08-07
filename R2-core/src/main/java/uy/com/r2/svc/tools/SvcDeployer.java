@@ -39,6 +39,7 @@ public class SvcDeployer implements AsyncService {
             SVC_GETMODULECONFIG, SVC_SETMODULECONFIG, SVC_GETMODULESTATUS, 
             SVC_STOPMODULE, SVC_STARTMODULE, SVC_SHUTDOWN
     };
+    private static final String REMOVE = "_ReMoVe_";
     private static final Logger LOG = Logger.getLogger( SvcDeployer.class);
     private final SvcCatalog catalog = SvcCatalog.getCatalog();
     private final ArrayList<String> deployedList = new ArrayList();
@@ -109,11 +110,15 @@ public class SvcDeployer implements AsyncService {
                     c.put( k, req.get( k));  // Put single value
                 }
             }
-            Object r = command( cmd, md, c);
+            Map<String,String> sm = command( cmd, md, c);
             SvcResponse resp = new SvcResponse( 0, req);
-            if( r != null) {
-                resp.put( "Response", r);
-            }    
+            for( String k: sm.keySet()) {
+                String sk = k;
+                if( k.indexOf( REMOVE) > 0) {
+                    sk = k.substring( 0, k.indexOf( REMOVE));
+                }
+                resp.add( sk, sm.get( k));
+            }
             LOG.trace( "Command response: " + resp);
             return resp;
         }
@@ -160,14 +165,14 @@ public class SvcDeployer implements AsyncService {
      * @param cmd Command verb
      * @param mn Module Name
      * @param cfg Configuration
-     * @return Response Map or null
+     * @return Response Map
      * @throws Exception Error on command execution
      */
-    private Object command( String cmd, String mn, Configuration cfg) 
+    private Map<String,String> command( String cmd, String mn, Configuration cfg) 
             throws Exception {
         LOG.trace( "Command: " + cmd + " " + mn + " " + cfg);
         ++receivedCommands;
-        Object resp = null;
+        Map<String,String> resp = new TreeMap();
         try {
             switch( cmd) {
             case SVC_DEPLOYMODULE:    
@@ -178,16 +183,22 @@ public class SvcDeployer implements AsyncService {
                 catalog.uninstallModule( mn);
                 break;
             case SVC_GETMODULELIST:
-                resp = catalog.getModuleNames();
+                int i = 0;
+                for( String s: catalog.getModuleNames()) {
+                    resp.put( "Modules" + REMOVE + i++, s);                    
+                }
                 break;
             case SVC_SETMODULECONFIG:    
                 catalog.updateConfiguration( mn, cfg);
                 break;
             case SVC_GETMODULECONFIG:
-                resp = catalog.getModuleInfo( mn).getConfiguration();
+                resp = catalog.getModuleInfo( mn).getConfiguration().getStringMap( "*");
                 break;
             case SVC_GETMODULESTATUS:
-                resp = catalog.getModuleInfo( mn).getStatusVars();
+                Map<String,Object> so = catalog.getModuleInfo( mn).getStatusVars();
+                for( String k: so.keySet()) {
+                    resp.put(  k, "" + so.get(  k));
+                }
                 break;
             case SVC_STOPMODULE:
                 catalog.getModuleInfo( mn).shutdown();

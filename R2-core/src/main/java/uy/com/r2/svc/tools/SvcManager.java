@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.net.InetAddress;
 import java.net.URL;
+import java.util.Set;
+import java.util.TreeSet;
 import org.apache.log4j.Logger;
 import uy.com.r2.core.CoreModule;
 import uy.com.r2.core.SvcCatalog;
@@ -43,7 +45,7 @@ public class SvcManager implements AsyncService, CoreModule {
         SVC_GETSERVERSLIST, SVC_ADDSERVER, SVC_REMOVESERVER, SVC_UPDATEMDOULE, 
         SVC_REMOVEMDOULE, SVC_GETMASTER, SVC_SETMASTER, SVC_KEEPALIVE, SVC_SHUTDOWN
     };
-    
+    private static final String REMOVE = "_ReMoVe_";
     private static final Logger LOG = Logger.getLogger(SvcManager.class);
     private static SvcManager svcMgr;
     private static boolean stop = false;
@@ -116,7 +118,7 @@ public class SvcManager implements AsyncService, CoreModule {
             defaultName += localPort;
         }
         localNodeName = cfg.getString( "ServerName", defaultName);
-        masterNodeName = cfg.getString( "MasterServer", null);
+        masterNodeName = cfg.getString( "MasterServer", localNodeName);
         knownServers = cfg.getStringMap( "Server.*");
         knownServers.put( localNodeName, localUrl);
         LOG.debug( "ServerName: " + localNodeName);
@@ -141,11 +143,15 @@ public class SvcManager implements AsyncService, CoreModule {
     @Override
     public SvcMessage onRequest( SvcRequest req, Configuration cfg) throws Exception {
         String cmd = req.getServiceName();
-        Object r = command( cmd, req.get( "Name"), req.get( "Url"));
+        Map<String,String> m = command( cmd, req.get( "Name"), req.get( "Url"));
         SvcResponse resp = new SvcResponse( 0, req);
-        if( r != null) {
-            resp.put( "Response", r);
-        }    
+        for( String k: m.keySet()) {
+            String sk = k;
+            if( k.indexOf( REMOVE) > 0) {
+                sk = k.substring( 0, k.indexOf( REMOVE));
+            }
+            resp.add( sk, m.get( k));
+        }
         LOG.trace( "Command response: " + resp);
         return resp;
     }
@@ -188,14 +194,14 @@ public class SvcManager implements AsyncService, CoreModule {
      * @param cmd Command verb
      * @param sn Server Name
      * @param param URL o Module name
-     * @return Response Map or null
+     * @return Response Map with REMOVE sub-key (Multimap)
      * @throws Exception Error on command execution
      */
-    private Object command( String cmd, Object sn, Object param) 
+    private Map<String,String> command( String cmd, Object sn, Object param) 
             throws Exception {
         LOG.trace( "Command: " + cmd + " " + sn + " " + param);
         ++receivedCommands;
-        Object resp = null;
+        Map<String,String> resp = new TreeMap();
         try {
             switch( cmd) {
             case SVC_GETSERVERSLIST:
@@ -210,10 +216,8 @@ public class SvcManager implements AsyncService, CoreModule {
                 updateDestinations();
                 break;
             case SVC_GETMASTER: 
-                TreeMap<String,Object> m = new TreeMap();
-                m.put( "Name", masterNodeName);
-                m.put( "Url", knownServers.get( masterNodeName));
-                resp = m;
+                resp.put( "Name", masterNodeName);
+                resp.put( "Url", knownServers.get( masterNodeName));
                 break;
             case SVC_SETMASTER: 
                 masterNodeName = "" + sn;
@@ -252,8 +256,8 @@ public class SvcManager implements AsyncService, CoreModule {
                 break;
             case SVC_KEEPALIVE:
                 masterTimeStamp = System.currentTimeMillis();
-                if( isMaster()) {  // Conflict!
-                    // choose one and notify!!!!
+                if( isMaster()) {  // Conflict! The master is the one that call KeepAlive
+                    masterNodeName = "" + sn;
                 }
                 break;
             case SVC_SHUTDOWN:
@@ -261,11 +265,15 @@ public class SvcManager implements AsyncService, CoreModule {
                 catalog.shutdown();
                 break;
             case SVC_GETSERVICESLIST:
-                resp = "";
+                Set<String> s = new TreeSet();
+                int i = 0;
+                for( String k: SERVICES) {
+                    resp.put( "Services" + REMOVE + i++, k);
+                }
                 break;
             default:
                 ++errorsOnCommands;
-                resp = "Invalid SvcMgr command: " + cmd; 
+                resp.put( "Error", "Invalid SvcManager command: " + cmd); 
             }
         } catch( Exception x) {
             LOG.info( "Command failed: " + cmd + " " + sn + " " + param, x);
@@ -328,7 +336,7 @@ public class SvcManager implements AsyncService, CoreModule {
                 svcMgr.notifyAllServers( SVC_KEEPALIVE, svcMgr.localNodeName);
             } else {  // The manager is alive?
                 if( System.currentTimeMillis() > svcMgr.masterTimeStamp + svcMgr.keepAliveTimeOut) {
-                    // Choose new master
+                    // Contact lost w/Master
                     // !!!!
                 }
             }
