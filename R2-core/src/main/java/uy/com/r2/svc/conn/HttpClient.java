@@ -22,6 +22,8 @@ import uy.com.r2.core.api.SvcMessage;
 /** HTTP client connector.
  * It invokes a HTTP service to getDataField the response.
  * This is a reference implementation !!!!.
+ * This module should return NULL to put to wait the response, and use a 
+ * second Thread to call onMessage when has the response.
  * @author G.Camargo
  */
 public class HttpClient implements AsyncService {
