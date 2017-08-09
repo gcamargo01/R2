@@ -9,10 +9,10 @@ package uy.com.r2.core.api;
 public interface SimpleService extends Module {
     
     /** Service call.
-     * The Configuration is a parameter to allow a complete state-less 
-     * implementation, such a EJB3 stateless session bean. The container may 
-     * restart, create few instances and distribute the module on many JVM / 
-     * servers as needed to scale. <br>
+     * The Configuration is a parameter on service call method to allow 
+     * a stateless implementation, such a EJB3 Stateless Session Bean. 
+     * The container may restart, create few instances and distribute the 
+     * module on many JVM / servers as needed to scale.
      * Each service implementation may throw a Exception to clearly set 
      * what originates the failure. <br>
      * @param req Invocation message
