@@ -23,7 +23,6 @@ import uy.com.r2.core.api.SvcMessage;
  */
 public class SvcDeployer implements AsyncService {
     private static final String DEPLOYER_NAME = SvcDeployer.class.getSimpleName();
-    private static final String PREFIX = DEPLOYER_NAME + "_";
     private static final String SVC_GETSERVICESLIST = "GetServicesList";
     private static final String SVC_DEPLOYMODULE    = "DeployModule";
     private static final String SVC_UNDEPLOYMODULE  = "UndeployModule";
@@ -41,11 +40,21 @@ public class SvcDeployer implements AsyncService {
     };
     private static final String REMOVE = "_ReMoVe_";
     private static final Logger LOG = Logger.getLogger( SvcDeployer.class);
+    private static String commands = "";
     private final SvcCatalog catalog = SvcCatalog.getCatalog();
     private final ArrayList<String> deployedList = new ArrayList();
     private int receivedCommands = 0;
     private int errorsOnCommands = 0;
 
+    static {
+        StringBuilder sb = new StringBuilder( "|");
+        for( String n: SERVICES) {
+            sb.append(  n);
+            sb.append(  "|");
+        }
+        commands = sb.toString();
+    }
+    
     /** Constructor.
      * @throws Exception Unexpected failure
      */
@@ -101,8 +110,8 @@ public class SvcDeployer implements AsyncService {
         updateCfg( cfg);
         LOG.trace( "onRequest " + req + " " + cfg);
         // Is there a command?
-        if( req.getServiceName().startsWith( PREFIX)) {
-            String cmd = req.getServiceName().substring( PREFIX.length());
+        if( commands.indexOf( "|" + req.getServiceName() + "|") >= 0) {
+            String cmd = req.getServiceName();
             String md = "" + req.get( "Module");
             Configuration c = new Configuration();  // distint configuration
             for( String k: req.getPayload().keySet()) {
@@ -143,7 +152,7 @@ public class SvcDeployer implements AsyncService {
         SvcRequest req = resp.getRequest();
         if( req.getServiceName().equals( SVC_GETSERVICESLIST)) {
             for( String s: SERVICES) {
-                resp.add( "Services", PREFIX + s);
+                resp.add( "Services", s);
             }
         } 
         return resp;  // nothing to do

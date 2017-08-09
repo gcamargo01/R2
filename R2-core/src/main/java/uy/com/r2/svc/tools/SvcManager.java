@@ -229,10 +229,10 @@ public class SvcManager implements AsyncService, CoreModule {
                 SvcRequest r;
                 if( masterNodeName != null) {
                     r = new SvcRequest( localNodeName, 0, tx++, 
-                            knownServers.get( masterNodeName) + "/" + "Deployer_GetModuleConfig", null, 1000);
+                            knownServers.get( masterNodeName) + "/" + "GetModuleConfig", null, 1000);
                 } else {
                     r = new SvcRequest( localNodeName, 0, tx++, 
-                            remoteUrl + "/" + "Deployer_GetModuleConfig", null, 1000);
+                            remoteUrl + "/" + "GetModuleConfig", null, 1000);
                 }    
                 r.put( "Module", mod);
                 SvcResponse rp = SvcCatalog.getDispatcher().callNext( r);
@@ -413,7 +413,7 @@ public class SvcManager implements AsyncService, CoreModule {
             Configuration c;
             
             c = new Configuration();
-            c.put( "DefaultServicePipeline", "DeSerializer,SvcDeployer,SvcManager");
+            c.put( "DefaultServicePipeline", "HTML,DeSerializer,SvcDeployer,SvcManager");
             c.put( "Pipeline.SvcManager", "FileServices,Serializer,HttpClient");
             deploy( SvcCatalog.DISPATCHER_NAME, c);
 
@@ -424,6 +424,10 @@ public class SvcManager implements AsyncService, CoreModule {
             }
             deploy( MiniHttpServer.class.getSimpleName(), c);
 
+            c = new Configuration();
+            c.put( "class", Resp2Html.class.getName());
+            deploy( "HTML", c);
+            
             c = new Configuration();
             c.put( "class", Json.class.getName());
             c.put( "ToSerial", false);
@@ -456,7 +460,7 @@ public class SvcManager implements AsyncService, CoreModule {
     
     private void deploy( String module, Configuration cfg) throws Exception {
         LOG.trace( "deploy " + module + " " + cfg);
-        SvcRequest rq = new SvcRequest( localNodeName, tx++, 0, "SvcDeployer_DeployModule", null, 1000);
+        SvcRequest rq = new SvcRequest( localNodeName, tx++, 0, "DeployModule", null, 1000);
         rq.put( "Module", module);
         for( String n: cfg.getStringMap( "*").keySet()) {
             rq.put( n, cfg.getString( n));            
