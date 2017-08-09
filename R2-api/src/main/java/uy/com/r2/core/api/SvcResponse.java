@@ -42,7 +42,7 @@ public class SvcResponse extends SvcMessage implements Serializable {
      * @param request Invocation request
      */
     public SvcResponse( Map<String,List<Object>> data, int resultCode, SvcRequest request) {
-        super( data);
+        super( request.getRequestId(), data);
         if( resultCode < 0) {
             log.warn( "The resultCode (" + resultCode +
                     ") should not be negative on a normal SvcResponse " +
@@ -63,7 +63,7 @@ public class SvcResponse extends SvcMessage implements Serializable {
      * @param request Invocation request
      */
     public SvcResponse( int resultCode, SvcRequest request) {
-        super( null);
+        super( request.getRequestId(), null);
         this.responseTime = ( int)( System.currentTimeMillis() - 
                 request.getAbsoluteTime());
         this.resultCode = resultCode;
@@ -79,7 +79,7 @@ public class SvcResponse extends SvcMessage implements Serializable {
      */
     public SvcResponse( String reasonOrAction, int resultCode, Throwable exception, 
             SvcRequest request) {
-        super( null);
+        super( request.getRequestId(), null);
         if( resultCode >= 0) {
             log.warn( "The resultCode " + resultCode + " of error '" + reasonOrAction  
                     + "' should be negative or generic exception " + RES_CODE_EXCEPTION 
@@ -101,7 +101,7 @@ public class SvcResponse extends SvcMessage implements Serializable {
      * @param request Invocation request
      */
     public SvcResponse( String reasonOrAction, int resultCode, SvcRequest request) {
-        super( null);
+        super( request.getRequestId(), null);
         if( resultCode >= 0) {
             log.warn( "The resultCode " + resultCode + " of error '" + reasonOrAction  
                     + "' should be negative on SvcErrorResponses from " + request);

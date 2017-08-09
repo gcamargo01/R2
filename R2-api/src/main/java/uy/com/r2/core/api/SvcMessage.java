@@ -14,16 +14,18 @@ import java.util.Map;
  */
 public abstract class SvcMessage implements Serializable {
     private static final long serialVersionUID = 1L;
+    private final String requestId;
     private final Map<String,List<Object>> payload;
-    protected String requestId;
     
     /** Constructor.
+     * @param requestId Message id
      * @param data Message data map
      */
-    public SvcMessage( Map<String,List<Object>> data) {
+    public SvcMessage( String requestId, Map<String,List<Object>> data) {
         if( data == null) {
             data = new HashMap();
         }
+        this.requestId = requestId;
         this.payload = data;
     }
     

@@ -24,7 +24,7 @@ public class SvcRequest extends SvcMessage implements Serializable, Cloneable {
      * It should be created right on the event to make a service call, the time 
      * starts running.
      * @param clientNode Client node name 
-     * @param nodeTxNr Node transaction number, it must increment every time
+     * @param nodeRqNr Node transaction number, it must change every request
      * @param sessionNr Session ticket, only for auditory proposes
      * @param service Service name
      * @param payload Message data multimap
@@ -32,11 +32,11 @@ public class SvcRequest extends SvcMessage implements Serializable, Cloneable {
      * @param currency Currency code of the amount
      * @param timeOut Maximum response time in mS
      */
-    public SvcRequest( String clientNode, int nodeTxNr, int sessionNr, String service, 
+    public SvcRequest( String clientNode, int nodeRqNr, int sessionNr, String service, 
             Map<String,List<Object>> payload, double amount, String currency, int timeOut) {
-        super( payload);
+        super( setReqId( clientNode, service, sessionNr, nodeRqNr), payload);
         this.clientNode = clientNode;
-        this.nodeRqNr = nodeTxNr;
+        this.nodeRqNr = nodeRqNr;
         this.sessionNr = sessionNr;
         this.service = service;
         this.timeOut = timeOut;
@@ -49,7 +49,7 @@ public class SvcRequest extends SvcMessage implements Serializable, Cloneable {
      * It should be created right on the event to make a service call, the time 
      * starts running.
      * @param clientNode Client node name 
-     * @param nodeRqNr Node request number, it must increment every time
+     * @param nodeRqNr Node request number, it must change every request
      * @param sessionNr Session ticket, only for auditory proposes
      * @param service Service name
      * @param payload Message data multimap
@@ -57,7 +57,7 @@ public class SvcRequest extends SvcMessage implements Serializable, Cloneable {
      */
     public SvcRequest( String clientNode, int nodeRqNr, int sessionNr, String service, 
             Map<String,List<Object>> payload, int timeOut) {
-        super( payload);
+        super( setReqId( clientNode, service, sessionNr, nodeRqNr), payload);
         this.clientNode = clientNode;
         this.nodeRqNr = nodeRqNr;
         this.sessionNr = sessionNr;
@@ -66,16 +66,18 @@ public class SvcRequest extends SvcMessage implements Serializable, Cloneable {
         this.amount = 0d;
         this.currency = null;
         this.requestTime = System.currentTimeMillis();
+    }
+
+    private static String setReqId( String clientNode, String service, int sessionNr, int nodeRqNr) { 
         StringBuilder sb = new StringBuilder();
-        sb.append( service);
-        sb.append( '@');
         sb.append( clientNode);
+        sb.append( '@');
+        sb.append( service);
         sb.append( '.');
         sb.append( Integer.toString( sessionNr));
         sb.append( '#');
-        sb.append(Integer.toString( nodeRqNr));
-        super.requestId = sb.toString();
-
+        sb.append( Integer.toString( nodeRqNr));
+        return sb.toString();
     }
     
     /** Clone itself. To isolate multiple messages.
