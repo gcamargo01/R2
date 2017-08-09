@@ -7,9 +7,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-/** Abstract base class of invocation {@link uy.com.r2.core.api.SvcRequest}
- * and message {@link uy.com.r2.core.api.SvcResponse}.
- * It hast a "payload" data stored ia a Multi-Map (Map of Lists).
+/** Abstract base class of service invocation {@link uy.com.r2.core.api.SvcRequest}
+ * and response {@link uy.com.r2.core.api.SvcResponse}.
+ * It hast a "payload" data stored in a Multi-Map (Map of Lists).
  * @author G.Camargo
  */
 public abstract class SvcMessage implements Serializable {

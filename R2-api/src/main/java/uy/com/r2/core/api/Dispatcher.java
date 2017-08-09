@@ -1,7 +1,7 @@
 /* Dispatcher.java */
 package uy.com.r2.core.api;
 
-/** Interface to call and manage execution of some service modules instances.
+/** Interface to core services to call and manage execution of service modules instances.
  * @author G.Camargo
  */
 public interface Dispatcher extends Module {
@@ -16,7 +16,8 @@ public interface Dispatcher extends Module {
     public SvcResponse call( SvcRequest req);   
  
     /** Dispatch the execution of the next service.
-     * Call next service module. Its is only known by the Dispatcher.
+     * This method is used by synchronous module implementations (SimpleService)  
+     * to call next one in the service pipeline. Its is only known by the Dispatcher.
      * @param req Request to dispatch
      * @return SvcResponse or error packed as a response 
      * @throws Exception Cant find Next module
@@ -24,6 +25,9 @@ public interface Dispatcher extends Module {
     public SvcResponse callNext( SvcRequest req) throws Exception;
 
     /** Dispatch the execution of a service pipeline by its name.
+     * This method is used by services implementations (AsyncService, SimpleService)  
+     * that need to set one explicit set the next services pipeline to be executed.
+     * Like a routing o balancer service module.
      * @param pipe Service pipeline name
      * @param req Request to dispatch
      * @return SvcResponse or error packed as a response 
@@ -40,8 +44,14 @@ public interface Dispatcher extends Module {
     public SvcResponse callService( String serviceName, SvcRequest req);   
    
     /** Process a message from an asynchronous service implementation.
-     * The AsyncService returned NULL when was called, and now this is the event
-     * to notify that there are a message to process.
+     * After a service returned NULL because there wasn't a message yet,
+     * this method is used to signal the event that now there are a message 
+     * to process.
+     * This method is usually executed by a different thread, started by 
+     * current service module to manage asynchronous events.
+     * With the SvcMessage.getRequestId() the Dispatcher previously subscribe 
+     * each message id, to get the corresponding service pipeline, and to go on 
+     * running.
      * @param msg Request or Response from the module
      * @throws Exception Cant find module to dispatch
      */
