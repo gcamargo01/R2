@@ -16,8 +16,11 @@ import uy.com.r2.core.api.SvcResponse;
 
 
 /** Direct and simple dispatcher.
- * It uses only one thread. The thread given by it's caller is used to
- * run the service modules pipeline.
+ * It uses only one thread to run the service modules. The thread given 
+ * by it's caller is used to run the service modules pipeline.
+ * Note thar a single thread server may need another implementation with a 
+ * thread pool to dispatch multiple request concurrently, in that way he 
+ * Catalog has a Configuration item to set the Dispatcher class.
  * @author G.Camargo
  */
 public class SimpleDispatcher implements Dispatcher, CoreModule {

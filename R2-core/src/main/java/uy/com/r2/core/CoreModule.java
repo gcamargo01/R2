@@ -5,7 +5,8 @@ import uy.com.r2.core.api.Configuration;
 import uy.com.r2.core.api.Module;
 
 /** R2 core module interface.
- * A common interface to internal implementations components.
+ * A common interface to internal modules, that needs the event to start or
+ * needs some Configuration.
  * @author G.Camargo
  */
 public interface CoreModule extends Module {

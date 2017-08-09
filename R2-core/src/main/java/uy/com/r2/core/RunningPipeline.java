@@ -6,7 +6,7 @@ import uy.com.r2.core.api.SvcMessage;
 import uy.com.r2.core.api.SvcRequest;
 import uy.com.r2.core.api.SvcResponse;
 
-/** A structure to keep the sequence of modules been running.
+/** A structure to keep a sequence of modules running.
  * @author Gustavo Camargo
  */
 public class RunningPipeline {
@@ -20,8 +20,8 @@ public class RunningPipeline {
     private SvcMessage msg;
     
     /** Create a running catalog.
-     * Its a sequence of service to call one by one.
-     * @param modules Modules names separated by comma (,)
+     * It receives the list of service names to call one by one.
+     * @param modules Modules name array
      * @param req Request to process
      */
     RunningPipeline( String modules[], SvcRequest req) {
@@ -83,14 +83,15 @@ public class RunningPipeline {
     }
     
     /** Get the next module name to run.
-     * @return Module name
+     * @return Name of the module to be executed next
      */
     String next() {
         return moduleNames[ ++index];
     }
 
-    /** Put a new one to run.
+    /** Add a new module to run.
      * @param moduleName The module to run now
+     * @deprecated Its only needed by the deprecated method callService()
      */
     void add( String moduleName) {
         if( index >= moduleNames.length) {  // Expand the array

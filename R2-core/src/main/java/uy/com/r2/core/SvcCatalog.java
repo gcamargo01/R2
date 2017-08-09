@@ -19,13 +19,13 @@ import uy.com.r2.core.api.Module;
 import uy.com.r2.svc.tools.SvcManager;
 
 /** Service modules catalog.
- * This module is only to be user locally, except getDispatcher() 
- * which is user by the modules itself.
+ * This module is almost the core of the entire system. It keeps the list
+ * of the installed modules, and a special one module: the Dispatcher.
  * @author G.Camargo
  */
 public class SvcCatalog implements CoreModule {
     public static final String CATALOG_NAME = SvcCatalog.class.getSimpleName();
-    public static final String DISPATCHER_NAME = Dispatcher.class.getSimpleName();
+    public static final String DISPATCHER_NAME = "SvcDispatcher";
     
     private static final Logger LOG = Logger.getLogger(SvcCatalog.class);
     private static final Object LOCK = new Object();
@@ -203,7 +203,7 @@ public class SvcCatalog implements CoreModule {
     @Override
     public List<ConfigItemDescriptor> getConfigDescriptors() {
         LinkedList<ConfigItemDescriptor> l = new LinkedList();
-        l.add( new ConfigItemDescriptor( "Dispatcher", ConfigItemDescriptor.STRING,
+        l.add( new ConfigItemDescriptor( DISPATCHER_NAME, ConfigItemDescriptor.STRING,
                 "Dispatcher class name", null));
         return l;        
     }
@@ -215,10 +215,11 @@ public class SvcCatalog implements CoreModule {
     @Override
     public void startup( Configuration cfg) throws Exception {
         if( cfg.isChanged()) {
+            String dn = cfg.getString( DISPATCHER_NAME);
             try {
-                dispatcher = (Dispatcher)Class.forName( cfg.getString( "Dispatcher")).newInstance();
+                dispatcher = (Dispatcher)Class.forName( dn).newInstance();
             } catch( Exception x) {
-                LOG.warn( "can't instance Dispatcher", x);
+                LOG.warn( "can't instance Dispatcher class " + dn, x);
             }    
         }
     }
