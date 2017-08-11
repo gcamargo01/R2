@@ -37,7 +37,7 @@ public class SvcManager implements AsyncService, CoreModule {
     private static final String SVC_REMOVEMDOULE    = "RemoveModule";
     private static final String SVC_GETMASTER       = "GetMasterServer";
     private static final String SVC_SETMASTER       = "SetMasterServer";
-    private static final String SVC_KEEPALIVE       = "KeepAplive";
+    private static final String SVC_KEEPALIVE       = "KeepAlive";
     private static final String SVC_SHUTDOWN        = "Shutdown";
     private static final String[] SERVICES = {
         SVC_GETSERVERSLIST, SVC_ADDSERVER, SVC_REMOVESERVER, SVC_UPDATEMDOULE, 
@@ -141,15 +141,10 @@ public class SvcManager implements AsyncService, CoreModule {
     @Override
     public SvcMessage onRequest( SvcRequest req, Configuration cfg) throws Exception {
         String cmd = req.getServiceName();
-        Map<String,String> m = command( cmd, req.get( "Name"), req.get( "Url"));
-        SvcResponse resp = new SvcResponse( 0, req);
-        for( String k: m.keySet()) {
-            String sk = k;
-            if( k.indexOf( REMOVE) > 0) {
-                sk = k.substring( 0, k.indexOf( REMOVE));
-            }
-            resp.add( sk, m.get( k));
-        }
+        Map<String,List<Object>> m = command( cmd, req.get( "Name"), req.get( "Url"));
+        int cr = ( m.get( "Error") != null)? 100: 0;
+        SvcResponse resp = new SvcResponse( cr, req);
+        resp.getPayload().putAll( m);
         LOG.trace( "Command response: " + resp);
         return resp;
     }
@@ -195,15 +190,17 @@ public class SvcManager implements AsyncService, CoreModule {
      * @return Response Map with REMOVE sub-key (Multimap)
      * @throws Exception Error on command execution
      */
-    private Map<String,String> command( String cmd, Object sn, Object param) 
+    private Map<String,List<Object>>  command( String cmd, Object sn, Object param) 
             throws Exception {
         LOG.trace( "Command: " + cmd + " " + sn + " " + param);
         ++receivedCommands;
-        Map<String,String> resp = new TreeMap();
+        Map<String,List<Object>>  resp = new TreeMap();
         try {
             switch( cmd) {
             case SVC_GETSERVERSLIST:
-                resp = knownServers;
+                for( String k: knownServers.keySet()) {
+                    SvcMessage.addToPayload( resp, k, knownServers.get(  k));
+                }
                 break;
             case SVC_ADDSERVER:
                 knownServers.put( "" + sn, "" + param);
@@ -214,8 +211,8 @@ public class SvcManager implements AsyncService, CoreModule {
                 updateDestinations();
                 break;
             case SVC_GETMASTER: 
-                resp.put( "Name", masterNodeName);
-                resp.put( "Url", knownServers.get( masterNodeName));
+                SvcMessage.addToPayload( resp, "Name", masterNodeName);
+                SvcMessage.addToPayload( resp, "Url", knownServers.get( masterNodeName));
                 break;
             case SVC_SETMASTER: 
                 masterNodeName = "" + sn;
@@ -266,12 +263,12 @@ public class SvcManager implements AsyncService, CoreModule {
                 Set<String> s = new TreeSet();
                 int i = 0;
                 for( String k: SERVICES) {
-                    resp.put( "Services" + REMOVE + i++, k);
+                    SvcMessage.addToPayload( resp, "Services", k);
                 }
                 break;
             default:
                 ++errorsOnCommands;
-                resp.put( "Error", "Invalid SvcManager command: " + cmd); 
+                 SvcMessage.addToPayload( resp, "Error", "Invalid command: " + cmd);
             }
         } catch( Exception x) {
             LOG.info( "Command failed: " + cmd + " " + sn + " " + param, x);
@@ -423,7 +420,7 @@ public class SvcManager implements AsyncService, CoreModule {
             deploy( MiniHttpServer.class.getSimpleName(), c);
 
             c = new Configuration();
-            c.put( "class", Resp2Html.class.getName());
+            c.put( "class", ToHtml.class.getName());
             deploy( "HTML", c);
 /*            
             c = new Configuration();

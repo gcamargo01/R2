@@ -18,7 +18,6 @@ import uy.com.r2.core.api.SvcMessage;
 
 /** Command interpreter service that deploy and un-deploy modules.
  * This is a in-memory Deployer, that allows system remote control.
- * WORK IN PROGRESS !!!!
  * @author G.Camargo
  */
 public class SvcDeployer implements AsyncService {
@@ -32,13 +31,11 @@ public class SvcDeployer implements AsyncService {
     private static final String SVC_GETMODULESTATUS = "GetModuleStatus";
     private static final String SVC_STOPMODULE      = "StopModule";
     private static final String SVC_STARTMODULE     = "StartModule";
-    private static final String SVC_SHUTDOWN        = "Shutdown";
     private static final String[] SERVICES = {
             SVC_DEPLOYMODULE, SVC_UNDEPLOYMODULE, SVC_GETMODULELIST, 
             SVC_GETMODULECONFIG, SVC_SETMODULECONFIG, SVC_GETMODULESTATUS, 
-            SVC_STOPMODULE, SVC_STARTMODULE, SVC_SHUTDOWN
+            SVC_STOPMODULE, SVC_STARTMODULE
     };
-    private static final String REMOVE = "_ReMoVe_";
     private static final Logger LOG = Logger.getLogger( SvcDeployer.class);
     private static String commands = "";
     private final SvcCatalog catalog = SvcCatalog.getCatalog();
@@ -87,8 +84,7 @@ public class SvcDeployer implements AsyncService {
             Map<String,String> m = cfg.getStringMap( "Commands.*.Cmd");
             for( String k: m.keySet()) {
                 String cmd = m.get( k);
-                command( cmd, cfg.getString( "Commands." + k + ".Module"),
-                        cfg); 
+                command( cmd, cfg.getString( "Commands." + k + ".Module"), cfg); 
             }
         }
     }
@@ -110,7 +106,7 @@ public class SvcDeployer implements AsyncService {
         updateCfg( cfg);
         LOG.trace( "onRequest " + req + " " + cfg);
         // Is there a command?
-        if( commands.indexOf( "|" + req.getServiceName() + "|") >= 0) {
+        if( commands.contains( "|" + req.getServiceName() + "|" )) {
             String cmd = req.getServiceName();
             String md = "" + req.get( "Module");
             Configuration c = new Configuration();  // distint configuration
@@ -119,15 +115,8 @@ public class SvcDeployer implements AsyncService {
                     c.put( k, req.get( k));  // Put single value
                 }
             }
-            Map<String,String> sm = command( cmd, md, c);
             SvcResponse resp = new SvcResponse( 0, req);
-            for( String k: sm.keySet()) {
-                String sk = k;
-                if( k.indexOf( REMOVE) > 0) {
-                    sk = k.substring( 0, k.indexOf( REMOVE));
-                }
-                resp.add( sk, sm.get( k));
-            }
+            resp.getPayload().putAll( command( cmd, md, c));
             LOG.trace( "Command response: " + resp);
             return resp;
         }
@@ -177,11 +166,11 @@ public class SvcDeployer implements AsyncService {
      * @return Response Map
      * @throws Exception Error on command execution
      */
-    private Map<String,String> command( String cmd, String mn, Configuration cfg) 
+    private Map<String,List<Object>> command( String cmd, String mn, Configuration cfg) 
             throws Exception {
         LOG.trace( "Command: " + cmd + " " + mn + " " + cfg);
         ++receivedCommands;
-        Map<String,String> resp = new TreeMap();
+        Map<String,List<Object>> resp = new TreeMap();
         try {
             switch( cmd) {
             case SVC_DEPLOYMODULE:    
@@ -194,19 +183,22 @@ public class SvcDeployer implements AsyncService {
             case SVC_GETMODULELIST:
                 int i = 0;
                 for( String s: catalog.getModuleNames()) {
-                    resp.put( "Modules" + REMOVE + i++, s);                    
+                    SvcMessage.addToPayload( resp, "Modules", s);                    
                 }
                 break;
             case SVC_SETMODULECONFIG:    
                 catalog.updateConfiguration( mn, cfg);
                 break;
             case SVC_GETMODULECONFIG:
-                resp = catalog.getModuleInfo( mn).getConfiguration().getStringMap( "*");
+                Map<String,String> m = catalog.getModuleInfo( mn).getConfiguration().getStringMap( "*");
+                for( String k: m.keySet()) {
+                    SvcMessage.addToPayload( resp, k, m.get( k));                    
+                } 
                 break;
             case SVC_GETMODULESTATUS:
-                Map<String,Object> so = catalog.getModuleInfo( mn).getStatusVars();
-                for( String k: so.keySet()) {
-                    resp.put(  k, "" + so.get(  k));
+                Map<String,Object> mo = catalog.getModuleInfo( mn).getStatusVars();
+                for( String k: mo.keySet()) {
+                    SvcMessage.addToPayload( resp, k, mo.get( k));
                 }
                 break;
             case SVC_STOPMODULE:
@@ -214,9 +206,6 @@ public class SvcDeployer implements AsyncService {
                 break;
             case SVC_STARTMODULE:
                 catalog.getModuleInfo( mn).setConfiguration( cfg);
-                break;
-            case SVC_SHUTDOWN:
-                shutdown();
                 break;
             default:
                 ++errorsOnCommands;

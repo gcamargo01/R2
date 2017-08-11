@@ -165,7 +165,7 @@ public class MiniHttpServer implements CoreModule {
 
     private Map<String, List<Object>> parseQuery( String query)throws Exception {
         Map<String, List<Object>> parameters = new HashMap<String, List<Object>>();
-        if( query != null) {
+        if( query != null && !query.isEmpty()) {
             String pairs[] = query.split("[&]");
             for( String pair : pairs) {
                 String param[] = pair.split("[=]");
