@@ -100,11 +100,11 @@ public class MiniHttpServer implements CoreModule {
     @Override
     public void shutdown() {
         log.debug( "shutdown");
-        if( server != null) {
-            server.stop( 100);
-        }
         if( pool != null) {
             pool.shutdown();
+        }
+        if( server != null) {
+            server.stop( 1);
         }
     }
 

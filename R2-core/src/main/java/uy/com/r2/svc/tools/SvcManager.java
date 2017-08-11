@@ -21,8 +21,6 @@ import uy.com.r2.core.api.ConfigItemDescriptor;
 import uy.com.r2.core.api.Configuration;
 import uy.com.r2.core.api.SvcMessage;
 //import uy.com.r2.svc.FilePathSynchronizer;
-import uy.com.r2.svc.FileServices;
-import uy.com.r2.svc.Json;
 import uy.com.r2.svc.conn.HttpClient;
 
 
@@ -413,7 +411,7 @@ public class SvcManager implements AsyncService, CoreModule {
             Configuration c;
             
             c = new Configuration();
-            c.put( "DefaultServicePipeline", "HTML,DeSerializer,SvcDeployer,SvcManager");
+            c.put( "DefaultServicePipeline", "HTML,SvcDeployer,SvcManager");
             c.put( "Pipeline.SvcManager", "FileServices,Serializer,HttpClient");
             deploy( SvcCatalog.DISPATCHER_NAME, c);
 
@@ -427,13 +425,13 @@ public class SvcManager implements AsyncService, CoreModule {
             c = new Configuration();
             c.put( "class", Resp2Html.class.getName());
             deploy( "HTML", c);
-            
+/*            
             c = new Configuration();
             c.put( "class", Json.class.getName());
             c.put( "ToSerial", false);
             c.put( "ProcessRequest", false);
             deploy( "DeSerializer", c);
-/*
+
             c = new Configuration();
             c.put( "class", FilePathSynchronizer.class.getName());
             c.put( "Path.lib", "lib");
