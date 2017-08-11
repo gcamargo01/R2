@@ -101,7 +101,7 @@ public class ModuleInfo implements Module {
         cdl.add( new ConfigItemDescriptor( "LimitActiveThreads", ConfigItemDescriptor.MODULE,
                "Keep track and limit the concurrent threads ons this module", null));
         cdl.add( new ConfigItemDescriptor( "Monitor", ConfigItemDescriptor.BOOLEAN,
-               "Wrap module with SvcMonitor to get statistics and acitvity", "false"));
+               "Wrap module with SvcMonitor to get statistics and acitvity", null));
         cdl.add( new ConfigItemDescriptor( "TimeOut", ConfigItemDescriptor.BOOLEAN,
                "Time out of this module", null));
         // Set default values 
