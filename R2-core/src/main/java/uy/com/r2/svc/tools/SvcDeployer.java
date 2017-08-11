@@ -1,13 +1,13 @@
 /* SvcDeployer.java */
 package uy.com.r2.svc.tools;
 
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.TreeMap;
 import org.apache.log4j.Logger;
+import uy.com.r2.core.ModuleInfo;
 import uy.com.r2.core.SvcCatalog;
 import uy.com.r2.core.api.SvcRequest;
 import uy.com.r2.core.api.SvcResponse;
@@ -187,9 +187,17 @@ public class SvcDeployer implements AsyncService {
                 catalog.updateConfiguration( mn, cfg);
                 break;
             case SVC_GETMODULECONFIG:
+                List<ConfigItemDescriptor> cdl = catalog.getModuleInfo( mn).getConfigDescriptors();
+                Map<String,String> dm = new HashMap();
+                for( ConfigItemDescriptor c: cdl) {
+                    dm.put( c.getKey(), c.getDescription());                   
+                }
                 Map<String,String> m = catalog.getModuleInfo( mn).getConfiguration().getStringMap( "*");
                 for( String k: m.keySet()) {
-                    SvcMessage.addToPayload( resp, k, m.get( k));                    
+                    SvcMessage.addToPayload( resp, k, m.get( k)); 
+                    if( dm.containsKey( k)) {
+                        SvcMessage.addToPayload( resp, k, dm.get( k));
+                    }
                 } 
                 break;
             case SVC_GETMODULESTATUS:
