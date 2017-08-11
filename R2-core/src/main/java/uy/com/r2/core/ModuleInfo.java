@@ -97,7 +97,7 @@ public class ModuleInfo implements Module {
             cdl = new LinkedList();
         }
         cdl.add( new ConfigItemDescriptor( "class", ConfigItemDescriptor.STRING,
-               "Specify lon class name or URL of the service", null));
+               "Long class name or URL of the service impelmentation", null));
         cdl.add( new ConfigItemDescriptor( "LimitActiveThreads", ConfigItemDescriptor.MODULE,
                "Keep track and limit the concurrent threads ons this module", null));
         cdl.add( new ConfigItemDescriptor( "Monitor", ConfigItemDescriptor.BOOLEAN,
