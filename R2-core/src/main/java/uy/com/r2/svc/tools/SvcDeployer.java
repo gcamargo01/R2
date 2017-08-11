@@ -39,7 +39,6 @@ public class SvcDeployer implements AsyncService {
     private static final Logger LOG = Logger.getLogger( SvcDeployer.class);
     private static String commands = "";
     private final SvcCatalog catalog = SvcCatalog.getCatalog();
-    private final ArrayList<String> deployedList = new ArrayList();
     private int receivedCommands = 0;
     private int errorsOnCommands = 0;
 
@@ -57,7 +56,6 @@ public class SvcDeployer implements AsyncService {
      */
     SvcDeployer() throws Exception {
         // Register itself in the system catalog
-        deployedList.add( DEPLOYER_NAME);
         catalog.installModule( DEPLOYER_NAME, this, null);
     }
     
@@ -175,7 +173,6 @@ public class SvcDeployer implements AsyncService {
             switch( cmd) {
             case SVC_DEPLOYMODULE:    
                 catalog.installModule( mn, cfg);
-                deployedList.add( mn);
                 break;
             case SVC_UNDEPLOYMODULE:    
                 catalog.uninstallModule( mn);
@@ -222,17 +219,6 @@ public class SvcDeployer implements AsyncService {
     /** Stop and release all the allocated resources. */
     @Override
     public void shutdown() {
-        // shutdown itself
-        LOG.trace( "shutdown " + deployedList.size());
-        // shutdown all modules deployed by this instance
-        Collections.reverse( deployedList);
-        deployedList.remove( DEPLOYER_NAME);
-        for( String n: deployedList) {
-            try {
-                catalog.uninstallModule( n);
-            } catch( Exception ex) { }
-        }
-        deployedList.clear();
     }
 
     /** Entry point as a Deployer.
