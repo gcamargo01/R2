@@ -25,7 +25,7 @@ public class Configuration implements Serializable {
     /** Map Constructor.
      * @param map Configuration items map
      */
-    public Configuration( Map<String,Object> map){
+    public Configuration( Map<String,Object> map) {
         cfg = map;
     }
 
@@ -33,7 +33,7 @@ public class Configuration implements Serializable {
      * @return A new configuration
      */
     @Override
-    public Configuration clone( ){
+    public Configuration clone( ) {
         return new Configuration( this.cfg);
     }
 
@@ -41,7 +41,7 @@ public class Configuration implements Serializable {
      * To avoid unnecessary processing
      * @return Boolean
      */
-    public boolean isChanged( ){
+    public boolean isChanged( ) {
         return changed;
     }
 
