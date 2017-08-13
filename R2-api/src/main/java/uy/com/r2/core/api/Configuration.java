@@ -11,7 +11,7 @@ import java.io.Serializable;
  * {@link uy.com.r2.core.api.ConfigItemDescriptor} and actual value.
  * @author G.Camargo
  */
-public class Configuration implements Serializable{
+public class Configuration implements Serializable {
     private static final long serialVersionUID = 1L;
     
     private Map<String,Object>cfg = new TreeMap<>();
