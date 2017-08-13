@@ -29,21 +29,28 @@ import uy.com.r2.svc.conn.HttpClient;
  * @author G.Camargo
  */
 public class SvcManager implements AsyncService, CoreModule {
-    private static final String SVC_GETSERVICESLIST = "GetServicesList";
-    private static final String SVC_GETSERVERSLIST  = "GetServersList";
     private static final String SVC_ADDSERVER       = "AddServer";
-    private static final String SVC_REMOVESERVER    = "RemoveServer";
-    private static final String SVC_UPDATEMDOULE    = "UpdateModule";
-    private static final String SVC_REMOVEMDOULE    = "RemoveModule";
     private static final String SVC_GETMASTER       = "GetMasterServer";
-    private static final String SVC_SETMASTER       = "SetMasterServer";
+    private static final String SVC_GETSERVERSLIST  = "GetServersList";
+    private static final String SVC_GETSERVICESLIST = "GetServicesList";
     private static final String SVC_KEEPALIVE       = "KeepAlive";
+    private static final String SVC_REMOVESERVER    = "RemoveServer";
+    private static final String SVC_REMOVEMDOULE    = "RemoveModule";
+    private static final String SVC_SETMASTER       = "SetMasterServer";
     private static final String SVC_SHUTDOWN        = "Shutdown";
+    private static final String SVC_UPDATEMDOULE    = "UpdateModule";
     private static final String[] SERVICES = {
-        SVC_GETSERVERSLIST, SVC_ADDSERVER, SVC_REMOVESERVER, SVC_UPDATEMDOULE, 
-        SVC_REMOVEMDOULE, SVC_GETMASTER, SVC_SETMASTER, SVC_KEEPALIVE, SVC_SHUTDOWN
+        SVC_ADDSERVER, 
+        SVC_GETMASTER, 
+        SVC_GETSERVERSLIST,
+        SVC_GETSERVICESLIST,
+        SVC_KEEPALIVE, 
+        SVC_REMOVESERVER, 
+        SVC_REMOVEMDOULE, 
+        SVC_SETMASTER, 
+        SVC_SHUTDOWN,
+        SVC_UPDATEMDOULE 
     };
-    private static final String REMOVE = "_ReMoVe_";
     private static final Logger LOG = Logger.getLogger(SvcManager.class);
     private static SvcManager svcMgr;
     private static boolean stop = false;
@@ -143,8 +150,7 @@ public class SvcManager implements AsyncService, CoreModule {
         String cmd = req.getServiceName();
         Map<String,List<Object>> m = command( cmd, req.get( "Name"), req.get( "Url"));
         int cr = ( m.get( "Error") != null)? 100: 0;
-        SvcResponse resp = new SvcResponse( cr, req);
-        resp.getPayload().putAll( m);
+        SvcResponse resp = new SvcResponse( m, cr, req);
         LOG.trace( "Command response: " + resp);
         return resp;
     }
@@ -194,7 +200,7 @@ public class SvcManager implements AsyncService, CoreModule {
             throws Exception {
         LOG.trace( "Command: " + cmd + " " + sn + " " + param);
         ++receivedCommands;
-        Map<String,List<Object>>  resp = new TreeMap();
+        Map<String,List<Object>> resp = new TreeMap();
         try {
             switch( cmd) {
             case SVC_GETSERVERSLIST:
