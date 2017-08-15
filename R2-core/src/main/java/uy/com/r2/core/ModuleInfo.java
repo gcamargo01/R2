@@ -24,7 +24,7 @@ import uy.com.r2.svc.tools.SvcMonitor;
  */
 public class ModuleInfo implements Module {
     private final static Logger LOG = Logger.getLogger(ModuleInfo.class);
-    private final static int DEFAULT_TIME_OUT = 10000;
+    private final static int DEFAULT_TIME_OUT = Integer.MAX_VALUE;
     private final String moduleName;
     private final Module moduleImpl;
     private final AsyncService asyncImpl;  // Module Wrapped as AsyncService
@@ -121,19 +121,8 @@ public class ModuleInfo implements Module {
      * @throws Exception Unexpected error
      */
     public void setConfiguration( Configuration cfg) throws Exception {
-        // Add generic config descriptors
+        // Get with generic config descriptors
         List<ConfigItemDescriptor> cdl = getImplementation().getConfigDescriptors();
-        if( cdl == null) {
-            cdl = new LinkedList();
-        }
-        cdl.add( new ConfigItemDescriptor( "class", ConfigItemDescriptor.STRING,
-               "Long class name or URL of the service impelmentation", null));
-        cdl.add( new ConfigItemDescriptor( "LimitActiveThreads", ConfigItemDescriptor.MODULE,
-               "Keep track and limit the concurrent threads ons this module", null));
-        cdl.add( new ConfigItemDescriptor( "Monitor", ConfigItemDescriptor.BOOLEAN,
-               "Wrap module with SvcMonitor to get statistics and acitvity", null));
-        cdl.add( new ConfigItemDescriptor( "TimeOut", ConfigItemDescriptor.BOOLEAN,
-               "Time out of this module", null));
         // Set default values 
         for( ConfigItemDescriptor cd: cdl) {
             if( cd.getDefaultValue() != null &&           // has a default value
@@ -145,30 +134,24 @@ public class ModuleInfo implements Module {
         }    
         // Log config status
         if( LOG.isTraceEnabled()) {
-            Map<String,String> cfgItems = cfg.getStringMap( "*");
-            LOG.trace( "Config: " + moduleName + " class=" + moduleImpl.getClass().getName());
-            cfgItems.remove( "class");
+            Map<String,String> unknowCfg = cfg.getStringMap( "*");
+            unknowCfg.remove( "class");
             for( ConfigItemDescriptor cd: cdl) {
                 if( !cd.getKey().contains( "*")) {    // Simple cfg.
                     if( cfg.containsKey( cd.getKey())) {
-                        LOG.trace( "Config:   // " + cd.getDescription());
-                        LOG.trace( "Config:   " + cd.getKey() + "=" + cfg.getString( cd.getKey()));
-                        cfgItems.remove( cd.getKey());
+                        unknowCfg.remove( cd.getKey());
                     }
                 } else {
                     for( String k: cfg.getStringMap( cd.getKey()).keySet()) {
-                        LOG.trace( "Config:   // " + cd.getDescription());
                         String kk = cd.getKey().replace( "*", k);
-                        LOG.trace( "Config:   " + kk + "=" + cfg.getString( kk));
-                        cfgItems.remove( kk);
+                        unknowCfg.remove( kk);
                     }
                 }
             }
             if( LOG.isDebugEnabled()) {
-                for( String k: cfgItems.keySet()) {
-                   LOG.trace( "Config:   " + k + "=" + cfg.getString( k));
+                for( String k: unknowCfg.keySet()) {
                    try {
-                       throw new Exception( "Config: Undefined configuration!: " + k);                       
+                       throw new Exception( "Undefined configuration!: " + k + "=" + unknowCfg.get( k));                       
                    } catch( Exception x) {
                        LOG.trace( "" + x, x);
                    }
@@ -212,15 +195,17 @@ public class ModuleInfo implements Module {
         return true;
     }
 
-    /*
-    int getTimeOut() {
-        try {
-            return cfg.getInt( "TimeOut", DEFAULT_TIME_OUT);
-        } catch( Exception x) {
-            return DEFAULT_TIME_OUT;
+    int getTimeOut( SvcRequest req) {
+        int to = req.getTimeOut();
+        if( to == 0) {
+            to = DEFAULT_TIME_OUT;
         }
+        try {
+            int t = cfg.getInt( "TimeOut", DEFAULT_TIME_OUT);
+            to = Integer.min( to, t);
+        } catch( Exception x) { }
+        return to;
     }
-    */
 
     /** Decrement running instances accounting. */
     void releaseOne() {
@@ -246,6 +231,19 @@ public class ModuleInfo implements Module {
         SvcRequest req = ( msg instanceof SvcRequest) ? 
                 (SvcRequest)msg:
                 ((SvcResponse)msg).getRequest();
+        // Chech Timed out processing
+        int to = getTimeOut( req);
+        if( to < Integer.MAX_VALUE) {
+            int t = ( int)( System.currentTimeMillis() - req.getAbsoluteTime());
+            if( t > to) {
+                ++count;
+                ++errorCount;
+                LOG.warn( "Timed out processing " + moduleName);
+                return new SvcResponse( SvcResponse.MSG_TIMEOUT, 
+                        SvcResponse.RES_CODE_TIMEOUT, null, req);
+            }
+        }
+        // Process    
         SvcResponse resp = null;
         if( !takeOne()) {  // Too many running instances, cancel!
             ++count;
@@ -307,11 +305,21 @@ public class ModuleInfo implements Module {
     /** Get configuration descriptors. */
     @Override
     public List<ConfigItemDescriptor> getConfigDescriptors() {
-        List<ConfigItemDescriptor> l = getImplementation().getConfigDescriptors();
-        if( l == null) {
-            l = new LinkedList();
+        // Get from module
+        List<ConfigItemDescriptor> cdl = getImplementation().getConfigDescriptors();
+        if( cdl == null) {
+            cdl = new LinkedList();
         }
-        return l;
+        // Add generic config descriptors
+        cdl.add( new ConfigItemDescriptor( "class", ConfigItemDescriptor.STRING,
+               "Long class name or URL of the service impelmentation (internal)", null));
+        cdl.add( new ConfigItemDescriptor( "LimitActiveThreads", ConfigItemDescriptor.MODULE,
+               "Keep track and limit the concurrent threads ons this module (internal)", null));
+        cdl.add( new ConfigItemDescriptor( "Monitor", ConfigItemDescriptor.BOOLEAN,
+               "Wrap module with SvcMonitor to get statistics and acitvity (internal)", null));
+        cdl.add( new ConfigItemDescriptor( "TimeOut", ConfigItemDescriptor.BOOLEAN,
+               "Time out of this module (internal)", null));
+        return cdl;
     }
 
     /** Stop service. */
