@@ -4,6 +4,7 @@ package uy.com.r2.svc.tools;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Set;
 import org.apache.log4j.Logger;
 import uy.com.r2.core.api.AsyncService;
 import uy.com.r2.core.api.SvcRequest;
@@ -14,6 +15,7 @@ import uy.com.r2.core.api.SvcMessage;
 
 
 /** HTML response formatter to make human readable and help send commands.
+ * This is a minimal HTML generator. 
  * @author G.Camargo
  */
 public class ToHtml implements AsyncService {
@@ -84,6 +86,8 @@ public class ToHtml implements AsyncService {
         sb.append( rq.getSessionNr());
         sb.append( " &nbsp; Rq.nr.: ");
         sb.append( rq.getNodeRqNr());
+        sb.append( " &nbsp; Time Out: ");
+        sb.append( rq.getTimeOut());
         sb.append( "<br/>");
         // 
         if( !rq.getPayload().isEmpty()) {
@@ -107,6 +111,8 @@ public class ToHtml implements AsyncService {
         // 
         sb.append( "<p/>&nbsp;<p/><h4>Response</h4>Result code: "); 
         sb.append( resp.getResultCode()); 
+        sb.append( " &nbsp; Time: ");
+        sb.append( resp.getResponseTime());
         sb.append( "<br/>");
         // Content
         boolean modlist = resp.getRequest().getServiceName().equals( "GetModulesList");
@@ -123,7 +129,7 @@ public class ToHtml implements AsyncService {
             }
             for( Object o: l) {
                 if( !modlist) {
-                    sb.append( "" + o);
+                    toHtml( o, sb);
                     sb.append( "<br>");
                 } else {
                     String m = "" + o;
@@ -134,6 +140,10 @@ public class ToHtml implements AsyncService {
                     sb.append( "  <div class=\"divCell0\">\n");
                     sb.append( "<form action=\"/GetModuleConfig\" style=\"display: inline;\"><input type=\"hidden\" name=\"Module\" value=\"" 
                             + m + "\"><input type=\"submit\" value=\"GetModuleConfig\"></form>\n"); 
+                    sb.append( "  </div>\n"); 
+                    sb.append( "  <div class=\"divCell0\">\n");
+                    sb.append( "<form action=\"/GetModuleDetailedConfig\" style=\"display: inline;\"><input type=\"hidden\" name=\"Module\" value=\""
+                            + m + "\"><input type=\"submit\" value=\"GetModuleDetailedConfig\"></form>\n"); 
                     sb.append( "  </div>\n"); 
                     sb.append( "  <div class=\"divCell0\">\n");
                     sb.append( "<form action=\"/GetModuleStatus\" style=\"display: inline;\"><input type=\"hidden\" name=\"Module\" value=\""
@@ -178,6 +188,48 @@ public class ToHtml implements AsyncService {
     @Override
     public void shutdown() {
     }
+    
+    private void toHtml( Object o, StringBuilder sb) {
+        boolean firstOne = true;
+        if( o == null) {
+            sb.append( "(NULL)");
+        } else if( o instanceof List) {
+            for( Object e: ( List)o) {
+                if( firstOne) {
+                    firstOne = false;
+                } else {
+                    sb.append( "<br/>");
+                }
+                toHtml( e, sb);
+            }        
+        } else if( o instanceof Set) {
+            for( Object e: ( Set)o) {
+                if( firstOne) {
+                    firstOne = false;
+                } else {
+                    sb.append( "<br/>");
+                }
+                toHtml( e, sb);
+            }
+        } else if( o instanceof Map) {
+            Map m = (Map)o;
+            sb.append( "<div class=\"divTable\">\n"); 
+            for( Object k: m.keySet()) {
+                sb.append( " <div class=\"divRow\">\n");
+                sb.append( "  <div class=\"divCell0\">\n");
+                sb.append( "" + k);
+                sb.append( "  </div>"); // EndCell
+                sb.append( "  <div class=\"divCell0\">\n");
+                toHtml( m.get( k), sb);
+                sb.append( "  </div>"); // EndCell
+                sb.append( " </div>"); // EndRow
+            }
+            sb.append( "</div>");
+        } else {
+            sb.append( "" + o);
+        }
+    }
+    
 
 }
 
