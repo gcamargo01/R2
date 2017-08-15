@@ -1,13 +1,11 @@
 /* SvcDeployer.java */
 package uy.com.r2.svc.tools;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.TreeMap;
 import org.apache.log4j.Logger;
-import uy.com.r2.core.ModuleInfo;
 import uy.com.r2.core.SvcCatalog;
 import uy.com.r2.core.api.SvcRequest;
 import uy.com.r2.core.api.SvcResponse;
@@ -33,10 +31,9 @@ public class SvcDeployer implements AsyncService {
     private static final String SVC_STOPMODULE      = "StopModule";
     private static final String SVC_UNDEPLOYMODULE  = "UndeployModule";
     private static final String[] SERVICES = {
-            SVC_DEPLOYMODULE,    SVC_GETSERVICESLIST, SVC_GETMODULECONFIG, 
-            SVC_GETMODULEDETCFG, SVC_GETMODULELIST,   SVC_GETMODULESTATUS,   
-            SVC_SETMODULECONFIG, SVC_STARTMODULE,     SVC_STOPMODULE,   
-            SVC_UNDEPLOYMODULE 
+            SVC_DEPLOYMODULE,    SVC_GETMODULECONFIG, SVC_GETMODULEDETCFG, 
+            SVC_GETMODULELIST,   SVC_GETMODULESTATUS, SVC_SETMODULECONFIG, 
+            SVC_STARTMODULE,     SVC_STOPMODULE,      SVC_UNDEPLOYMODULE 
     };
     private static final Logger LOG = Logger.getLogger( SvcDeployer.class);
     private static String commands = "";
