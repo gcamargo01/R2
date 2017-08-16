@@ -313,7 +313,7 @@ public class ModuleInfo implements Module {
         // Add generic config descriptors
         cdl.add( new ConfigItemDescriptor( "class", ConfigItemDescriptor.STRING,
                "Long class name or URL of the service impelmentation (internal)", null));
-        cdl.add( new ConfigItemDescriptor( "LimitActiveThreads", ConfigItemDescriptor.MODULE,
+        cdl.add( new ConfigItemDescriptor( "LimitActiveThreads", ConfigItemDescriptor.BOOLEAN,
                "Keep track and limit the concurrent threads ons this module (internal)", null));
         cdl.add( new ConfigItemDescriptor( "Monitor", ConfigItemDescriptor.BOOLEAN,
                "Wrap module with SvcMonitor to get statistics and acitvity (internal)", null));
