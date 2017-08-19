@@ -20,7 +20,6 @@ import uy.com.r2.core.api.SvcMessage;
  */
 public class SvcDeployer implements AsyncService {
     public static final String SVC_DEPLOYMODULE    = "DeployModule";
-    public static final String SVC_GETSERVICESLIST = "GetServicesList";
     public static final String SVC_GETMODULECONFIG = "GetModuleConfig";
     public static final String SVC_GETMODULELIST   = "GetModulesList";
     public static final String SVC_GETMODULESTATUS = "GetModuleStatus";
@@ -138,7 +137,7 @@ public class SvcDeployer implements AsyncService {
     public SvcResponse onResponse( SvcResponse resp, Configuration cfg) throws Exception {
         updateCfg( cfg);
         SvcRequest req = resp.getRequest();
-        if( req.getServiceName().equals( SVC_GETSERVICESLIST)) {
+        if( req.getServiceName().equals( SvcManager.SVC_GETSERVICESLIST)) {
             for( String s: SERVICES) {
                 resp.add( "Services", s);
             }
