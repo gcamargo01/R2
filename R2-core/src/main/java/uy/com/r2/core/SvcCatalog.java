@@ -253,11 +253,13 @@ public class SvcCatalog implements CoreModule {
         } catch (InterruptedException ex) { }
         Set<String> nml = new HashSet( SvcCatalog.getCatalog().getModuleNames());
         nml.remove( CATALOG_NAME);  // avoid loop
+        nml.remove( DISPATCHER_NAME);  // can't be uninstalled
         for( String n: nml) {
             try {
                 uninstallModule( n);
             } catch ( Exception ex) { }
         }
+        dispatcher.shutdown();
     }    
 
 }

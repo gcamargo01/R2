@@ -18,6 +18,7 @@ public class RunningPipeline {
     private String moduleNames[];
     private int index;
     private SvcMessage msg;
+    private boolean stop = false;
     
     /** Create a running catalog.
      * It receives the list of service names to call one by one.
@@ -36,8 +37,8 @@ public class RunningPipeline {
         //LOG.trace( "new RunningPipeline( " + req.getRequestId() + " ) " + toString());
     }
     
-    /** Running step, process one module a time */
-    void run () {
+    /** Run one module a time */
+    private void runStep () {
         String moduleName = null;
         try {
             if( index >= moduleNames.length || moduleNames[ index] == null) {
@@ -82,15 +83,15 @@ public class RunningPipeline {
         }
     }
     
-    /** Get the next module name to run.
+    /** Get the next module name to runStep.
      * @return Name of the module to be executed next
      */
     String next() {
         return moduleNames[ ++index];
     }
 
-    /** Add a new module to run.
-     * @param moduleName The module to run now
+    /** Add a new module to runStep.
+     * @param moduleName The module to runStep now
      * @deprecated Its only needed by the deprecated method callService()
      */
     void add( String moduleName) {
@@ -110,8 +111,8 @@ public class RunningPipeline {
      */
     SvcResponse getResponse() {
         int actualIndex = index;
-        while( index >= actualIndex) {
-            run();
+        while( index >= actualIndex && !stop) {
+            runStep();
         }
         if( !( msg instanceof SvcResponse )) {
             Exception x = new Exception( "Cast error running " + toString());
@@ -123,8 +124,8 @@ public class RunningPipeline {
     }
     
     SvcResponse getFinalResponse() {
-        while( index >= 0) {
-            run();
+        while( index >= 0 && !stop) {
+            runStep();
         }
         if( !( msg instanceof SvcResponse )) {
             Exception x = new Exception( "Cast error running " + toString());
@@ -135,6 +136,11 @@ public class RunningPipeline {
         return (SvcResponse)msg;
     }
     
+    void stop() {
+        stop = true;
+        LOG.debug( "stopping" + toString());
+    }
+
     /** Dump status.
      * @return String
      */

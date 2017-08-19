@@ -213,6 +213,10 @@ public class SimpleDispatcher implements Dispatcher, CoreModule {
     /** Release all the allocated resources. */
     @Override
     public void shutdown() {
+        LOG.debug( "shutdown");
+        for( String k: runningPipelines.keySet()) {
+            runningPipelines.get(  k).stop();
+        }
     }
 
     private SvcResponse newExceptionResponse( String msg, SvcRequest req) {
