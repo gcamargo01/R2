@@ -18,6 +18,7 @@ import uy.com.r2.core.api.AsyncService;
 import uy.com.r2.core.api.ConfigItemDescriptor;
 import uy.com.r2.core.api.Configuration;
 import uy.com.r2.core.api.SvcMessage;
+import uy.com.r2.svc.tools.SvcManager;
 
 
 /** JDBC service module.
@@ -84,9 +85,7 @@ public class JdbcService implements AsyncService {
             ServiceInfo si = new ServiceInfo();
             si.sqlSentence = svcsSQL.get( k);
             String pns = svcsParams.get( k);
-            if( pns != null) {
-                si.paramNames = svcsParams.get( k).split( ",");
-            }
+            si.paramNames = ( pns != null)? svcsParams.get( k).split( ","): new String[ 0];
             si.rowName = svcsRowName.get( k);
             if( si.rowName == null) {
                 si.rowName = "Row";
@@ -104,12 +103,13 @@ public class JdbcService implements AsyncService {
      * @throws Exception Unexpected error, the responseCode will be lower than 0
      */
     @Override
-    public SvcResponse onRequest( SvcRequest req, Configuration cfg) throws Exception {
+    public SvcMessage onRequest( SvcRequest req, Configuration cfg) throws Exception {
         setConfiguration( cfg);
         String svcName = req.getServiceName();
         ServiceInfo si = svcs.get( svcName);
         if( si == null) {
-            throw new Exception( SvcResponse.MSG_INVALID_SERVICE + req.getServiceName());
+            //throw new Exception( SvcResponse.MSG_INVALID_SERVICE + req.getServiceName());
+            return req;
         }
         Map<String,List<Object>> r = execute( req.getPayload(), si);
         SvcResponse resp = new SvcResponse( r, 0, req);
@@ -190,9 +190,18 @@ public class JdbcService implements AsyncService {
         }
     }
 
+    
+    /** Process a response from another modules
+     * @throws Exception Unexpected
+     */
     @Override
     public SvcResponse onResponse( SvcResponse resp, Configuration cfg) throws Exception {
-        throw new UnsupportedOperationException( "Not supported."); 
+        if( resp.getRequest().getServiceName().equals( SvcManager.SVC_GETSERVICESLIST)) {
+            for( String k: svcs.keySet()) {
+                resp.add( "Services", k);
+            }
+        }
+        return resp;
     }
     
     private class ServiceInfo {
