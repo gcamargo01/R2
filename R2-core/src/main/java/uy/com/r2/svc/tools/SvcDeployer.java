@@ -19,21 +19,22 @@ import uy.com.r2.core.api.SvcMessage;
  * @author G.Camargo
  */
 public class SvcDeployer implements AsyncService {
+    public static final String SVC_DEPLOYMODULE    = "DeployModule";
+    public static final String SVC_GETSERVICESLIST = "GetServicesList";
+    public static final String SVC_GETMODULECONFIG = "GetModuleConfig";
+    public static final String SVC_GETMODULELIST   = "GetModulesList";
+    public static final String SVC_GETMODULESTATUS = "GetModuleStatus";
+    public static final String SVC_SETMODULECONFIG = "SetModuleConfig";
+    public static final String SVC_GETMODULEDETCFG = "GetModuleDetailedConfig";
+    public static final String SVC_STARTMODULE     = "StartModule";
+    public static final String SVC_STOPMODULE      = "StopModule";
+    public static final String SVC_UNDEPLOYMODULE  = "UndeployModule";
+    public static final String TAG_ACTUALCONFIG = "_Configuration";
     private static final String DEPLOYER_NAME = SvcDeployer.class.getSimpleName();
-    private static final String SVC_DEPLOYMODULE    = "DeployModule";
-    private static final String SVC_GETSERVICESLIST = "GetServicesList";
-    private static final String SVC_GETMODULECONFIG = "GetModuleConfig";
-    private static final String SVC_GETMODULELIST   = "GetModulesList";
-    private static final String SVC_GETMODULESTATUS = "GetModuleStatus";
-    private static final String SVC_SETMODULECONFIG = "SetModuleConfig";
-    private static final String SVC_GETMODULEDETCFG = "GetModuleDetailedConfig";
-    private static final String SVC_STARTMODULE     = "StartModule";
-    private static final String SVC_STOPMODULE      = "StopModule";
-    private static final String SVC_UNDEPLOYMODULE  = "UndeployModule";
     private static final String[] SERVICES = {
             SVC_DEPLOYMODULE,    SVC_GETMODULECONFIG, SVC_GETMODULEDETCFG, 
             SVC_GETMODULELIST,   SVC_GETMODULESTATUS, SVC_SETMODULECONFIG, 
-            SVC_STARTMODULE,     SVC_STOPMODULE,      SVC_UNDEPLOYMODULE 
+            SVC_STARTMODULE,     SVC_STOPMODULE,      SVC_UNDEPLOYMODULE
     };
     private static final Logger LOG = Logger.getLogger( SvcDeployer.class);
     private static String commands = "";
@@ -84,6 +85,7 @@ public class SvcDeployer implements AsyncService {
                 command( cmd, cfg.getString( "Commands." + k + ".Module"), cfg); 
             }
         }
+        cfg.resetChanged();
     }
 
     /** Invocation dispatch phase.
@@ -190,6 +192,8 @@ public class SvcDeployer implements AsyncService {
                 for( String k: mm.keySet()) {
                     SvcMessage.addToPayload( resp, k, mm.get( k)); 
                 } 
+                SvcMessage.addToPayload( resp, TAG_ACTUALCONFIG, 
+                        catalog.getModuleInfo( mn).getConfiguration().getStringMap( "*")); 
                 break;
             case SVC_GETMODULECONFIG:
                 Map<String,String> cm = catalog.getModuleInfo( mn).getConfiguration().getStringMap( "*");
@@ -218,6 +222,7 @@ public class SvcDeployer implements AsyncService {
             ++errorsOnCommands;
             throw x;
         }
+        LOG.debug( "command resp=" + resp);
         return resp;
     }    
 

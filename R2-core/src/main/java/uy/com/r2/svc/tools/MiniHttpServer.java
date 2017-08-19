@@ -77,6 +77,7 @@ public class MiniHttpServer implements CoreModule {
         server.createContext( "/", new MyHandler());
         server.setExecutor( pool); // creates a default executor
         server.start();
+        cfg.resetChanged();
         // reset statistics
         calledTimes = 0;
         callingErrors = 0;

@@ -99,6 +99,7 @@ public class SvcMonitor implements AsyncService, SimpleService {
                 lastReqs = new SvcRequest[ keepLast];
                 lastResp = new SvcResponse[ keepLast];
             }
+            cfg.resetChanged();
         }    
     }
     

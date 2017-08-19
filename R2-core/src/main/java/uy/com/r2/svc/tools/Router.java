@@ -52,6 +52,7 @@ public class Router implements AsyncService {
             //    log.warn( "Defined route not found " + pn + " for node " + sn);
             //}
         }
+        cfg.resetChanged();
     }
 
     /** Invocation dispatch phase.

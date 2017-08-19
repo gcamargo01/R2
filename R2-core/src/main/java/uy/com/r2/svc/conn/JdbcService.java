@@ -83,7 +83,10 @@ public class JdbcService implements AsyncService {
         for( String k: svcsSQL.keySet()) {
             ServiceInfo si = new ServiceInfo();
             si.sqlSentence = svcsSQL.get( k);
-            si.paramNames = svcsParams.get( k).split( ",");
+            String pns = svcsParams.get( k);
+            if( pns != null) {
+                si.paramNames = svcsParams.get( k).split( ",");
+            }
             si.rowName = svcsRowName.get( k);
             if( si.rowName == null) {
                 si.rowName = "Row";
@@ -91,7 +94,7 @@ public class JdbcService implements AsyncService {
             svcs.put( k, si);
             log.debug( "Service " + k + " " + si.sqlSentence);
         }
-        log.debug( "Services defined: " + svcs.size());
+        cfg.resetChanged();
     }
 
     /** Service call.
@@ -180,8 +183,7 @@ public class JdbcService implements AsyncService {
             return resp;
         } catch( Exception x) {
             ++si.errors;
-            log.warn( "Unexpcected Exception on JDBC " + url, x);
-            throw new Exception( "Unexpcected Exception on JDBC " + url, x);
+            throw new Exception( "" + x + " url= " + url + " user=" + user, x);
         } finally {   // Allways release 
             try { rs.close(); } catch( Exception xx) { }
             try { ps.close(); } catch( Exception xx) { }

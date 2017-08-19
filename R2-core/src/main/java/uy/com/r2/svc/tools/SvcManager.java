@@ -22,6 +22,7 @@ import uy.com.r2.core.api.Configuration;
 import uy.com.r2.core.api.SvcMessage;
 //import uy.com.r2.svc.FilePathSynchronizer;
 import uy.com.r2.svc.conn.HttpClient;
+import uy.com.r2.svc.conn.JdbcService;
 
 
 /** Command interpreter service that manage servers of the domain.
@@ -29,22 +30,24 @@ import uy.com.r2.svc.conn.HttpClient;
  * @author G.Camargo
  */
 public class SvcManager implements AsyncService, CoreModule {
-    private static final String SVC_ADDSERVER       = "AddServer";
-    private static final String SVC_GETMASTER       = "GetMasterServer";
-    private static final String SVC_GETSERVERSLIST  = "GetServersList";
-    private static final String SVC_GETSERVICESLIST = "GetServicesList";
-    private static final String SVC_KEEPALIVE       = "KeepAlive";
-    private static final String SVC_REMOVESERVER    = "RemoveServer";
-    private static final String SVC_REMOVEMDOULE    = "RemoveModule";
-    private static final String SVC_SETMASTER       = "SetMasterServer";
-    private static final String SVC_SHUTDOWN        = "Shutdown";
-    private static final String SVC_UPDATEMDOULE    = "UpdateModule";
+    public static final String SVC_ADDSERVER       = "AddServer";
+    public static final String SVC_GETMASTER       = "GetMasterServer";
+    public static final String SVC_GETSERVERSLIST  = "GetServersList";
+    public static final String SVC_GETSERVICESLIST = "GetServicesList";
+    public static final String SVC_KEEPALIVE       = "KeepAlive";
+    public static final String SVC_PERSISTCONFIG   = "PersistConfig";
+    public static final String SVC_REMOVESERVER    = "RemoveServer";
+    public static final String SVC_REMOVEMDOULE    = "RemoveModule";
+    public static final String SVC_SETMASTER       = "SetMasterServer";
+    public static final String SVC_SHUTDOWN        = "Shutdown";
+    public static final String SVC_UPDATEMDOULE    = "UpdateModule";
     private static final String[] SERVICES = {
         SVC_ADDSERVER, 
         SVC_GETMASTER, 
         SVC_GETSERVERSLIST,
         SVC_GETSERVICESLIST,
         SVC_KEEPALIVE, 
+        SVC_PERSISTCONFIG,
         SVC_REMOVESERVER, 
         SVC_REMOVEMDOULE, 
         SVC_SETMASTER, 
@@ -265,6 +268,12 @@ public class SvcManager implements AsyncService, CoreModule {
                 stop = true;
                 catalog.shutdown();
                 break;
+            case SVC_PERSISTCONFIG:
+                for( String s:knownServers.keySet()) {
+                    //for( )
+                    
+                }
+                break;
             case SVC_GETSERVICESLIST:
                 Set<String> s = new TreeSet();
                 int i = 0;
@@ -414,7 +423,7 @@ public class SvcManager implements AsyncService, CoreModule {
             Configuration c;
             
             c = new Configuration();
-            c.put( "DefaultServicePipeline", "HTML,SvcDeployer,SvcManager");
+            c.put( "DefaultServicePipeline", "HTML,JDBC,SvcDeployer,SvcManager");
             c.put( "Pipeline.SvcManager", "FileServices,Serializer,HttpClient");
             deploy( SvcCatalog.DISPATCHER_NAME, c);
 
@@ -449,6 +458,17 @@ public class SvcManager implements AsyncService, CoreModule {
             c.put( "class", Json.class.getName());
             c.put( "ProcessRequest", false);
             deploy( "Serializer", c);
+
+            c = new Configuration();
+            c.put( "class", JdbcService.class.getName());
+            c.put( "Driver", "org.apache.derby.jdbc.ClientDriver");
+            c.put( "URL", "jdbc:derby://localhost:1527/Test");
+            c.put( "User", "root");
+            c.put( "Password", "XXXX");
+            c.put( "Service.ListClients.SQL", "SELECT * FROM clients");
+            c.put( "Service.AddClient.SQL", "INSERT INTO clients(id,name) VALUES (?,?)");
+            c.put( "Service.AddClient.Params", "Id,Name");
+            deploy( "JDBC", c);
 
             c = new Configuration();
             c.put( "class", HttpClient.class.getName());

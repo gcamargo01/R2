@@ -38,11 +38,18 @@ public class Configuration implements Serializable {
     }
 
     /** Determine if the configuration has changed.
-     * To avoid unnecessary processing
+     * To avoid unnecessary processing. Use with resetChaged();
      * @return Boolean
      */
     public boolean isChanged( ) {
         return changed;
+    }
+
+    /** Clear changed flag.
+     * To explicit set this status.
+     */
+    public void resetChanged( ) {
+        changed = false;
     }
 
     /** String getter.
@@ -51,7 +58,6 @@ public class Configuration implements Serializable {
      * @return Not null value as string
      */
     public String getString( String key, String defValue) {
-        changed = false;
         Object v = cfg.get( key);
         if( v == null) {
             return defValue;
@@ -75,7 +81,6 @@ public class Configuration implements Serializable {
      * @throws Exception Parsing error
      */
     public Map<String,String> getStringMap( String key) throws Exception {
-        changed = false;
         if( !key.contains( "*")) {
             throw new Exception( "The config item " + key 
                     + " is not multivalued (must have *)");
@@ -237,24 +242,4 @@ public class Configuration implements Serializable {
         return cfg.toString();
     }
     
-    /* Test getMap *
-    void test( ) {
-        Map<String,Object> m = new HashMap<>();
-        m.put( "Command.1.A", "some1");
-        m.put( "Command.3.A", "some3");
-        m.put( "Command.2.A", "some2");
-        Map<String,Object> m = new HashMap<>();
-        m.put( "Service.Prb.Kind", "funny");
-        m.put( "Command.1.A", "some1");
-        System.out.println( "has cmd=" + c.containsKey( "Command.*.A"));
-        System.out.println( "cmd=" + c.getStringMap( "Command.*.A"));
-        m.put( "Command.2.A", "some2");
-        Configuration c = new Configuration( m);
-        System.out.println( "c=" + c);
-        System.out.println( "map=" + c.getStringMap( "Service.*.Kind"));
-        System.out.println( "has cmd=" + c.containsKey( "Command.*.A"));
-        System.out.println( "cmd=" + c.getStringMap( "Command.*.A"));
-    }
-    **/
-
 }

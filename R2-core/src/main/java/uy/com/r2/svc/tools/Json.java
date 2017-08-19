@@ -60,6 +60,7 @@ public class Json implements AsyncService {
             parsedCount = 0;
             generatedCount = 0;
         }
+        cfg.resetChanged();
     }
 
     /** Process a service call.

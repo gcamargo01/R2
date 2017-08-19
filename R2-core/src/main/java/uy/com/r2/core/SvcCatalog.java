@@ -88,8 +88,8 @@ public class SvcCatalog implements CoreModule {
         // Load from the net
         ClassLoader loader = getClass().getClassLoader();
         String loaderDesc = "";
-        if( cfg.containsKey( "URL")) {
-            URL u = cfg.getURL( "URL");
+        if( cfg.containsKey( "classUrl")) {
+            URL u = cfg.getURL( "classUrl");
             loader = new URLClassLoader( new URL[] { u});
             loaderDesc = " from " + u.toString();
         }
@@ -220,7 +220,8 @@ public class SvcCatalog implements CoreModule {
                 dispatcher = (Dispatcher)Class.forName( dn).newInstance();
             } catch( Exception x) {
                 LOG.warn( "can't instance Dispatcher class " + dn, x);
-            }    
+            }
+            cfg.resetChanged();
         }
     }
     

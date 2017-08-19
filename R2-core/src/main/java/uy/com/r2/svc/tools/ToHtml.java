@@ -1,10 +1,13 @@
 /* ToHtml.java */
 package uy.com.r2.svc.tools;
 
+import java.io.BufferedReader;
+import java.io.StringReader;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import org.apache.log4j.Logger;
 import uy.com.r2.core.api.AsyncService;
 import uy.com.r2.core.api.SvcRequest;
@@ -19,7 +22,7 @@ import uy.com.r2.core.api.SvcMessage;
  * @author G.Camargo
  */
 public class ToHtml implements AsyncService {
-    private static final Logger LOG = Logger.getLogger(ToHtml.class);
+    private static final Logger LOG = Logger.getLogger( ToHtml.class);
     private static final String STYLES = 
             ".divTable{ display: table; }\n" +
             ".divRow{ display: table-row; }\n" +
@@ -52,6 +55,22 @@ public class ToHtml implements AsyncService {
      */
     @Override
     public SvcMessage onRequest( SvcRequest req, Configuration cfg) throws Exception {
+        if( req.getServiceName().equals( SvcDeployer.SVC_SETMODULECONFIG)) {
+            if( req.get( SvcDeployer.TAG_ACTUALCONFIG) != null) {
+                String c = "" + req.get( SvcDeployer.TAG_ACTUALCONFIG);
+                // Parse in key = value \n
+                BufferedReader reader = new BufferedReader( new StringReader( c));
+                String l;
+                while ( ( l = reader.readLine()) != null) {
+                    if( l.contains( "=")) {
+                        String s[] = l.split( "=");
+                        req.put( s[ 0], s[ 1]);
+                    }
+                }
+                // Remove parsed input tag
+                req.getPayload().remove( SvcDeployer.TAG_ACTUALCONFIG);
+            }
+        }
         return req;
     }
 
@@ -92,7 +111,7 @@ public class ToHtml implements AsyncService {
         // 
         if( !rq.getPayload().isEmpty()) {
             sb.append( "<div class=\"divTable\">\n"); 
-            for( String k: rq.getPayload().keySet()) {
+            for( String k: new TreeSet<String>( rq.getPayload().keySet())) {
                 sb.append( " <div class=\"divRow\">\n");
                 sb.append( "  <div class=\"divHead\">\n");
                 sb.append( k);
@@ -115,51 +134,19 @@ public class ToHtml implements AsyncService {
         sb.append( resp.getResponseTime());
         sb.append( "<br/>");
         // Content
-        boolean modlist = resp.getRequest().getServiceName().equals( "GetModulesList");
         sb.append( "<div class=\"divTable\">\n"); 
-        for( String k: resp.getPayload().keySet()) {
+        for( String k: new TreeSet<String>( resp.getPayload().keySet())) {
             sb.append( " <div class=\"divRow\">\n");
             sb.append( "  <div class=\"divHead\">\n");
             sb.append( k);
             sb.append( "  </div>\n");
             sb.append( "  <div class=\"divCell\">\n");
-            List l = resp.getPayload().get( k);
-            if( modlist) {
-                sb.append( "<div class=\"divTable\">\n"); 
-            }
-            for( Object o: l) {
-                if( !modlist) {
-                    toHtml( o, sb);
-                    sb.append( "<br>");
-                } else {
-                    String m = "" + o;
-                    sb.append( " <div class=\"divRow\">\n");
-                    sb.append( "  <div class=\"divCell0\">\n");
-                    sb.append( m);
-                    sb.append( "  </div>\n"); 
-                    sb.append( "  <div class=\"divCell0\">\n");
-                    sb.append( "<form action=\"/GetModuleConfig\" style=\"display: inline;\"><input type=\"hidden\" name=\"Module\" value=\"" 
-                            + m + "\"><input type=\"submit\" value=\"GetModuleConfig\"></form>\n"); 
-                    sb.append( "  </div>\n"); 
-                    sb.append( "  <div class=\"divCell0\">\n");
-                    sb.append( "<form action=\"/GetModuleDetailedConfig\" style=\"display: inline;\"><input type=\"hidden\" name=\"Module\" value=\""
-                            + m + "\"><input type=\"submit\" value=\"GetModuleDetailedConfig\"></form>\n"); 
-                    sb.append( "  </div>\n"); 
-                    sb.append( "  <div class=\"divCell0\">\n");
-                    sb.append( "<form action=\"/GetModuleStatus\" style=\"display: inline;\"><input type=\"hidden\" name=\"Module\" value=\""
-                            + m + "\"><input type=\"submit\" value=\"GetModuleStatus\"></form>\n"); 
-                    sb.append( "  </div>\n"); 
-                    sb.append( " </div>\n");   // End row
-                }
-            }
-            if( modlist) {
-                sb.append( "</div>\n");  // End table
-            }
+            toHtml( resp.getPayload().get( k), sb);
             sb.append( "  </div>\n");
             sb.append( " </div>\n"); 
         }
         sb.append( "</div>\n"); 
-        // Commands
+        // Foot - Gloabl Commands
         sb.append( "<p/>&nbsp;<p/>\n"); 
         sb.append( "<form action=\"/GetServersList\"  style=\"display: inline;\"><input type=\"submit\" value=\"GetServersList\"></form>\n"); 
         sb.append( "&nbsp;"); 
@@ -169,8 +156,79 @@ public class ToHtml implements AsyncService {
         sb.append( "&nbsp;"); 
         sb.append( "<form action=\"/GetMasterServer\" style=\"display: inline;\"><input type=\"submit\" value=\"GetMasterServer\"></form>\n"); 
         sb.append( "&nbsp;"); 
-        sb.append( "<form action=\"/Shutdown\"        style=\"display: inline;\"><input type=\"submit\" value=\"Shutdown\"></form>\n"); 
-        // Foot
+        sb.append( "<form action=\"/Shutdown\"        style=\"display: inline;\"><input type=\"submit\" value=\"Shutdown\"></form>\n");
+        // Modules actions
+        if( resp.getResultCode() == 0) {
+            if( rq.getServiceName().equals( SvcDeployer.SVC_GETMODULELIST)) {
+                sb.append( "<p/>\n"); 
+                sb.append( "<div class=\"divTable\">\n"); 
+                for( String k: new TreeSet<String>( resp.getPayload().keySet())) {
+                    List l = resp.getPayload().get( k);
+                    for( Object o: l) {
+                        String m = "" + o;
+                        sb.append( " <div class=\"divRow\">\n");
+                        sb.append( "  <div class=\"divCell0\">\n");
+                        sb.append( m);
+                        sb.append( " :  </div>\n"); 
+                        sb.append( "  <div class=\"divCell0\">\n");
+                        sb.append( "<form action=\"/GetModuleStatus\" style=\"display: inline;\"><input type=\"hidden\" name=\"Module\" value=\""
+                                + m + "\"><input type=\"submit\" value=\"GetModuleStatus\"></form>\n"); 
+                        sb.append( "  </div>\n"); 
+                        sb.append( "  <div class=\"divCell0\">\n");
+                        sb.append( "<form action=\"/GetModuleConfig\" style=\"display: inline;\"><input type=\"hidden\" name=\"Module\" value=\"" 
+                                + m + "\"><input type=\"submit\" value=\"GetModuleConfig\"></form>\n"); 
+                        sb.append( "  </div>\n"); 
+                        sb.append( "  <div class=\"divCell0\">\n");
+                        sb.append( "<form action=\"/GetModuleDetailedConfig\" style=\"display: inline;\"><input type=\"hidden\" name=\"Module\" value=\""
+                                + m + "\"><input type=\"submit\" value=\"GetModuleDetailedConfig\"></form>\n"); 
+                        sb.append( "  </div>\n"); 
+                        sb.append( " </div>\n");   // End row
+                    }
+                }
+                sb.append( "</div>\n");  // End table
+
+            } else if( rq.getServiceName().equals( SvcDeployer.SVC_GETMODULEDETCFG)) {
+
+                String m = "" + rq.get( "Module");
+                String v = "";
+                Map<String,String> cm = ( Map)resp.get( SvcDeployer.TAG_ACTUALCONFIG);
+                for( String ck: cm.keySet()) {
+                    v += ck + "=" + cm.get(  ck) + "\n";
+                }
+                sb.append( "<p/>\n"); 
+                sb.append( m);
+                sb.append( " configuration : <br/>\n"); 
+                sb.append( "<form action=\"/SetModuleConfig\">");
+                sb.append( "<input type=\"hidden\" name=\"Module\" value=\"");
+                sb.append( m);
+                sb.append( "\"><textarea name=\"" + SvcDeployer.TAG_ACTUALCONFIG + "\" rows=\"16\" cols=\"80\" >");
+                sb.append( v);
+                sb.append( "</textarea><br/><br/>"); 
+                sb.append( "<input type=\"submit\" value=\"SetModuleConfig\">\n"); 
+                sb.append( "</form>\n");  
+
+            } else if( rq.getServiceName().equals( SvcManager.SVC_GETSERVERSLIST)) {
+
+                sb.append( "<p/>\n"); 
+                sb.append( "<div class=\"divTable\">\n"); 
+                for( String s: new TreeSet<String>( resp.getPayload().keySet())) {
+                    sb.append( " <div class=\"divRow\">\n");
+                    sb.append( "  <div class=\"divCell0\">\n");
+                    sb.append( s);  
+                    sb.append( " :  </div>\n");  
+                    sb.append( "  <div class=\"divCell0\">\n");
+                    sb.append( "<form action=\"/SetMasterServer\">");
+                    sb.append( "<input type=\"hidden\" name=\"Server\" value=\"");
+                    sb.append( s);
+                    sb.append( "\"><input type=\"submit\" value=\"SetMasterServer\">\n"); 
+                    sb.append( "</form><br/>\n");  
+                    sb.append( "  </div>\n");  
+                    sb.append( " </div>\n");  // Row end
+                }
+                sb.append( "</div>\n");  // Table end
+
+            }
+        }
         sb.append( "</body></html>");
         resp.put( "Serialized", sb.toString());
         return resp;
@@ -190,11 +248,12 @@ public class ToHtml implements AsyncService {
     }
     
     private void toHtml( Object o, StringBuilder sb) {
+        LOG.debug( "toHTML" + o);
         boolean firstOne = true;
         if( o == null) {
             sb.append( "(NULL)");
         } else if( o instanceof List) {
-            for( Object e: ( List)o) {
+            for( Object e:( List)o) {
                 if( firstOne) {
                     firstOne = false;
                 } else {
@@ -203,7 +262,7 @@ public class ToHtml implements AsyncService {
                 toHtml( e, sb);
             }        
         } else if( o instanceof Set) {
-            for( Object e: ( Set)o) {
+            for( Object e: new TreeSet( ( Set)o)) {
                 if( firstOne) {
                     firstOne = false;
                 } else {
@@ -214,7 +273,7 @@ public class ToHtml implements AsyncService {
         } else if( o instanceof Map) {
             Map m = (Map)o;
             sb.append( "<div class=\"divTable\">\n"); 
-            for( Object k: m.keySet()) {
+            for( Object k: new TreeSet( m.keySet())) {
                 sb.append( " <div class=\"divRow\">\n");
                 sb.append( "  <div class=\"divCell0\">\n");
                 sb.append( "" + k);
@@ -226,11 +285,11 @@ public class ToHtml implements AsyncService {
             }
             sb.append( "</div>");
         } else {
+            LOG.debug( "toHTML class=" + o.getClass());
             sb.append( "" + o);
         }
     }
     
-
 }
 
 

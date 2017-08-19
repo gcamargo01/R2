@@ -54,6 +54,7 @@ public class Cache implements AsyncService {
             cacheableServices = new HashSet( Arrays.asList( sa));
             cache = new HashMap();
         }
+        cfg.resetChanged();
     }
 
     /**

@@ -75,6 +75,7 @@ public class HABalancer implements AsyncService {
         respTimeFactor = (float)cfg.getDouble( "RespTimeFactor");
         respTimeThresold = cfg.getInt( "RespTimeThresold");
         testMsg = cfg.getString( "TestMessage");
+        cfg.resetChanged();
     }
 
     /** Process a service call.

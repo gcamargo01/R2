@@ -173,7 +173,9 @@ public class ModuleInfo implements Module {
             monitorImpl = null;
         }
         // Update config
+LOG.debug( "**** " + cfg);
         this.cfg = cfg.clone(); 
+LOG.debug( "**** " + this.cfg);
         if( moduleImpl instanceof CoreModule) {  
             ( (CoreModule)moduleImpl).startup( this.cfg);
         }
@@ -257,7 +259,7 @@ public class ModuleInfo implements Module {
             if( msg instanceof SvcRequest) {
                 ++count;
                 msg = as.onRequest( req, cfg);
-                /* 
+                /*
                 if( LOG.isDebugEnabled() && msg instanceof SvcResponse) {
                     LOG.debug( "processMessage <<| " + moduleName + " " + msg);
                 } 
@@ -312,7 +314,9 @@ public class ModuleInfo implements Module {
         }
         // Add generic config descriptors
         cdl.add( new ConfigItemDescriptor( "class", ConfigItemDescriptor.STRING,
-               "Long class name or URL of the service impelmentation (internal)", null));
+               "Long class name of the service impelmentation (internal)", null));
+        cdl.add( new ConfigItemDescriptor( "classUrl", ConfigItemDescriptor.URL,
+               "URL to load class of the service impelmentation (internal)", null));
         cdl.add( new ConfigItemDescriptor( "LimitActiveThreads", ConfigItemDescriptor.BOOLEAN,
                "Keep track and limit the concurrent threads ons this module (internal)", null));
         cdl.add( new ConfigItemDescriptor( "Monitor", ConfigItemDescriptor.BOOLEAN,
