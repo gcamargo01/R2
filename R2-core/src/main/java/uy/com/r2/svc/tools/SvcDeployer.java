@@ -205,12 +205,15 @@ public class SvcDeployer implements AsyncService {
             case SVC_PERSISTCONFIG:
                 Properties pr = new Properties();
                 int n = 0;
-                for( String m: new TreeSet<String>( catalog.getModuleNames())) {
+                TreeSet<String> ts = new TreeSet( catalog.getModuleNames());
+                ts.remove( DEPLOYER_NAME);  // Auto-started
+                for( String m: ts) {
                     pr.put( "Module." + n, m);
                     Configuration c = catalog.getModuleInfo( m).getConfiguration();
                     for( String k: c.getStringMap( "*").keySet()) {
                         pr.put( "" + n + "." + k, c.getStringMap( "*").get(  k));                        
                     }
+                    ++n;
                 }
                 FileOutputStream fos = new FileOutputStream( "R2.properties");
                 pr.store( fos, null);
@@ -263,19 +266,17 @@ public class SvcDeployer implements AsyncService {
             }    
             if( pr.isEmpty()) {
                 pr.putAll( DEFAULT_PIPE);
+                pr.put( "0.Port", "" + localPort);
+                pr.put( "1.RemoteUrl", rmtUrl);
             }
-            pr.put( "0.Port", "" + localPort);
-            pr.put( "1.RemoteUrl", rmtUrl);
             LOG.debug( "Init Pipe =" + pr);
             // Deploy initial pipe
             for( int i = 0; pr.getProperty( "Module." + i) != null; ++i) {
                 String mod = pr.getProperty( "Module." + i);
                 String ki = "" + i + ".";
-                LOG.debug( " " + mod + " " + ki + " ****************");
                 Configuration c = new Configuration();
                 for( String k: pr.stringPropertyNames()) {
                     if( k.startsWith( ki)) {
-                        LOG.debug( " " + k + " <-----");
                         c.put( k.substring( ki.length()), pr.get( k));
                     }    
                 }
