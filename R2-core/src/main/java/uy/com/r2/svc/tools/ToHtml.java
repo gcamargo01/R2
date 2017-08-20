@@ -154,8 +154,6 @@ public class ToHtml implements AsyncService {
         sb.append( "&nbsp;"); 
         sb.append( "<form action=\"/GetServicesList\" style=\"display: inline;\"><input type=\"submit\" value=\"GetServicesList\"></form>\n"); 
         sb.append( "&nbsp;"); 
-        sb.append( "<form action=\"/GetMasterServer\" style=\"display: inline;\"><input type=\"submit\" value=\"GetMasterServer\"></form>\n"); 
-        sb.append( "&nbsp;"); 
         sb.append( "<form action=\"/Shutdown\"        style=\"display: inline;\"><input type=\"submit\" value=\"Shutdown\"></form>\n");
         // Modules actions
         if( resp.getResultCode() == 0) {
@@ -178,16 +176,12 @@ public class ToHtml implements AsyncService {
                         sb.append( "<form action=\"/GetModuleConfig\" style=\"display: inline;\"><input type=\"hidden\" name=\"Module\" value=\"" 
                                 + m + "\"><input type=\"submit\" value=\"GetModuleConfig\"></form>\n"); 
                         sb.append( "  </div>\n"); 
-                        sb.append( "  <div class=\"divCell0\">\n");
-                        sb.append( "<form action=\"/GetModuleDetailedConfig\" style=\"display: inline;\"><input type=\"hidden\" name=\"Module\" value=\""
-                                + m + "\"><input type=\"submit\" value=\"GetModuleDetailedConfig\"></form>\n"); 
-                        sb.append( "  </div>\n"); 
                         sb.append( " </div>\n");   // End row
                     }
                 }
                 sb.append( "</div>\n");  // End table
 
-            } else if( rq.getServiceName().equals( SvcDeployer.SVC_GETMODULEDETCFG)) {
+            } else if( rq.getServiceName().equals( SvcDeployer.SVC_GETMODULECONFIG)) {
 
                 String m = "" + rq.get( "Module");
                 String v = "";

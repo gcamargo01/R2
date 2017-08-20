@@ -123,6 +123,9 @@ public class ModuleInfo implements Module {
     public void setConfiguration( Configuration cfg) throws Exception {
         // Get with generic config descriptors
         List<ConfigItemDescriptor> cdl = getImplementation().getConfigDescriptors();
+        if( cdl == null) {
+            cdl = new LinkedList();
+        }
         // Set default values 
         for( ConfigItemDescriptor cd: cdl) {
             if( cd.getDefaultValue() != null &&           // has a default value
@@ -173,9 +176,7 @@ public class ModuleInfo implements Module {
             monitorImpl = null;
         }
         // Update config
-LOG.debug( "**** " + cfg);
-        this.cfg = cfg.clone(); 
-LOG.debug( "**** " + this.cfg);
+        this.cfg = cfg.clone();
         if( moduleImpl instanceof CoreModule) {  
             ( (CoreModule)moduleImpl).startup( this.cfg);
         }

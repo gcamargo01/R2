@@ -1,10 +1,15 @@
 /* SvcDeployer.java */
 package uy.com.r2.svc.tools;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.util.HashMap;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Properties;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import org.apache.log4j.Logger;
 import uy.com.r2.core.SvcCatalog;
 import uy.com.r2.core.api.SvcRequest;
@@ -13,9 +18,12 @@ import uy.com.r2.core.api.AsyncService;
 import uy.com.r2.core.api.ConfigItemDescriptor;
 import uy.com.r2.core.api.Configuration;
 import uy.com.r2.core.api.SvcMessage;
+import uy.com.r2.svc.conn.HttpClient;
+import uy.com.r2.svc.conn.JdbcService;
 
 /** Command interpreter service that deploy and un-deploy modules.
- * This is a in-memory Deployer, that allows system remote control.
+ * This is a in-memory Deployer, that allows system remote control,
+ * and it startup a basic or initial service pipe. 
  * @author G.Camargo
  */
 public class SvcDeployer implements AsyncService {
@@ -24,16 +32,15 @@ public class SvcDeployer implements AsyncService {
     public static final String SVC_GETMODULELIST   = "GetModulesList";
     public static final String SVC_GETMODULESTATUS = "GetModuleStatus";
     public static final String SVC_SETMODULECONFIG = "SetModuleConfig";
-    public static final String SVC_GETMODULEDETCFG = "GetModuleDetailedConfig";
-    public static final String SVC_STARTMODULE     = "StartModule";
-    public static final String SVC_STOPMODULE      = "StopModule";
+    public static final String SVC_PERSISTCONFIG   = "PersistConfig";
+    public static final String SVC_RESTARTMODULE   = "RetartModule";
     public static final String SVC_UNDEPLOYMODULE  = "UndeployModule";
     public static final String TAG_ACTUALCONFIG = "_Configuration";
     private static final String DEPLOYER_NAME = SvcDeployer.class.getSimpleName();
     private static final String[] SERVICES = {
-            SVC_DEPLOYMODULE,    SVC_GETMODULECONFIG, SVC_GETMODULEDETCFG, 
-            SVC_GETMODULELIST,   SVC_GETMODULESTATUS, SVC_SETMODULECONFIG, 
-            SVC_STARTMODULE,     SVC_STOPMODULE,      SVC_UNDEPLOYMODULE
+            SVC_DEPLOYMODULE,    SVC_GETMODULECONFIG, SVC_GETMODULELIST,   
+            SVC_GETMODULESTATUS, SVC_SETMODULECONFIG, SVC_PERSISTCONFIG,   
+            SVC_RESTARTMODULE,   SVC_UNDEPLOYMODULE
     };
     private static final Logger LOG = Logger.getLogger( SvcDeployer.class);
     private static String commands = "";
@@ -63,12 +70,7 @@ public class SvcDeployer implements AsyncService {
      */
     @Override
     public List<ConfigItemDescriptor> getConfigDescriptors() {
-        LinkedList<ConfigItemDescriptor> l = new LinkedList();
-        l.add( new ConfigItemDescriptor( "Commands.*.Cmd", ConfigItemDescriptor.STRING,
-                "Commands to execute in order", null));
-        l.add( new ConfigItemDescriptor( "Commands.*.Module", ConfigItemDescriptor.STRING,
-                "Module parameter of commands to execute (optional)", null));
-        return l;
+        return null;
     }
     
     private void updateCfg( Configuration cfg) throws Exception {
@@ -186,7 +188,7 @@ public class SvcDeployer implements AsyncService {
             case SVC_SETMODULECONFIG:    
                 catalog.updateConfiguration( mn, cfg);
                 break;
-            case SVC_GETMODULEDETCFG:
+            case SVC_GETMODULECONFIG:
                 Map<String,Map<String,Object>> mm = catalog.getModuleInfo( mn).getDetailedConfiguration();
                 for( String k: mm.keySet()) {
                     SvcMessage.addToPayload( resp, k, mm.get( k)); 
@@ -194,22 +196,27 @@ public class SvcDeployer implements AsyncService {
                 SvcMessage.addToPayload( resp, TAG_ACTUALCONFIG, 
                         catalog.getModuleInfo( mn).getConfiguration().getStringMap( "*")); 
                 break;
-            case SVC_GETMODULECONFIG:
-                Map<String,String> cm = catalog.getModuleInfo( mn).getConfiguration().getStringMap( "*");
-                for( String k: cm.keySet()) {
-                    SvcMessage.addToPayload( resp, k, cm.get( k)); 
-                } 
-                break;
             case SVC_GETMODULESTATUS:
                 Map<String,Object> mo = catalog.getModuleInfo( mn).getStatusVars();
                 for( String k: mo.keySet()) {
                     SvcMessage.addToPayload( resp, k, mo.get( k));
                 }
                 break;
-            case SVC_STOPMODULE:
-                catalog.getModuleInfo( mn).shutdown();
+            case SVC_PERSISTCONFIG:
+                Properties pr = new Properties();
+                int n = 0;
+                for( String m: new TreeSet<String>( catalog.getModuleNames())) {
+                    pr.put( "Module." + n, m);
+                    Configuration c = catalog.getModuleInfo( m).getConfiguration();
+                    for( String k: c.getStringMap( "*").keySet()) {
+                        pr.put( "" + n + "." + k, c.getStringMap( "*").get(  k));                        
+                    }
+                }
+                FileOutputStream fos = new FileOutputStream( "R2.properties");
+                pr.store( fos, null);
+                fos.close();
                 break;
-            case SVC_STARTMODULE:
+            case SVC_RESTARTMODULE:
                 catalog.getModuleInfo( mn).setConfiguration( cfg);
                 break;
             default:
@@ -230,37 +237,51 @@ public class SvcDeployer implements AsyncService {
     public void shutdown() {
     }
 
-    /** Entry point as a Deployer.
-     * @param args Standard arguments
+    /** Entry point as a main Deployer.
+     * @param args Standard arguments: Local_Port Remote_Url
      */
     public static void main( String args[]) {
         try {
             LOG.debug( "start " + args);
             SvcDeployer m = new SvcDeployer();
-            String rmtUrl = "http://localhost:8012";
+            String rmtUrl = "http://localhost:8016";
             int localPort = 8015;
-            for( int i = 0; i < args.length; ++i) {
-                if( args[ i].startsWith( "-u")) {
-                    if( args[ i].length() == 2) {
-                        rmtUrl = args[ ++i];
-                    } else {
-                        rmtUrl = args[ i].substring( 2);
-                    }
-                } else if( args[ i].startsWith( "-p")) {
-                    if( args[ i].length() == 2) {
-                        localPort = Integer.parseInt( args[ ++i]);
-                    } else {
-                        localPort = Integer.parseInt( args[ i].substring( 2));
-                    }
+            switch( args.length) {
+            case 2:
+               rmtUrl = args[ 1];
+            case 1:
+               localPort = Integer.parseInt( args[ 0]);
+            }
+            // Read basic basic pipe
+            Properties pr = new Properties();
+            try {
+                FileInputStream fi = new FileInputStream( "R2.properties");
+                pr.load( fi);
+                fi.close();
+            } catch( Exception x) {
+                LOG.info( "Error loading R2.properties " + x , x);
+            }    
+            if( pr.isEmpty()) {
+                pr.putAll( DEFAULT_PIPE);
+            }
+            pr.put( "0.Port", "" + localPort);
+            pr.put( "1.RemoteUrl", rmtUrl);
+            LOG.debug( "Init Pipe =" + pr);
+            // Deploy initial pipe
+            for( int i = 0; pr.getProperty( "Module." + i) != null; ++i) {
+                String mod = pr.getProperty( "Module." + i);
+                String ki = "" + i + ".";
+                LOG.debug( " " + mod + " " + ki + " ****************");
+                Configuration c = new Configuration();
+                for( String k: pr.stringPropertyNames()) {
+                    if( k.startsWith( ki)) {
+                        LOG.debug( " " + k + " <-----");
+                        c.put( k.substring( ki.length()), pr.get( k));
+                    }    
                 }
+                m.command( SVC_DEPLOYMODULE, mod, c);
             }
-            Configuration c = new Configuration();
-            c.put( "class", SvcManager.class.getName());
-            if( localPort > 0) {
-                c.put( "Port", localPort);
-            }
-            c.put( "RemoteUrl", rmtUrl);
-            m.command( SVC_DEPLOYMODULE, SvcManager.class.getSimpleName(), c);
+            // Wait till stop
             while( SvcManager.isAlive()) { }
             LOG.info( "Stopped");
         } catch ( Exception ex ) {
@@ -269,6 +290,82 @@ public class SvcDeployer implements AsyncService {
         }
     }
 
+    static final Map<String,String> DEFAULT_PIPE = new HashMap();
+    static {
+        DEFAULT_PIPE.put( "Module.0", MiniHttpServer.class.getSimpleName());
+        DEFAULT_PIPE.put( "0.class", MiniHttpServer.class.getName());
+        DEFAULT_PIPE.put( "0.Port", "8015");
+        DEFAULT_PIPE.put( "Module.1", SvcManager.class.getSimpleName());
+        DEFAULT_PIPE.put( "1.class", SvcManager.class.getName());
+        DEFAULT_PIPE.put( "1.RemoteUrl", "http://localhost:8016");
+        DEFAULT_PIPE.put( "Module.2", SvcCatalog.DISPATCHER_NAME);
+        DEFAULT_PIPE.put( "2.DefaultServicePipeline", "ToHtml,JdbcService,SvcDeployer,SvcManager");
+        DEFAULT_PIPE.put( "2.Pipeline.SvcManager", "FileServices,Serializer,HttpClient");
+        DEFAULT_PIPE.put( "Module.3", ToHtml.class.getSimpleName());
+        DEFAULT_PIPE.put( "3.class", ToHtml.class.getName());
+        DEFAULT_PIPE.put( "Module.4", JdbcService.class.getSimpleName());
+        DEFAULT_PIPE.put( "4.class", JdbcService.class.getName());
+        DEFAULT_PIPE.put( "4.Driver", "org.apache.derby.jdbc.ClientDriver");
+        DEFAULT_PIPE.put( "4.URL", "jdbc:derby://localhost:1527/Test");
+        DEFAULT_PIPE.put( "4.User", "root");
+        DEFAULT_PIPE.put( "4.Password", "XXXX");
+        DEFAULT_PIPE.put( "4.Service.ListClients.SQL", "SELECT * FROM clients");
+        DEFAULT_PIPE.put( "4.Service.AddClient.SQL", "INSERT INTO clients(id,name) VALUES (?,?)");
+        DEFAULT_PIPE.put( "4.Service.AddClient.Params", "Id,Name");
+   }
+/*    
+        private void basicPipe() {
+        try {
+            LOG.debug( "basicPipe " + remoteUrl + " " + localPort);
+            Configuration c;
+            
+            c = new Configuration();
+            c.put( "DefaultServicePipeline", "HTML,JDBC,SvcDeployer,SvcManager");
+            c.put( "Pipeline.SvcManager", "FileServices,Serializer,HttpClient");
+            deploy( SvcCatalog.DISPATCHER_NAME, c);
+
+            c = new Configuration();
+            c.put( "class", MiniHttpServer.class.getName());
+            if( localPort > 0) {
+                c.put( "Port", localPort);
+            }
+            deploy( MiniHttpServer.class.getSimpleName(), c);
+
+            c = new Configuration();
+            c.put( "class", ToHtml.class.getName());
+            deploy( "HTML", c);
+
+            c = new Configuration();
+            c.put( "class", FileServices.class.getName());
+            deploy( "FileServices", c);
+
+            c = new Configuration();
+            c.put( "class", Json.class.getName());
+            c.put( "ProcessRequest", false);
+            deploy( "Serializer", c);
+
+            c = new Configuration();
+            c.put( "class", JdbcService.class.getName());
+            c.put( "Driver", "org.apache.derby.jdbc.ClientDriver");
+            c.put( "URL", "jdbc:derby://localhost:1527/Test");
+            c.put( "User", "root");
+            c.put( "Password", "XXXX");
+            c.put( "Service.ListClients.SQL", "SELECT * FROM clients");
+            c.put( "Service.AddClient.SQL", "INSERT INTO clients(id,name) VALUES (?,?)");
+            c.put( "Service.AddClient.Params", "Id,Name");
+            deploy( "JDBC", c);
+
+            c = new Configuration();
+            c.put( "class", HttpClient.class.getName());
+            deploy( "HttpClient", c);
+
+        } catch( Exception ex) {
+            LOG.warn( "Failed to start basicPipe", ex);
+        }
+    }
+*/
+    
+    
 }
 
 

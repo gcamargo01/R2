@@ -127,7 +127,7 @@ public class JdbcService implements AsyncService {
             if( svcs.get( s).uses > 0) {
                 m.put( s + ".Uses", "" + svcs.get( s).uses);
                 m.put( s + ".Errors", "" + svcs.get( s).errors);
-                m.put( s + ".Time", "" + ( svcs.get( s).time / svcs.get( s).uses));
+                m.put( s + ".AvgTime", "" + ( svcs.get( s).time / svcs.get( s).uses));
             }    
         }
         return m;

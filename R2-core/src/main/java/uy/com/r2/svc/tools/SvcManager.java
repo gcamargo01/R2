@@ -25,7 +25,12 @@ import uy.com.r2.svc.conn.HttpClient;
 import uy.com.r2.svc.conn.JdbcService;
 
 
-/** Command interpreter service that manage servers of the domain.
+/** System manager module. 
+ * Its functions are: <br>
+ * - Startup a minimal configuration  <br>
+ * - Keeps track of registered servers <br>
+ * - Notify changes to master <br>
+ * - If its a master notify changes to servers <br>
  * WORK IN PROGRESS !!!!
  * @author G.Camargo
  */
@@ -35,7 +40,6 @@ public class SvcManager implements AsyncService, CoreModule {
     public static final String SVC_GETSERVERSLIST  = "GetServersList";
     public static final String SVC_GETSERVICESLIST = "GetServicesList";
     public static final String SVC_KEEPALIVE       = "KeepAlive";
-    public static final String SVC_PERSISTCONFIG   = "PersistConfig";
     public static final String SVC_REMOVESERVER    = "RemoveServer";
     public static final String SVC_REMOVEMDOULE    = "RemoveModule";
     public static final String SVC_SETMASTER       = "SetMasterServer";
@@ -47,7 +51,6 @@ public class SvcManager implements AsyncService, CoreModule {
         SVC_GETSERVERSLIST,
         SVC_GETSERVICESLIST,
         SVC_KEEPALIVE, 
-        SVC_PERSISTCONFIG,
         SVC_REMOVESERVER, 
         SVC_REMOVEMDOULE, 
         SVC_SETMASTER, 
@@ -69,7 +72,6 @@ public class SvcManager implements AsyncService, CoreModule {
     private int receivedCommands = 0;
     private int errorsOnCommands = 0;
     private int tx = 0;
-    private boolean firstTime = true;
     private long masterTimeStamp = System.currentTimeMillis();
     
     public SvcManager() {
@@ -93,12 +95,6 @@ public class SvcManager implements AsyncService, CoreModule {
                 "The primary node name", null));
         l.add( new ConfigItemDescriptor( "Server.*", ConfigItemDescriptor.STRING,
                 "Known servers and URLs", null));
-        l.add( new ConfigItemDescriptor( "Commands.*.Cmd", ConfigItemDescriptor.STRING,
-                "Commands to execute in order", null));
-        l.add( new ConfigItemDescriptor( "Commands.*.Server", ConfigItemDescriptor.STRING,
-                "Server parameter of commands to execute (optional)", null));
-        l.add( new ConfigItemDescriptor( "Commands.*.Server", ConfigItemDescriptor.STRING,
-                "Url parameter of commands to execute (optional)", null));
         return l;
     }
     
@@ -131,10 +127,6 @@ public class SvcManager implements AsyncService, CoreModule {
         knownServers.put( localNodeName, localUrl);
         LOG.debug( "ServerName: " + localNodeName);
         LOG.debug( "knownServers: " + knownServers);
-        if( firstTime) {
-            basicPipe();
-            firstTime = false;
-        }
     }
 
     /** Invocation dispatch phase.
@@ -268,12 +260,6 @@ public class SvcManager implements AsyncService, CoreModule {
                 stop = true;
                 catalog.shutdown();
                 break;
-            case SVC_PERSISTCONFIG:
-                for( String s:knownServers.keySet()) {
-                    //for( )
-                    
-                }
-                break;
             case SVC_GETSERVICESLIST:
                 Set<String> s = new TreeSet();
                 int i = 0;
@@ -346,14 +332,17 @@ public class SvcManager implements AsyncService, CoreModule {
                 svcMgr.notifyAllServers( SVC_KEEPALIVE, svcMgr.localNodeName);
             } else {  // The manager is alive?
                 if( System.currentTimeMillis() > svcMgr.masterTimeStamp + svcMgr.keepAliveTimeOut) {
-                    // Contact lost w/Master
+                    // Contact w/Master
+                    //svcMgr.command( SVC_KEEPALIVE, );
                     // !!!!
                 }
             }
-            Thread.sleep( svcMgr.keepAliveWait);
         } catch( Exception ex) {
             LOG.warn( "Error on keepAlive", ex);
         }
+        try {
+            Thread.sleep( svcMgr.keepAliveWait);
+        } catch( Exception ex) { }
         return !stop;
     }
     
@@ -416,92 +405,7 @@ public class SvcManager implements AsyncService, CoreModule {
             }
         }
     }
-
-    private void basicPipe() {
-        try {
-            LOG.debug( "basicPipe " + remoteUrl + " " + localPort);
-            Configuration c;
-            
-            c = new Configuration();
-            c.put( "DefaultServicePipeline", "HTML,JDBC,SvcDeployer,SvcManager");
-            c.put( "Pipeline.SvcManager", "FileServices,Serializer,HttpClient");
-            deploy( SvcCatalog.DISPATCHER_NAME, c);
-
-            c = new Configuration();
-            c.put( "class", MiniHttpServer.class.getName());
-            if( localPort > 0) {
-                c.put( "Port", localPort);
-            }
-            deploy( MiniHttpServer.class.getSimpleName(), c);
-
-            c = new Configuration();
-            c.put( "class", ToHtml.class.getName());
-            deploy( "HTML", c);
-/*            
-            c = new Configuration();
-            c.put( "class", Json.class.getName());
-            c.put( "ToSerial", false);
-            c.put( "ProcessRequest", false);
-            deploy( "DeSerializer", c);
-
-            c = new Configuration();
-            c.put( "class", FilePathSynchronizer.class.getName());
-            c.put( "Path.lib", "lib");
-            c.put( "RemoteServer", remoteUrl);
-            deploy( "Replicator", c);
-*/
-            c = new Configuration();
-            c.put( "class", FileServices.class.getName());
-            deploy( "FileServices", c);
-
-            c = new Configuration();
-            c.put( "class", Json.class.getName());
-            c.put( "ProcessRequest", false);
-            deploy( "Serializer", c);
-
-            c = new Configuration();
-            c.put( "class", JdbcService.class.getName());
-            c.put( "Driver", "org.apache.derby.jdbc.ClientDriver");
-            c.put( "URL", "jdbc:derby://localhost:1527/Test");
-            c.put( "User", "root");
-            c.put( "Password", "XXXX");
-            c.put( "Service.ListClients.SQL", "SELECT * FROM clients");
-            c.put( "Service.AddClient.SQL", "INSERT INTO clients(id,name) VALUES (?,?)");
-            c.put( "Service.AddClient.Params", "Id,Name");
-            deploy( "JDBC", c);
-
-            c = new Configuration();
-            c.put( "class", HttpClient.class.getName());
-            deploy( "HttpClient", c);
-
-        } catch( Exception ex) {
-            LOG.warn( "Failed to start basicPipe", ex);
-        }
-    }
-    
-    private void deploy( String module, Configuration cfg) throws Exception {
-        LOG.trace( "deploy " + module + " " + cfg);
-        SvcRequest rq = new SvcRequest( localNodeName, tx++, 0, "DeployModule", null, 1000);
-        rq.put( "Module", module);
-        for( String n: cfg.getStringMap( "*").keySet()) {
-            rq.put( n, cfg.getString( n));            
-        }
-        catalog.getDispatcher().callService( "SvcDeployer", rq);
-    }
-
-    /* Mimimal tests *
-    public static void main( String args[]) throws Exception {
-        SvcManager m = new SvcManager();
-        SvcCatalog.getCatalog().installModule( "SvcManager", m, null);
-        Configuration c = new Configuration();
-        c.put( "Commands.2.Cmd", "AddServer");
-        c.put( "Commands.2.Server", "SRV002");
-        c.put( "Commands.1.Cmd", "AddServer");
-        c.put( "Commands.1.Server", "SRV001");
-        m.setConfiguration( c);
-    }
-    /**/
-
+  
 }
 
 
