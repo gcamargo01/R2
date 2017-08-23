@@ -50,7 +50,7 @@ public class ModuleInfo implements Module {
             this.asyncImpl = (AsyncService)impl;
         } else if( impl instanceof SimpleService){
             this.asyncImpl = new WrapAsAsyncService( (SimpleService)impl); 
-        } else {  // CoreModule
+        } else {  // CoreModule, cant be monitored
             this.asyncImpl = null;
         }
     }    
@@ -139,6 +139,8 @@ public class ModuleInfo implements Module {
         if( LOG.isTraceEnabled()) {
             Map<String,String> unknowCfg = cfg.getStringMap( "*");
             unknowCfg.remove( "class");
+            unknowCfg.remove( "LimitActiveThreads");
+            unknowCfg.remove( "Monitor");
             for( ConfigItemDescriptor cd: cdl) {
                 if( !cd.getKey().contains( "*")) {    // Simple cfg.
                     if( cfg.containsKey( cd.getKey())) {
