@@ -177,11 +177,15 @@ public class SvcManager implements AsyncService, CoreModule {
      */
     @Override
     public Map<String,Object> getStatusVars() {
-        Map<String,Object> m = new TreeMap();
-        m.put( "Commands", receivedCommands);
-        m.put( "CommandErrors", errorsOnCommands);
-        m.put( "KnownServers", knownServers);
-        return m;
+        Map<String,Object> map = new TreeMap();
+        Package pak = getClass().getPackage();
+        if( pak != null) {
+            map.put( "Version", "" + pak.getImplementationVersion());
+        } 
+        map.put( "Commands", receivedCommands);
+        map.put( "CommandErrors", errorsOnCommands);
+        map.put( "KnownServers", knownServers);
+        return map;
     }
 
     /** Execute command.

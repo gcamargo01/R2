@@ -151,9 +151,13 @@ public class FileServices implements AsyncService {
      */
     @Override
     public Map<String, Object> getStatusVars() {
-        Map<String,Object> m = new HashMap();
-        m.put( "DefaultPath", defaultPath);
-        return m;
+        Map<String,Object> map = new HashMap();
+        Package pak = getClass().getPackage();
+        if( pak != null) {
+            map.put( "Version", "" + pak.getImplementationVersion());
+        } 
+        map.put( "DefaultPath", defaultPath);
+        return map;
     }
 
     /** Release all the allocated resources. */

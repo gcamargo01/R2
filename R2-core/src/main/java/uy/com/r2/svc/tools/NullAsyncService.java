@@ -12,7 +12,6 @@ import uy.com.r2.core.api.AsyncService;
 import uy.com.r2.core.api.ConfigItemDescriptor;
 import uy.com.r2.core.api.Configuration;
 import uy.com.r2.core.api.SvcMessage;
-import uy.com.r2.core.api.SvcException;
 
 /** Empty asynchronous service, prototype to create one.
  * A service that doesn't do any thing.
@@ -98,9 +97,13 @@ public class NullAsyncService implements AsyncService {
      */
     @Override
     public Map<String, Object> getStatusVars() {
-        Map<String,Object> m = new HashMap<String,Object>();
+        Map<String,Object> map = new HashMap<String,Object>();
+        Package pak = getClass().getPackage();
+        if( pak != null) {
+            map.put( "Version", "" + pak.getImplementationVersion());
+        } 
         // ...
-        return m;
+        return map;
     }
 
     /** Release all the allocated resources. */

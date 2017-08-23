@@ -121,16 +121,19 @@ public class JdbcService implements AsyncService {
      */
     @Override
     public Map<String, Object> getStatusVars() {
-        Map<String,Object> m = new HashMap();
-        m.put( "Version", "$Revision: 1.1 $");
+        Map<String,Object> map = new HashMap();
+        Package pak = getClass().getPackage();
+        if( pak != null) {
+            map.put( "Version", "" + pak.getImplementationVersion());
+        } 
         for( String s: svcs.keySet()) {
             if( svcs.get( s).uses > 0) {
-                m.put( s + ".Uses", "" + svcs.get( s).uses);
-                m.put( s + ".Errors", "" + svcs.get( s).errors);
-                m.put( s + ".AvgTime", "" + ( svcs.get( s).time / svcs.get( s).uses));
+                map.put( s + ".Uses", "" + svcs.get( s).uses);
+                map.put( s + ".Errors", "" + svcs.get( s).errors);
+                map.put( s + ".AvgTime", "" + ( svcs.get( s).time / svcs.get( s).uses));
             }    
         }
-        return m;
+        return map;
     }
 
     /** Release all the allocated resources. */

@@ -27,8 +27,8 @@ import uy.com.r2.core.api.SvcMessage;
 public class HABalancer implements AsyncService {
     private static final Logger log = Logger.getLogger( HABalancer.class);
     private final Object lock = new Object(); 
-    private ModuleStats[] modules = new ModuleStats[ 0];
-    private HashMap<String,ModuleStats> modsInUse = new HashMap<String,ModuleStats>();
+    private Destination[] modules = new Destination[ 0];
+    private HashMap<String,Destination> modsInUse = new HashMap<String,Destination>();
     private String testMsg = null;
     // Statistics
     private float usesFactor = 1F;
@@ -66,9 +66,9 @@ public class HABalancer implements AsyncService {
             return;
         }
         String mn[] = cfg.getString( "Modules").split( ",");
-        modules = new ModuleStats[ mn.length];
+        modules = new Destination[ mn.length];
         for( int i = 0; i < mn.length; ++i) {
-            modules[ i] = new ModuleStats( mn[ i]);
+            modules[ i] = new Destination( mn[ i]);
         }
         usesFactor = (float)cfg.getDouble( "UsesFactor");
         errorFactor = (float)cfg.getDouble( "ErrorFactor");
@@ -95,10 +95,10 @@ public class HABalancer implements AsyncService {
             return r;
         }
         // Get the better module to be used: the lower weight
-        ModuleStats ms = modules[ 0];
+        Destination ms = modules[ 0];
         synchronized( lock) {
             for( int i = 1; i < modules.length; ++i) {  // order-N search
-                ModuleStats mi = modules[ i];
+                Destination mi = modules[ i];
                 if( mi.compareTo( ms) < 0) {  // revert (buble search)
                     modules[ i] = ms;
                     modules[ 0] = mi;
@@ -108,9 +108,9 @@ public class HABalancer implements AsyncService {
             ++ms.timesUsed;
             modsInUse.put( req.getRequestId(), ms);
         }
-        log.trace( "selected weight=" + ms.weight + " " + ms.moduleName);
+        log.trace( "selected weight=" + ms.weight + " " + ms.pipe);
         // Call this module
-        cfg.put( "Next", ms.moduleName);
+        cfg.put("Next", ms.pipe);
         return req;
     }
 
@@ -126,7 +126,7 @@ public class HABalancer implements AsyncService {
     public SvcResponse onResponse( SvcResponse res, Configuration cfg) throws Exception {
         setConfiguration( cfg);
         String msgId = res.getRequest().getRequestId();
-        ModuleStats ms;
+        Destination ms;
         synchronized( lock) {
             ms = modsInUse.get( msgId);
             modsInUse.remove( msgId);
@@ -148,12 +148,12 @@ public class HABalancer implements AsyncService {
     @Override
     public Map<String, Object> getStatusVars() {
         Map<String,Object> m = new TreeMap();
-        m.put( "Version", "$Revision: 1.1 $");
+        m.put( "Version", "" + getClass().getPackage());
         m.put( "InUseCount", modsInUse.size());
         m.put( "InUse", modsInUse);
         for( int i = 0; i < modules.length; ++i) {
-            ModuleStats ms = modules[ i];
-            m.put( "Module_" + i + "_Module", ms.moduleName);
+            Destination ms = modules[ i];
+            m.put( "Module_" + i + "_Pipeline", ms.pipe);
             m.put( "Module_" + i + "_TimesUsed", ms.timesUsed);
             m.put( "Module_" + i + "_Errors", ms.errors);
             m.put( "Module_" + i + "_ResponseTime", ms.responseTime);
@@ -167,22 +167,22 @@ public class HABalancer implements AsyncService {
     public void shutdown() {
     }
 
-    private class ModuleStats implements Comparable<ModuleStats> {
-        ModuleStats( String m) { moduleName = m;}
-        String moduleName;
+    private class Destination implements Comparable<Destination> {
+        Destination( String m) { pipe = m;}
+        String pipe;
         int timesUsed = 0;
         int errors = 0;
         int responseTime = 0;
         float weight = 0;
 
         @Override
-        public int compareTo( ModuleStats o) {
+        public int compareTo( Destination o) {
             return Float.compare( weight, o.weight);
         }
         
         @Override
         public String toString() {
-            return moduleName;
+            return pipe;
         }
     }
 

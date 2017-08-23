@@ -115,13 +115,16 @@ public class Cache implements AsyncService {
      */
     @Override
     public Map<String, Object> getStatusVars() {
-        Map<String, Object> m = new HashMap<String, Object>();
-        m.put( "Version", "$Revision: 1.1 $" );
-        m.put( "Size", cache.size() );
+        Map<String, Object> map = new HashMap<String, Object>();
+        Package pak = getClass().getPackage();
+        if( pak != null) {
+            map.put( "Version", "" + pak.getImplementationVersion());
+        } 
+        map.put( "Size", cache.size() );
         for( String s : cache.keySet() ) {
-            m.put( "HitsOnService_" + s, "" + cache.get( s).hits );
+            map.put( "HitsOnService_" + s, "" + cache.get( s).hits );
         }
-        return m;
+        return map;
     }
 
     /**

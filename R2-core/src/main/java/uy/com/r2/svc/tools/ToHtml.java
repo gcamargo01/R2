@@ -3,6 +3,7 @@ package uy.com.r2.svc.tools;
 
 import java.io.BufferedReader;
 import java.io.StringReader;
+import java.util.HashMap;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.Map;
@@ -234,7 +235,12 @@ public class ToHtml implements AsyncService {
      */
     @Override
     public Map<String, Object> getStatusVars() {
-        return null;
+        Map<String, Object> map = new HashMap();
+        Package pak = getClass().getPackage();
+        if( pak != null) {
+            map.put( "Version", "" + pak.getImplementationVersion());
+        } 
+        return map;
     }
 
     /** Release all the allocated resources. */

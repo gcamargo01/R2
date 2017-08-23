@@ -75,9 +75,12 @@ public class HttpClient implements AsyncService {
      */
     @Override
     public Map<String, Object> getStatusVars() {
-        Map<String,Object> m = new HashMap();
-        m.put( "Version", "$Revision: 1.1 $");
-        return m;
+        Map<String,Object> map = new HashMap();
+        Package pak = getClass().getPackage();
+        if( pak != null) {
+            map.put( "Version", "" + pak.getImplementationVersion());
+        } 
+        return map;
     }
 
     /** Release all the allocated resources. */

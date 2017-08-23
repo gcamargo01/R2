@@ -225,14 +225,16 @@ public class SvcCatalog implements CoreModule {
     @Override
     public Map<String,Object> getStatusVars() {
         Map<String,Object> map = new TreeMap();
+        Package pak = getClass().getPackage();
+        if( pak != null) {
+            map.put( "Version", "" + pak.getImplementationVersion());
+        } 
         map.put( "ModuleNames", getModuleNames());
         Set<String> mns = getModuleNames();
         mns.remove( SvcCatalog.CATALOG_NAME);  // Avoid Loop
         for( String n: mns) {
             Map<String,Object> v = getModuleInfo( n).getStatusVars();
-            for( String k: v.keySet()) {
-                map.put( n + "." + k, v.get( k));
-            }
+            map.put( "Module_" + n, v);
         }
         return map;
     }

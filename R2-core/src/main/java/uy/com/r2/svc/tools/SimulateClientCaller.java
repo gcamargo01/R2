@@ -56,8 +56,6 @@ public class SimulateClientCaller implements CoreModule {
                 "mS", "0"));
         l.add( new ConfigItemDescriptor( "Messages", ConfigItemDescriptor.STRING,
                 "List of messages, separated by (,)", null));
-        l.add( new ConfigItemDescriptor( "Next", ConfigItemDescriptor.MODULE,
-                "Module name to be tested", null));
         l.add( new ConfigItemDescriptor( "Service", ConfigItemDescriptor.STRING,
                 "Service name to be called", null));
         l.add( new ConfigItemDescriptor( "Node", ConfigItemDescriptor.STRING,
@@ -83,7 +81,7 @@ public class SimulateClientCaller implements CoreModule {
                 LOG.trace( "msgs='" + m + "'");
             }
         }
-        pipe = cfg.getString( "Pipeline");
+        pipe = cfg.getString( "Pipeline", null);
         service = cfg.getString( "Service");
         node = cfg.getString( "Node");
         invocationTimeout = cfg.getInt( "InvocationTimeout", 1000);

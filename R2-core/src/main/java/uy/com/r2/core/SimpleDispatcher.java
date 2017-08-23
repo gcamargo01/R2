@@ -162,6 +162,10 @@ public class SimpleDispatcher implements Dispatcher, CoreModule {
     @Override
     public Map<String,Object> getStatusVars() {
         Map<String,Object> map = new TreeMap<String,Object>();
+        Package pak = getClass().getPackage();
+        if( pak != null) {
+            map.put( "Version", "" + pak.getImplementationVersion());
+        } 
         map.put( "RunningPipelinesCount", runningPipelines.size());
         return map;
     } 

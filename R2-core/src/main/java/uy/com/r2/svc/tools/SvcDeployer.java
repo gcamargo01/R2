@@ -156,10 +156,14 @@ public class SvcDeployer implements AsyncService {
      */
     @Override
     public Map<String,Object> getStatusVars() {
-        Map<String,Object> m = new TreeMap();
-        m.put( "Commands", receivedCommands);
-        m.put( "CommandErrors", errorsOnCommands);
-        return m;
+        Map<String,Object> map = new TreeMap();
+        Package pak = getClass().getPackage();
+        if( pak != null) {
+            map.put( "Version", "" + pak.getImplementationVersion());
+        } 
+        map.put( "Commands", receivedCommands);
+        map.put( "CommandErrors", errorsOnCommands);
+        return map;
     }
 
     /** Execute command.

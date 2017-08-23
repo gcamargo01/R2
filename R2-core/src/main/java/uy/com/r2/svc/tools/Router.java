@@ -102,7 +102,11 @@ public class Router implements AsyncService {
      */
     @Override
     public Map<String, Object> getStatusVars() {
-        HashMap<String, Object> map = new HashMap<String, Object>();
+        HashMap<String, Object> map = new HashMap();
+        Package pak = getClass().getPackage();
+        if( pak != null) {
+            map.put( "Version", "" + pak.getImplementationVersion());
+        } 
         for( String s: defRoutes.keySet()) {
             defRoutes.get( s).addStatus( map);
         }
@@ -126,8 +130,8 @@ public class Router implements AsyncService {
         }
 
         private void addStatus( Map<String,Object> map) {
-            map.put( "Pipe." + service + ".Uses", uses); 
-            map.put( "Pipe." + service + ".Errors", errors);
+            map.put( "Pipeline." + service + ".Uses", uses); 
+            map.put( "Pipeline." + service + ".Errors", errors);
         }
     }
 

@@ -12,7 +12,6 @@ import uy.com.r2.core.api.SvcResponse;
 import uy.com.r2.core.api.ConfigItemDescriptor;
 import uy.com.r2.core.api.Configuration;
 import uy.com.r2.core.api.SimpleService;
-import uy.com.r2.core.api.SvcException;
 
 
 /** Empty synchronous service, prototype to create one.
@@ -57,9 +56,12 @@ public class NullService implements SimpleService {
      */
     @Override
     public Map<String, Object> getStatusVars() {
-        Map<String,Object> m = new HashMap<String,Object>();
-        //m.put( "Version", "$Revision: 1.1 $");
-        return m;
+        Map<String,Object> map = new HashMap<String,Object>();
+        Package pak = getClass().getPackage();
+        if( pak != null) {
+            map.put( "Version", "" + pak.getImplementationVersion());
+        } 
+        return map;
     }
 
     /** Release all the allocated resources. */

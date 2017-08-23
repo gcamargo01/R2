@@ -36,7 +36,7 @@ public class MiniHttpServer implements CoreModule {
     private String encoding = System.getProperty( "file.encoding");
     private ExecutorService pool = null;
     private HttpServer server = null;
-    private String pipe = null;
+    private String pipe = "";
     private int calledTimes = 0;
     private int callingErrors = 0;
 
@@ -53,7 +53,7 @@ public class MiniHttpServer implements CoreModule {
         l.add( new ConfigItemDescriptor( "Encoding", ConfigItemDescriptor.STRING,
                 "Encoding", System.getProperty( "file.encoding")));
         l.add( new ConfigItemDescriptor( "Pipeline", ConfigItemDescriptor.STRING,
-                "System Pipeline name to route requests", null));
+                "System Pipeline name to route requests", ""));
         return l;
     }
 
@@ -153,7 +153,7 @@ public class MiniHttpServer implements CoreModule {
             SvcResponse resp = new SvcResponse( 1, req);
             try {
                 // Dispatch invocation
-                if( pipe != null) {
+                if( !pipe.isEmpty()) {
                     resp = SvcCatalog.getDispatcher().callPipeline( pipe, req);
                 } else {
                     resp = SvcCatalog.getDispatcher().call( req);
