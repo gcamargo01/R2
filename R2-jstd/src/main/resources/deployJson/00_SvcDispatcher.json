@@ -1,0 +1,7 @@
+{
+    "class": "uy.com.r2.core.SimpleDispatcher",
+    "DefaultServicePipeline": "Null0,Null1,Null2,Null3,Null4,NullA5,NullA6,NullA7,NullA8,NullA9,Loop",
+    "Pipeline.TestEJB": "Ejb,Ejb,Ejb,Ejb,Ejb,Ejb,Ejb,Ejb,Ejb,Ejb,Loop",
+    "Pipeline.Test10": "Null0,Null0,Null0,Null0,Null0,Null0,Null0,Null0,Null0,Null0,Loop"
+}    
+
