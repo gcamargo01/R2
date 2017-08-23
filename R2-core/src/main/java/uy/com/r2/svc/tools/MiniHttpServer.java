@@ -36,6 +36,7 @@ public class MiniHttpServer implements CoreModule {
     private String encoding = System.getProperty( "file.encoding");
     private ExecutorService pool = null;
     private HttpServer server = null;
+    private String pipe = null;
     private int calledTimes = 0;
     private int callingErrors = 0;
 
@@ -51,6 +52,8 @@ public class MiniHttpServer implements CoreModule {
                 "Port nomber where the server is listening", "8012"));
         l.add( new ConfigItemDescriptor( "Encoding", ConfigItemDescriptor.STRING,
                 "Encoding", System.getProperty( "file.encoding")));
+        l.add( new ConfigItemDescriptor( "Pipeline", ConfigItemDescriptor.STRING,
+                "System Pipeline name to route requests", null));
         return l;
     }
 
@@ -62,6 +65,7 @@ public class MiniHttpServer implements CoreModule {
         }
         int port = cfg.getInt( "Port", 8012);
         encoding = cfg.getString( "Encoding");
+        pipe = cfg.getString( "Pipeline");
         log.debug( "port=" + port);
         // Shutdown if it was up
         if( pool != null) {
@@ -110,6 +114,7 @@ public class MiniHttpServer implements CoreModule {
     }
 
     class MyHandler implements HttpHandler {
+
         @Override
         public void handle( HttpExchange t) throws IOException {
             String thr = Thread.currentThread().getName();
@@ -148,7 +153,11 @@ public class MiniHttpServer implements CoreModule {
             SvcResponse resp = new SvcResponse( 1, req);
             try {
                 // Dispatch invocation
-                resp = SvcCatalog.getDispatcher().call( req);
+                if( pipe != null) {
+                    resp = SvcCatalog.getDispatcher().callPipeline( pipe, req);
+                } else {
+                    resp = SvcCatalog.getDispatcher().call( req);
+                }
             } catch( Exception ex) {
                 ++callingErrors;
                 log.warn( thr + " dispatch error " + ex, ex);
