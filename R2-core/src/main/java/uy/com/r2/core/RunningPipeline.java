@@ -34,7 +34,11 @@ public class RunningPipeline {
         sb.append( req0.getRequestId());
         sb.append( ": ");
         this.toStrPrefix = sb.toString();
-        //LOG.trace( "new RunningPipeline( " + req.getRequestId() + " ) " + toString());
+        /*
+        if( LOG.isTraceEnabled()) {
+            LOG.trace( "new RunningPipeline( " + req.getRequestId() + " ) " + toString() + " " + modules[ 0]);
+        }
+        */
     }
     
     /** Run one module a time */
@@ -42,7 +46,7 @@ public class RunningPipeline {
         String moduleName = null;
         try {
             if( index >= moduleNames.length || moduleNames[ index] == null) {
-                throw new Exception( "Ended service pipeline " + moduleNames);
+                throw new Exception( "Exausted pipeline");
             }
             moduleName = moduleNames[ index];
             LOG.trace( "run index=" + index + " " + moduleName + " " + msg);
