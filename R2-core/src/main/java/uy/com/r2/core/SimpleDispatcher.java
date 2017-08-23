@@ -27,12 +27,18 @@ public class SimpleDispatcher implements Dispatcher, CoreModule {
     private static final Logger LOG = Logger.getLogger( SimpleDispatcher.class);
     
     // Current running pipeline
+    private static boolean instanced = false;
     private final Map<String,RunningPipeline> runningPipelines = new ConcurrentHashMap();
     private Map<String,String[]> defPipes = new ConcurrentHashMap();
     private Map<String,String> nodePipes = new ConcurrentHashMap();
     private String defaultServicePipeline[] = new String[ 0];
       
-    SimpleDispatcher( ) { }
+    SimpleDispatcher( ) {
+        if( instanced) {
+            LOG.debug( "Warning, Dispatcher re-instaced", new Exception());
+        }
+        instanced = true;
+    }
     
     /** Start running a service call.
      * @param req Request to dispatch
@@ -44,8 +50,8 @@ public class SimpleDispatcher implements Dispatcher, CoreModule {
         String modsToRun[] = defaultServicePipeline;
         String rpn = nodePipes.get( req.getClientNode());
         if( rpn != null) {   // Defined RunningPipe by name
-            String[] mtr = defPipes.get(  rpn);
-            if( mtr == null) {
+            String[] mtr = defPipes.get( rpn);
+            if( mtr == null || mtr.length == 0) {
                 return newExceptionResponse( "RunningPipeline name '" + rpn + "' undefined", req);
             } else {
                 modsToRun = mtr;
@@ -185,10 +191,12 @@ public class SimpleDispatcher implements Dispatcher, CoreModule {
     @Override
     public void startup( Configuration cfg ) throws Exception {
         defaultServicePipeline = cfg.getString( "DefaultServicePipeline").split( ",");
+        LOG.debug( "DefaultServicePipeline " + cfg.getString( "DefaultServicePipeline"));
         defPipes = new ConcurrentHashMap();
         Map<String,String> rps = cfg.getStringMap( "Pipeline.*");
         for( String n: rps.keySet()) {
             defPipes.put(  n, rps.get( n).split( ","));
+            LOG.debug( "Pipeline." + n + "" + defPipes.get( n));
         }
         nodePipes = cfg.getStringMap( "Node.*");
     }
