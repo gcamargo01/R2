@@ -5,12 +5,12 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.HashMap;
 import java.util.List;
-import java.util.LinkedList;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import org.apache.log4j.Logger;
+import uy.com.r2.core.SimpleDispatcher;
 import uy.com.r2.core.SvcCatalog;
 import uy.com.r2.core.api.SvcRequest;
 import uy.com.r2.core.api.SvcResponse;
@@ -18,7 +18,6 @@ import uy.com.r2.core.api.AsyncService;
 import uy.com.r2.core.api.ConfigItemDescriptor;
 import uy.com.r2.core.api.Configuration;
 import uy.com.r2.core.api.SvcMessage;
-import uy.com.r2.svc.conn.HttpClient;
 import uy.com.r2.svc.conn.JdbcService;
 
 /** Command interpreter service that deploy and un-deploy modules.
@@ -61,8 +60,11 @@ public class SvcDeployer implements AsyncService {
      * @throws Exception Unexpected failure
      */
     SvcDeployer() throws Exception {
-        // Register itself in the system catalog
-        catalog.installModule( DEPLOYER_NAME, this, null);
+        LOG.info( "Deployer started");
+        if( catalog.getModuleInfo( DEPLOYER_NAME) == null) {
+            // Register itself in the system catalog
+            catalog.installModule( DEPLOYER_NAME, this, null);
+        }
     }
     
     /** Get the configuration descriptors of this module.
@@ -300,6 +302,7 @@ public class SvcDeployer implements AsyncService {
         DEFAULT_PIPE.put( "1.class", SvcManager.class.getName());
         DEFAULT_PIPE.put( "1.RemoteUrl", "http://localhost:8016");
         DEFAULT_PIPE.put( "Module.2", SvcCatalog.DISPATCHER_NAME);
+        DEFAULT_PIPE.put( "2.class", SimpleDispatcher.class.getName());
         DEFAULT_PIPE.put( "2.DefaultServicePipeline", "ToHtml,JdbcService,SvcDeployer,SvcManager");
         DEFAULT_PIPE.put( "2.Pipeline.SvcManager", "FileServices,Serializer,HttpClient");
         DEFAULT_PIPE.put( "Module.3", ToHtml.class.getSimpleName());
@@ -314,58 +317,6 @@ public class SvcDeployer implements AsyncService {
         DEFAULT_PIPE.put( "4.Service.AddClient.SQL", "INSERT INTO clients(id,name) VALUES (?,?)");
         DEFAULT_PIPE.put( "4.Service.AddClient.Params", "Id,Name");
    }
-/*    
-        private void basicPipe() {
-        try {
-            LOG.debug( "basicPipe " + remoteUrl + " " + localPort);
-            Configuration c;
-            
-            c = new Configuration();
-            c.put( "DefaultServicePipeline", "HTML,JDBC,SvcDeployer,SvcManager");
-            c.put( "Pipeline.SvcManager", "FileServices,Serializer,HttpClient");
-            deploy( SvcCatalog.DISPATCHER_NAME, c);
-
-            c = new Configuration();
-            c.put( "class", MiniHttpServer.class.getName());
-            if( localPort > 0) {
-                c.put( "Port", localPort);
-            }
-            deploy( MiniHttpServer.class.getSimpleName(), c);
-
-            c = new Configuration();
-            c.put( "class", ToHtml.class.getName());
-            deploy( "HTML", c);
-
-            c = new Configuration();
-            c.put( "class", FileServices.class.getName());
-            deploy( "FileServices", c);
-
-            c = new Configuration();
-            c.put( "class", Json.class.getName());
-            c.put( "ProcessRequest", false);
-            deploy( "Serializer", c);
-
-            c = new Configuration();
-            c.put( "class", JdbcService.class.getName());
-            c.put( "Driver", "org.apache.derby.jdbc.ClientDriver");
-            c.put( "URL", "jdbc:derby://localhost:1527/Test");
-            c.put( "User", "root");
-            c.put( "Password", "XXXX");
-            c.put( "Service.ListClients.SQL", "SELECT * FROM clients");
-            c.put( "Service.AddClient.SQL", "INSERT INTO clients(id,name) VALUES (?,?)");
-            c.put( "Service.AddClient.Params", "Id,Name");
-            deploy( "JDBC", c);
-
-            c = new Configuration();
-            c.put( "class", HttpClient.class.getName());
-            deploy( "HttpClient", c);
-
-        } catch( Exception ex) {
-            LOG.warn( "Failed to start basicPipe", ex);
-        }
-    }
-*/
-    
     
 }
 
