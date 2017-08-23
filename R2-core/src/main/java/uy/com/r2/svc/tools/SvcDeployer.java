@@ -1,6 +1,7 @@
 /* SvcDeployer.java */
 package uy.com.r2.svc.tools;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.HashMap;
@@ -217,7 +218,11 @@ public class SvcDeployer implements AsyncService {
                     }
                     ++n;
                 }
-                FileOutputStream fos = new FileOutputStream( "R2.properties");
+                String r2Path = System.getProperty( "R2_PATH", "");
+                if( r2Path.length() > 0 && !r2Path.endsWith( File.separator)) {
+                    r2Path += File.separator;
+                }
+                FileOutputStream fos = new FileOutputStream( r2Path + "R2.properties");
                 pr.store( fos, null);
                 fos.close();
                 break;
@@ -258,9 +263,13 @@ public class SvcDeployer implements AsyncService {
                localPort = Integer.parseInt( args[ 0]);
             }
             // Read basic basic pipe
+            String r2Path = System.getProperty( "R2_PATH", "");
+            if( r2Path.length() > 0 && !r2Path.endsWith( File.separator)) {
+                r2Path += File.separator;
+            }
             Properties pr = new Properties();
             try {
-                FileInputStream fi = new FileInputStream( "R2.properties");
+                FileInputStream fi = new FileInputStream( r2Path + "R2.properties");
                 pr.load( fi);
                 fi.close();
             } catch( Exception x) {
