@@ -262,7 +262,7 @@ public class SvcDeployer implements AsyncService {
             case 1:
                localPort = Integer.parseInt( args[ 0]);
             }
-            // Read basic basic pipe
+            // Read basic basic service pipe
             String r2Path = System.getProperty( "R2_PATH", "");
             if( r2Path.length() > 0 && !r2Path.endsWith( File.separator)) {
                 r2Path += File.separator;
@@ -273,7 +273,7 @@ public class SvcDeployer implements AsyncService {
                 pr.load( fi);
                 fi.close();
             } catch( Exception x) {
-                LOG.info( "Error loading R2.properties " + x , x);
+                LOG.info( "Can't load R2.properties: " + x);
             }    
             if( pr.isEmpty()) {
                 pr.putAll( DEFAULT_PIPE);
