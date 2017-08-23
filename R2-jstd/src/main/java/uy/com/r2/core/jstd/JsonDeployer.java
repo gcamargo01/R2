@@ -10,6 +10,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import com.google.gson.Gson;
+import java.util.TreeSet;
 import org.apache.log4j.Logger;
 import uy.com.r2.core.api.Configuration;
 import uy.com.r2.core.SvcCatalog;
@@ -98,7 +99,7 @@ public class JsonDeployer implements Runnable {
                     }
                 }
                 // Deploy new files 
-                for( String fn : filesMap.keySet()) {
+                for( String fn : new TreeSet<String>( filesMap.keySet())) {
                     if( filesMap.get( fn).status == FileStatus.FSNew) {
                         filesMap.get( fn).status = FileStatus.FSIdle;
                         deploy( fn);
