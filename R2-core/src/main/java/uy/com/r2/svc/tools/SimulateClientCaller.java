@@ -26,8 +26,11 @@ public class SimulateClientCaller implements CoreModule {
     private int testIterations = Integer.MAX_VALUE;
     private int sleepTime = 0;
     private String msgs[] = { ""};
-    private String moduleName = null;
+    private String pipe = null;
     private int invocationTimeout = 1000;
+    private String service;
+    private String node;
+    private final Object lock = new Object();
     private boolean stopTest = false;
     private int activeWorkers = 0;
     private int msgIndex = 0;
@@ -36,9 +39,6 @@ public class SimulateClientCaller implements CoreModule {
     private int errors = 0;
     private int iterations = 0;
     private int responseTimeSum = 0;
-    private String serviceName;
-    private String node = "TEST";
-    private final Object lock = new Object();
     
     /** Get the configuration descriptors of this module.
      * @return ConfigItemDescriptor List
@@ -61,9 +61,11 @@ public class SimulateClientCaller implements CoreModule {
         l.add( new ConfigItemDescriptor( "Service", ConfigItemDescriptor.STRING,
                 "Service name to be called", null));
         l.add( new ConfigItemDescriptor( "Node", ConfigItemDescriptor.STRING,
-                "Client node name used in the test", "TEST"));
+                "Client node name used in the test", "SIMULATOR"));
         l.add( new ConfigItemDescriptor( "InvocationTimeout", ConfigItemDescriptor.INTEGER,
                 "time-out in mS", null));
+        l.add( new ConfigItemDescriptor( "Pipeline", ConfigItemDescriptor.STRING,
+                "Service pipeline to use", null));
         l.add( new ConfigItemDescriptor( "DumpStatus", ConfigItemDescriptor.BOOLEAN,
                 "Dump all the status at the end", "true"));
         return l;
@@ -81,8 +83,8 @@ public class SimulateClientCaller implements CoreModule {
                 LOG.trace( "msgs='" + m + "'");
             }
         }
-        moduleName = cfg.getString( "Next");
-        serviceName = cfg.getString( "Service");
+        pipe = cfg.getString( "Pipeline");
+        service = cfg.getString( "Service");
         node = cfg.getString( "Node");
         invocationTimeout = cfg.getInt( "InvocationTimeout", 1000);
         // reset statistics
@@ -181,21 +183,25 @@ public class SimulateClientCaller implements CoreModule {
                 for( int i = it0; i < it0 + range; ++i) {
                     try {
                         if( LOG.isTraceEnabled()) {
-                            LOG.debug( ">>> " + moduleName + " " + getName() + ":" + i + " " + getName());
+                            LOG.debug(">>> " + pipe + " " + getName() + ":" + i + " " + getName());
                         }
                         String m = getMessage();
                         Map<String,List<Object>> data = SvcMessage.addToPayload( null, "Data", m);
                         SvcMessage.addToPayload( data, "ItCount", i);
                         SvcMessage.addToPayload( data, "ThName", getName());
-                        SvcRequest rq = new SvcRequest( node, i, 0, serviceName, data, invocationTimeout);
+                        SvcRequest rq = new SvcRequest( node, i, 0, service, data, invocationTimeout);
                         //long t0 = System.currentTimeMillis();
                         long t0 = System.nanoTime();
-                        //SvcResponse rp = SvcCatalog.getDispatcher().callService( moduleName, rq);
-                        SvcResponse rp = SvcCatalog.getDispatcher().call( rq);
+                        SvcResponse rp;
+                        if( pipe == null) {
+                            rp = SvcCatalog.getDispatcher().call( rq);
+                        } else {
+                            rp = SvcCatalog.getDispatcher().callPipeline( pipe, rq);
+                        }
                         //t += (int)( System.currentTimeMillis() - t0);
                         t += ( System.nanoTime() - t0);
                         if( LOG.isTraceEnabled()) {
-                            LOG.debug( "<<< " + moduleName + " t=" + t + " " + rp);
+                            LOG.debug("<<< " + pipe + " t=" + t + " " + rp);
                         }    
                         /*
                         if( testIterations > 100 && ( i % (testIterations / 10)) == 0) {
