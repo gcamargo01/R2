@@ -168,7 +168,7 @@ public class SimulateClientCaller implements CoreModule {
         public void run() {
             while( !stopTest) {
                 int it0;
-                int range = 10; //00;   !!!!
+                int range = 1000; 
                 synchronized( lock) {
                     if( iterations >= testIterations) {
                         break;
