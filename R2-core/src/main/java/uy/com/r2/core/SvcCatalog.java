@@ -6,7 +6,6 @@ import java.net.URLClassLoader;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeMap;
@@ -21,6 +20,7 @@ import uy.com.r2.svc.tools.SvcManager;
 /** Service modules catalog.
  * This module is almost the core of the entire system. It keeps the list
  * of the installed modules, and a special one module: the Dispatcher.
+ * By a convention it must be called "SvcDispatcher" or it si auto installed.
  * @author G.Camargo
  */
 public class SvcCatalog implements CoreModule {
@@ -38,8 +38,6 @@ public class SvcCatalog implements CoreModule {
     private SvcCatalog() {  // Private constructor.
         modules = new HashMap();
         modules.put( CATALOG_NAME, new ModuleInfo( CATALOG_NAME, this));
-        dispatcher = new SimpleDispatcher();
-        modules.put( DISPATCHER_NAME, new ModuleInfo( DISPATCHER_NAME, dispatcher));
     }  
     
     /** Get the Catalog instance.
@@ -62,6 +60,19 @@ public class SvcCatalog implements CoreModule {
      * @return Dispatcher instance
      */
     public static Dispatcher getDispatcher() {
+        if( dispatcher == null) {
+            dispatcher = ( Dispatcher)getCatalog().getModuleInfo( DISPATCHER_NAME).getImplementation();
+            if( dispatcher != null) {
+                return dispatcher;  // Just loaded
+            }
+            try {
+                dispatcher = new SimpleDispatcher();
+                LOG.info( "Auto-install dispatcher");
+                catalog.installModule( DISPATCHER_NAME, dispatcher, null);
+            } catch( Exception x) {
+                LOG.error( "Failed to auto-install dispatcher", x);
+            }
+        }
         return dispatcher;
     }
 
@@ -79,10 +90,6 @@ public class SvcCatalog implements CoreModule {
         LOG.trace( "installModule " + moduleName + " " + className);
         // Sepecial names Catalog & Deployer
         if( CATALOG_NAME.equals( moduleName)) {
-            return;
-        }
-        if( DISPATCHER_NAME.equals( moduleName)) {
-            updateConfiguration( DISPATCHER_NAME, cfg);
             return;
         }
         // Load from the net
@@ -142,7 +149,6 @@ public class SvcCatalog implements CoreModule {
             installModule( moduleName, cfg);
         } else if( !mi.isTheSameClass( cfg)                    // If diff class
                 && mi.getConfiguration().containsKey( "class") // && has cfg 
-                && !DISPATCHER_NAME.equals( moduleName)        // && not dispatcher
                 && !CATALOG_NAME.equals( moduleName)) {        // && not this
             uninstallModule( moduleName);     
             mi.setConfiguration( cfg);        // Do not re-enter
@@ -159,7 +165,7 @@ public class SvcCatalog implements CoreModule {
      */
     public void uninstallModule( String moduleName) throws Exception {
         LOG.info( "uninstallModule " + moduleName);
-        if( CATALOG_NAME.equals( moduleName) || DISPATCHER_NAME.equals( moduleName)) {
+        if( CATALOG_NAME.equals( moduleName)) {
             LOG.info( "Module " + moduleName + " can't be uninstalled, ignored");
             return;
         }
@@ -202,10 +208,7 @@ public class SvcCatalog implements CoreModule {
      */
     @Override
     public List<ConfigItemDescriptor> getConfigDescriptors() {
-        LinkedList<ConfigItemDescriptor> l = new LinkedList();
-        l.add( new ConfigItemDescriptor( DISPATCHER_NAME, ConfigItemDescriptor.STRING,
-                "Dispatcher class name", null));
-        return l;        
+        return null;
     }
 
     /** Startup.
@@ -214,15 +217,6 @@ public class SvcCatalog implements CoreModule {
      */
     @Override
     public void startup( Configuration cfg) throws Exception {
-        if( cfg.isChanged()) {
-            String dn = cfg.getString( DISPATCHER_NAME);
-            try {
-                dispatcher = (Dispatcher)Class.forName( dn).newInstance();
-            } catch( Exception x) {
-                LOG.warn( "can't instance Dispatcher class " + dn, x);
-            }
-            cfg.resetChanged();
-        }
     }
     
     /** Get the status report.
@@ -253,7 +247,6 @@ public class SvcCatalog implements CoreModule {
         } catch (InterruptedException ex) { }
         Set<String> nml = new HashSet( SvcCatalog.getCatalog().getModuleNames());
         nml.remove( CATALOG_NAME);  // avoid loop
-        nml.remove( DISPATCHER_NAME);  // can't be uninstalled
         for( String n: nml) {
             try {
                 uninstallModule( n);
