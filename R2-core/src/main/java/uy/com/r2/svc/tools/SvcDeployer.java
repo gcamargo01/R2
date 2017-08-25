@@ -4,6 +4,7 @@ package uy.com.r2.svc.tools;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -242,7 +243,7 @@ public class SvcDeployer implements AsyncService {
             ++errorsOnCommands;
             throw x;
         }
-        LOG.debug( "command resp=" + resp);
+        LOG.debug( "command " + cmd + " resp=" + resp);
         return resp;
     }    
 
@@ -256,7 +257,6 @@ public class SvcDeployer implements AsyncService {
      */
     public static void main( String args[]) {
         try {
-            LOG.debug( "start " + args);
             SvcDeployer m = new SvcDeployer();
             String rmtUrl = "http://localhost:8016";
             int localPort = 8015;
@@ -266,6 +266,7 @@ public class SvcDeployer implements AsyncService {
             case 1:
                localPort = Integer.parseInt( args[ 0]);
             }
+            LOG.debug( "start " + localPort + " " + rmtUrl);
             // Read basic basic service pipe
             String r2Path = System.getProperty( "R2_PATH", "");
             if( r2Path.length() > 0 && !r2Path.endsWith( File.separator)) {
@@ -280,9 +281,18 @@ public class SvcDeployer implements AsyncService {
                 LOG.info( "Can't load R2.properties: " + x);
             }    
             if( pr.isEmpty()) {
+                // calculate default server name
+                String hostName = InetAddress.getLocalHost().getHostName();
+                String localUrl = "http://" + hostName + ":" + localPort;
+                String localName = hostName + localPort;
+                // configure
                 pr.putAll( DEFAULT_PIPE);
                 pr.put( "0.Port", "" + localPort);
-                pr.put( "1.RemoteUrl", rmtUrl);
+                pr.put( "1.LocalServer", localName);
+                pr.put( "1.LocalUrl", localUrl);
+                if( rmtUrl != null && !rmtUrl.isEmpty()) {
+                    pr.put( "1.RemoteUrl", rmtUrl);
+                }
             }
             LOG.debug( "Init Pipe =" + pr);
             // Deploy initial pipe
@@ -313,7 +323,9 @@ public class SvcDeployer implements AsyncService {
         DEFAULT_PIPE.put( "0.Port", "8015");
         DEFAULT_PIPE.put( "Module.1", SvcManager.class.getSimpleName());
         DEFAULT_PIPE.put( "1.class", SvcManager.class.getName());
-        DEFAULT_PIPE.put( "1.RemoteUrl", "http://localhost:8016");
+        // Default add 1.LocalServier
+        // Default add 1.LocalUrl
+        // Default add 1.RemotelUrl
         DEFAULT_PIPE.put( "Module.2", SvcCatalog.DISPATCHER_NAME);
         DEFAULT_PIPE.put( "2.class", SimpleDispatcher.class.getName());
         DEFAULT_PIPE.put( "2.DefaultServicePipeline", "ToHtml,JdbcService,SvcDeployer,SvcManager");
