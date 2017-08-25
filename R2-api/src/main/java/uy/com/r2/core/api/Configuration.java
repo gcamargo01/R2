@@ -184,7 +184,7 @@ public class Configuration implements Serializable {
      * @return Not null value as URL
      * @throws Exception Parsing error
      */
-    public URL getURL( String key, URL defValue) throws Exception {
+    public URL getUrl( String key, URL defValue) throws Exception {
         if( !cfg.containsKey( key)) {
             return defValue;
         }
@@ -196,8 +196,8 @@ public class Configuration implements Serializable {
      * @return Not null value as string
      * @throws Exception Parsing error
      */
-    public URL getURL( String key) throws Exception {
-        return getURL( key, new URL( "http://UNDEFINED_HOST"));
+    public URL getUrl( String key) throws Exception {
+        return getUrl( key, new URL( "http://UNDEFINED_HOST"));
     }
 
     /** Test a configuration boolean value.
