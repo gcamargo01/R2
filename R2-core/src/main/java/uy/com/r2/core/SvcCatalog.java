@@ -96,7 +96,7 @@ public class SvcCatalog implements CoreModule {
         ClassLoader loader = getClass().getClassLoader();
         String loaderDesc = "";
         if( cfg.containsKey( "classUrl")) {
-            URL u = cfg.getURL( "classUrl");
+            URL u = cfg.getUrl( "classUrl");
             loader = new URLClassLoader( new URL[] { u});
             loaderDesc = " from " + u.toString();
         }
