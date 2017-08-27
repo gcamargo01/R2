@@ -59,7 +59,7 @@ public class MiniHttpServer implements CoreModule {
 
     @Override
     public void startup( Configuration cfg) throws Exception {
-        log.trace( "starup " + cfg + " " + cfg.isChanged());
+        log.trace( "startup " + cfg + " " + cfg.isChanged());
         if( !cfg.isChanged()) {
             return;
         }
@@ -150,6 +150,9 @@ public class MiniHttpServer implements CoreModule {
             }
             // Invoke service
             SvcRequest req = new SvcRequest( node, ++txNr, 0, svc, params, 5000);
+            if( userAgent != null) {
+                req.put( "_User-Agent_", userAgent);                
+            }
             SvcResponse resp = new SvcResponse( 1, req);
             try {
                 // Dispatch invocation
@@ -163,9 +166,16 @@ public class MiniHttpServer implements CoreModule {
                 log.warn( thr + " dispatch error " + ex, ex);
             }     
             // Prepare and send HTTP response
-            String response = "" + resp.get( "Serialized");
-            t.getResponseHeaders().add( "ResultCode", "" + resp.getResultCode());
-            t.sendResponseHeaders( 200, response.length());
+            String response;
+            if( userAgent != null && resp.get( "SerializedHtml") != null) {
+                response = "" + resp.get( "SerializedHtml");
+                t.getResponseHeaders().add( "ResultCode", "" + resp.getResultCode());
+                t.sendResponseHeaders( 200, response.length());
+            } else if( resp.get( "SerializedJson") != null) {
+                response = "" + resp.get( "SerializedJson");
+            } else {
+                response = "" + resp.getPayload();
+            }
             OutputStream os = t.getResponseBody();
             os.write( response.getBytes());
             os.close();
