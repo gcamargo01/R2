@@ -7,6 +7,7 @@ import java.util.TreeMap;
 import java.util.LinkedList;
 import java.util.Map;
 import org.apache.log4j.Logger;
+import uy.com.r2.core.SvcCatalog;
 import uy.com.r2.core.api.SvcRequest;
 import uy.com.r2.core.api.SvcResponse;
 import uy.com.r2.core.api.AsyncService;
@@ -41,9 +42,9 @@ public class HABalancer implements AsyncService {
      */
     @Override
     public List<ConfigItemDescriptor> getConfigDescriptors() {
-        LinkedList<ConfigItemDescriptor> l = new LinkedList<ConfigItemDescriptor>();
-        l.add( new ConfigItemDescriptor( "Modules", ConfigItemDescriptor.MODULE, 
-                "Modules names to balance, comma separated", ""));
+        LinkedList<ConfigItemDescriptor> l = new LinkedList();
+        l.add( new ConfigItemDescriptor( "Pipelines", ConfigItemDescriptor.MODULE, 
+                "Service pipwlines names to balance, comma separated", ""));
         l.add( new ConfigItemDescriptor( "UsesFactor", ConfigItemDescriptor.INTEGER,
                 "Usage weighting factor", "1"));
         l.add( new ConfigItemDescriptor( "ErrorFactor", ConfigItemDescriptor.INTEGER,
@@ -61,11 +62,7 @@ public class HABalancer implements AsyncService {
         if( !cfg.isChanged()) {
             return;
         }
-        if( !cfg.containsKey( "Modules")) {
-            log.warn( "No modules to balance in cfg.");
-            return;
-        }
-        String mn[] = cfg.getString( "Modules").split( ",");
+        String mn[] = cfg.getString( "Pipelines").split( ",");
         modules = new Destination[ mn.length];
         for( int i = 0; i < mn.length; ++i) {
             modules[ i] = new Destination( mn[ i]);
@@ -109,9 +106,8 @@ public class HABalancer implements AsyncService {
             modsInUse.put( req.getRequestId(), ms);
         }
         log.trace( "selected weight=" + ms.weight + " " + ms.pipe);
-        // Call this module
-        cfg.put("Next", ms.pipe);
-        return req;
+        // Call this pipeline
+        return SvcCatalog.getCatalog().getDispatcher().callPipeline( ms.pipe, req);
     }
 
     /** Process a response.
@@ -153,11 +149,11 @@ public class HABalancer implements AsyncService {
         m.put( "InUse", modsInUse);
         for( int i = 0; i < modules.length; ++i) {
             Destination ms = modules[ i];
-            m.put( "Module_" + i + "_Pipeline", ms.pipe);
-            m.put( "Module_" + i + "_TimesUsed", ms.timesUsed);
-            m.put( "Module_" + i + "_Errors", ms.errors);
-            m.put( "Module_" + i + "_ResponseTime", ms.responseTime);
-            m.put( "Module_" + i + "_Weight", ms.weight);
+            m.put( "Pipeline_" + i + "_Name", ms.pipe);
+            m.put( "Pipeline_" + i + "_TimesUsed", ms.timesUsed);
+            m.put( "Pipeline_" + i + "_Errors", ms.errors);
+            m.put( "Pipeline_" + i + "_ResponseTime", ms.responseTime);
+            m.put( "Pipeline_" + i + "_Weight", ms.weight);
         }
         return m;
     }
