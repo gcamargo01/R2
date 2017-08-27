@@ -181,7 +181,7 @@ public class Configuration implements Serializable {
     /** URL getter.
      * @param key Configuration key
      * @param defValue Default value
-     * @return Not null value as URL
+     * @return URL 
      * @throws Exception Parsing error
      */
     public URL getUrl( String key, URL defValue) throws Exception {
@@ -193,11 +193,11 @@ public class Configuration implements Serializable {
 
     /** Long getter.
      * @param key Configuration key
-     * @return Not null value as string
+     * @return URL or null 
      * @throws Exception Parsing error
      */
     public URL getUrl( String key) throws Exception {
-        return getUrl( key, new URL( "http://UNDEFINED_HOST"));
+        return getUrl( key, null);
     }
 
     /** Test a configuration boolean value.
