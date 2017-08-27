@@ -20,7 +20,7 @@ import uy.com.r2.core.api.SvcResponse;
  * @author G.Camargo
  */
 public class Json implements AsyncService {
-    public static final String SERIALIZED = "Serialized";
+    public static final String SERIALIZED = "SerializedJson";
     private static final Logger log = Logger.getLogger( Json.class);
     private Gson mapper = new Gson();
     private boolean toSerial = true;
