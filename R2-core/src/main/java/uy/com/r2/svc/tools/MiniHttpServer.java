@@ -31,7 +31,7 @@ import uy.com.r2.core.api.SvcResponse;
  */
 public class MiniHttpServer implements CoreModule {
 
-    private static final Logger log = Logger.getLogger(MiniHttpServer.class);
+    private static final Logger LOG = Logger.getLogger(MiniHttpServer.class);
     private int txNr = 0;
     private String encoding = System.getProperty( "file.encoding");
     private ExecutorService pool = null;
@@ -59,14 +59,14 @@ public class MiniHttpServer implements CoreModule {
 
     @Override
     public void startup( Configuration cfg) throws Exception {
-        log.trace( "startup " + cfg + " " + cfg.isChanged());
+        LOG.trace( "startup " + cfg + " " + cfg.isChanged());
         if( !cfg.isChanged()) {
             return;
         }
         int port = cfg.getInt( "Port", 8012);
         encoding = cfg.getString( "Encoding");
         pipe = cfg.getString( "Pipeline");
-        log.debug( "port=" + port);
+        LOG.debug( "port=" + port);
         // Shutdown if it was up
         if( pool != null) {
             if( !pool.isShutdown()) {
@@ -75,7 +75,7 @@ public class MiniHttpServer implements CoreModule {
             }
         }
         // Start the server to this port
-        log.trace( "staring on port=" + port);
+        LOG.trace( "staring on port=" + port);
         pool = Executors.newCachedThreadPool();
         server = HttpServer.create( new InetSocketAddress( port), 0);
         server.createContext( "/", new MyHandler());
@@ -104,7 +104,7 @@ public class MiniHttpServer implements CoreModule {
      */
     @Override
     public void shutdown() {
-        log.debug( "shutdown");
+        LOG.debug( "shutdown");
         if( pool != null) {
             pool.shutdown();
         }
@@ -117,69 +117,76 @@ public class MiniHttpServer implements CoreModule {
 
         @Override
         public void handle( HttpExchange t) throws IOException {
-            String thr = Thread.currentThread().getName();
-            log.trace( thr + " *** handler " + t.getRequestURI());
-            // Process de HTTP request
-            String svc = "none";
             try {
-                svc = t.getRequestURI().getPath().substring( 1);
-            } catch( Exception xx) { }
-            if( svc.equals( "favicon.ico")) {
-                t.sendResponseHeaders( 404, 0);
-                return;
-            }
-            ++calledTimes;
-            String node = t.getRemoteAddress().getHostName();
-            Headers rqh = t.getRequestHeaders();
-            if( rqh.containsKey( "Node")) {
-                node = rqh.getFirst( "Node");
-            }
-            String userAgent = rqh.getFirst( "User-Agent");
-            // Parse HTTP parameters
-            String query = t.getRequestURI().getRawQuery();
-            Map<String, List<Object>> params = null;
-            try {
-                params = parseQuery( query);
-            } catch( Exception ex) {
-                log.warn( thr + " error parsing query " + query + ", ignored", ex);
-                ++callingErrors;
-            }
-            if( log.isTraceEnabled()) {
-                log.trace( thr + " *** svc=" + svc + " node=" + node + " ua=" + userAgent);
-                log.trace( thr + " *** params=" + params);
-            }
-            // Invoke service
-            SvcRequest req = new SvcRequest( node, ++txNr, 0, svc, params, 5000);
-            if( userAgent != null) {
-                req.put( "_User-Agent_", userAgent);                
-            }
-            SvcResponse resp = new SvcResponse( 1, req);
-            try {
-                // Dispatch invocation
-                if( !pipe.isEmpty()) {
-                    resp = SvcCatalog.getDispatcher().callPipeline( pipe, req);
-                } else {
-                    resp = SvcCatalog.getDispatcher().call( req);
+                String thr = Thread.currentThread().getName();
+                LOG.trace( thr + " *** handler " + t.getRequestURI());
+                // Process de HTTP request
+                String svc = "none";
+                try {
+                    svc = t.getRequestURI().getPath().substring( 1);
+                } catch( Exception xx) { }
+                if( svc.equals( "favicon.ico")) {
+                    t.sendResponseHeaders( 404, 0);
+                    return;
                 }
-            } catch( Exception ex) {
-                ++callingErrors;
-                log.warn( thr + " dispatch error " + ex, ex);
-            }     
-            // Prepare and send HTTP response
-            String response;
-            if( userAgent != null && resp.get( "SerializedHtml") != null) {
-                response = "" + resp.get( "SerializedHtml");
+                ++calledTimes;
+                String node = t.getRemoteAddress().getHostName();
+                Headers rqh = t.getRequestHeaders();
+                if( rqh.containsKey( "Node")) {
+                    node = rqh.getFirst( "Node");
+                }
+                String userAgent = rqh.getFirst( "User-Agent");
+                // Parse HTTP parameters
+                String query = t.getRequestURI().getRawQuery();
+                Map<String, List<Object>> params = null;
+                try {
+                    params = parseQuery( query);
+                } catch( Exception ex) {
+                    LOG.warn( thr + " error parsing query " + query + ", ignored", ex);
+                    ++callingErrors;
+                }
+                if( LOG.isTraceEnabled()) {
+                    LOG.trace( thr + " *** svc=" + svc + " node=" + node + " ua=" + userAgent);
+                    LOG.trace( thr + " *** params=" + params);
+                }
+                // Invoke service
+                SvcRequest req = new SvcRequest( node, ++txNr, 0, svc, params, 5000);
+                SvcResponse resp = new SvcResponse( 1, req);
+                try {
+                    // Dispatch invocation
+                    if( !pipe.isEmpty()) {
+                        resp = SvcCatalog.getDispatcher().callPipeline( pipe, req);
+                    } else {
+                        resp = SvcCatalog.getDispatcher().call( req);
+                    }
+                } catch( Exception ex) {
+                    ++callingErrors;
+                    LOG.warn( thr + " dispatch error " + ex, ex);
+                }     
+                LOG.trace( thr + " *** to send" + resp.toString());
+                // Prepare and send HTTP response
+                String response;
+                if( userAgent != null && resp.get( "SerializedHtml") != null) {
+                    t.getResponseHeaders().add( "Content-Type", "text/html");
+                    response = "" + resp.get( "SerializedHtml");
+                } else if( resp.get( "SerializedJson") != null) {
+                    t.getResponseHeaders().add( "Content-Typee", "application/json");
+                    response = "" + resp.get( "SerializedJson");
+                } else {
+                    response = "" + resp.getPayload();
+                }
+                response += "\n";
                 t.getResponseHeaders().add( "ResultCode", "" + resp.getResultCode());
                 t.sendResponseHeaders( 200, response.length());
-            } else if( resp.get( "SerializedJson") != null) {
-                response = "" + resp.get( "SerializedJson");
-            } else {
-                response = "" + resp.getPayload();
-            }
-            OutputStream os = t.getResponseBody();
-            os.write( response.getBytes());
-            os.close();
-            log.trace( thr + " *** end response=" + response);
+                OutputStream os = t.getResponseBody();
+                os.write( response.getBytes());
+                os.flush();
+                os.close();
+                LOG.trace( thr + " *** end response");
+            } catch( Exception x) {
+                LOG.info( "" + x, x);
+                throw new IOException( x);
+            }    
         }
     }
 
