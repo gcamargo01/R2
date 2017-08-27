@@ -20,6 +20,7 @@ import uy.com.r2.core.api.AsyncService;
 import uy.com.r2.core.api.ConfigItemDescriptor;
 import uy.com.r2.core.api.Configuration;
 import uy.com.r2.core.api.SvcMessage;
+import uy.com.r2.svc.conn.HttpClient;
 import uy.com.r2.svc.conn.JdbcService;
 
 /** Command interpreter service that deploy and un-deploy modules.
@@ -288,7 +289,7 @@ public class SvcDeployer implements AsyncService {
                 // configure
                 pr.putAll( DEFAULT_PIPE);
                 pr.put( "0.Port", "" + localPort);
-                pr.put( "1.LocalServer", localName);
+                pr.put( "1.LocalName", localName);
                 pr.put( "1.LocalUrl", localUrl);
                 if( rmtUrl != null && !rmtUrl.isEmpty()) {
                     pr.put( "1.RemoteUrl", rmtUrl);
@@ -328,19 +329,28 @@ public class SvcDeployer implements AsyncService {
         // Default add 1.RemotelUrl
         DEFAULT_PIPE.put( "Module.2", SvcCatalog.DISPATCHER_NAME);
         DEFAULT_PIPE.put( "2.class", SimpleDispatcher.class.getName());
-        DEFAULT_PIPE.put( "2.DefaultServicePipeline", "ToHtml,JdbcService,SvcDeployer,SvcManager");
-        DEFAULT_PIPE.put( "2.Pipeline.SvcManager", "FileServices,Serializer,HttpClient");
+        DEFAULT_PIPE.put( "2.DefaultServicePipeline", "ToHtml,ToJson,JdbcService,SvcDeployer,SvcManager");
+        //DEFAULT_PIPE.put( "2.DefaultServicePipeline", "JdbcService,SvcDeployer,SvcManager");
+        //DEFAULT_PIPE.put( "2.Pipeline.SvcManager", "FileServices,Serializer,HttpClient");
+        DEFAULT_PIPE.put( "2.Pipeline.SvcManager", "HttpClient");
         DEFAULT_PIPE.put( "Module.3", ToHtml.class.getSimpleName());
         DEFAULT_PIPE.put( "3.class", ToHtml.class.getName());
-        DEFAULT_PIPE.put( "Module.4", JdbcService.class.getSimpleName());
-        DEFAULT_PIPE.put( "4.class", JdbcService.class.getName());
-        DEFAULT_PIPE.put( "4.Driver", "org.apache.derby.jdbc.ClientDriver");
-        DEFAULT_PIPE.put( "4.URL", "jdbc:derby://localhost:1527/Test");
-        DEFAULT_PIPE.put( "4.User", "root");
-        DEFAULT_PIPE.put( "4.Password", "XXXX");
-        DEFAULT_PIPE.put( "4.Service.ListClients.SQL", "SELECT * FROM clients");
-        DEFAULT_PIPE.put( "4.Service.AddClient.SQL", "INSERT INTO clients(id,name) VALUES (?,?)");
-        DEFAULT_PIPE.put( "4.Service.AddClient.Params", "Id,Name");
+        DEFAULT_PIPE.put( "Module.4", "ToJson");
+        DEFAULT_PIPE.put( "4.class", Json.class.getName());
+        DEFAULT_PIPE.put( "4.ToSerial", "false");
+        DEFAULT_PIPE.put( "4.ProcessRequest", "false");
+        DEFAULT_PIPE.put( "4.ProcessResponse", "true");
+        DEFAULT_PIPE.put( "Module.5", JdbcService.class.getSimpleName());
+        DEFAULT_PIPE.put( "5.class", JdbcService.class.getName());
+        DEFAULT_PIPE.put( "5.Driver", "org.apache.derby.jdbc.ClientDriver");
+        DEFAULT_PIPE.put( "5.URL", "jdbc:derby://localhost:1527/Test");
+        DEFAULT_PIPE.put( "5.User", "root");
+        DEFAULT_PIPE.put( "5.Password", "XXXX");
+        DEFAULT_PIPE.put( "5.Service.ListClients.SQL", "SELECT * FROM clients");
+        DEFAULT_PIPE.put( "5.Service.AddClient.SQL", "INSERT INTO clients(id,name) VALUES (?,?)");
+        DEFAULT_PIPE.put( "5.Service.AddClient.Params", "Id,Name");
+        DEFAULT_PIPE.put( "Module.6", HttpClient.class.getSimpleName());
+        DEFAULT_PIPE.put( "6.class", HttpClient.class.getName());
    }
     
 }

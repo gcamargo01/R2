@@ -64,17 +64,13 @@ public class SvcManager implements AsyncService, CoreModule {
     private int nodeTxNr = 0;
     private static boolean stop = false;
     // Cfg
-    private String localNodeName = "localhost";
+    private String localName = "localhost";
     private URL localUrl = null;
-    private int localPort = 0;
     private URL remoteUrl = null;
-    private String masterNodeName = null;
+    private String masterName = null;
     private Map<String,String> knownServers = new TreeMap();
     private int keepAliveTimeout = 10000;
     private int keepAliveTime = 5000;
-    // Stats
-    private int receivedCommands = 0;
-    private int errorsOnCommands = 0;
     
     public SvcManager() {
         LOG.trace( "new");
@@ -87,12 +83,10 @@ public class SvcManager implements AsyncService, CoreModule {
     @Override
     public List<ConfigItemDescriptor> getConfigDescriptors() {
         LinkedList<ConfigItemDescriptor> l = new LinkedList();
-        l.add( new ConfigItemDescriptor( "ServerName", ConfigItemDescriptor.STRING,
-                "Local node name", null));
+        l.add( new ConfigItemDescriptor( "LocalName", ConfigItemDescriptor.STRING,
+                "Local node name", localName));
         l.add( new ConfigItemDescriptor( "LocalUrl", ConfigItemDescriptor.URL,
                 "local URL of this  server", null));
-        l.add( new ConfigItemDescriptor( "Port", ConfigItemDescriptor.INTEGER,
-                "Local server port to listen", null));
         l.add( new ConfigItemDescriptor( "RemoteUrl", ConfigItemDescriptor.URL,
                 "local URL of this  server", null));
         l.add( new ConfigItemDescriptor( "MasterName", ConfigItemDescriptor.STRING,
@@ -108,8 +102,6 @@ public class SvcManager implements AsyncService, CoreModule {
     
     @Override
     public void startup( Configuration cfg) throws Exception {
-        receivedCommands = 0;
-        errorsOnCommands = 0;
         if( cfg.containsKey( "Commands.*")) {
             Map<String,String> m = cfg.getStringMap( "Commands.*.Cmd");
             for( String k: m.keySet()) {
@@ -118,16 +110,17 @@ public class SvcManager implements AsyncService, CoreModule {
                         cfg.getString( "Commands." + k + ".Url")); 
             }
         }
-        localNodeName = cfg.getString( "ServerName");
+        localName = cfg.getString( "LocalName");
         localUrl = cfg.getUrl( "LocalUrl");
         remoteUrl = cfg.getUrl( "RemoteUrl");
-        masterNodeName = cfg.getString( "MasterServer", localNodeName);
+        masterName = cfg.getString( "MasterServer");
         knownServers = cfg.getStringMap( "Server.*");
-        knownServers.put( localNodeName, "" + localUrl);
         keepAliveTimeout = cfg.getInt( "KeepAliveTimeout");
         keepAliveTime = cfg.getInt( "KeepAliveTime");
-        LOG.debug( "ServerName: " + localNodeName);
-        LOG.debug( "knownServers: " + knownServers);
+        if( remoteUrl != null && !knownServers.values().contains( "" + remoteUrl)) {
+            knownServers.put( "<Unknown>", "" + remoteUrl);
+        }
+        LOG.debug( "Starting ............... " + localName);
     }
 
     /** Invocation dispatch phase.
@@ -183,8 +176,7 @@ public class SvcManager implements AsyncService, CoreModule {
         if( pak != null) {
             map.put( "Version", "" + pak.getImplementationVersion());
         } 
-        map.put( "Commands", receivedCommands);
-        map.put( "CommandErrors", errorsOnCommands);
+        map.put( "TimeStamp", "" + ( System.currentTimeMillis() -  masterTimeStamp));
         map.put( "KnownServers", knownServers);
         return map;
     }
@@ -192,14 +184,13 @@ public class SvcManager implements AsyncService, CoreModule {
     /** Execute command.
      * @param cmd Command verb
      * @param sn Server Name
-     * @param param URL o Module name
+     * @param url URL o Module name
      * @return Response Map with REMOVE sub-key (Multimap)
      * @throws Exception Error on command execution
      */
-    private Map<String,List<Object>>  command( String cmd, Object sn, Object param) 
+    private Map<String,List<Object>>  command( String cmd, Object sn, Object url) 
             throws Exception {
-        LOG.trace( "Command: " + cmd + " " + sn + " " + param);
-        ++receivedCommands;
+        LOG.trace("Command: " + cmd + " " + sn + " " + url);
         Map<String,List<Object>> resp = new TreeMap();
         try {
             switch( cmd) {
@@ -209,7 +200,10 @@ public class SvcManager implements AsyncService, CoreModule {
                 }
                 break;
             case SVC_ADDSERVER:
-                knownServers.put( "" + sn, "" + param);
+                if( ( "" + url).equals( "" + remoteUrl)) {
+                    knownServers.remove( "<Unknown>");
+                }
+                knownServers.put( "" + sn, "" + url);
                 updateDestinations();
                 break;
             case SVC_REMOVESERVER:
@@ -217,22 +211,25 @@ public class SvcManager implements AsyncService, CoreModule {
                 updateDestinations();
                 break;
             case SVC_GETMASTER: 
-                SvcMessage.addToPayload( resp, "Name", masterNodeName);
-                SvcMessage.addToPayload( resp, "Url", knownServers.get( masterNodeName));
+                SvcMessage.addToPayload( resp, "Name", masterName);
+                if( masterName != null) {
+                    SvcMessage.addToPayload( resp, "Url", knownServers.get( masterName));
+                }
                 break;
             case SVC_SETMASTER: 
-                masterNodeName = "" + sn;
+                masterName = "" + sn;
+                knownServers.put( "" + sn, "" + url);
                 break;
             case SVC_UPDATEMDOULE:
                 Configuration cfM = null;
-                String mod = "" + param;
+                String mod = "" + url;
                 // Get config from master
                 SvcRequest r;
-                if( masterNodeName != null) {
-                    r = new SvcRequest( localNodeName, 0, nodeTxNr++, 
-                            knownServers.get( masterNodeName) + "/" + "GetModuleConfig", null, 1000);
+                if( masterName != null) {
+                    r = new SvcRequest( localName, 0, nodeTxNr++, 
+                            knownServers.get(masterName) + "/" + "GetModuleConfig", null, 1000);
                 } else {
-                    r = new SvcRequest( localNodeName, 0, nodeTxNr++, 
+                    r = new SvcRequest( localName, 0, nodeTxNr++, 
                             remoteUrl + "/" + "GetModuleConfig", null, 1000);
                 }    
                 r.put( "Module", mod);
@@ -247,18 +244,18 @@ public class SvcManager implements AsyncService, CoreModule {
                     throw new Exception( "Module " + mod + " not found");
                 }
                 // Wait JAR copy
-                r = new SvcRequest( localNodeName, 0, nodeTxNr++, "WaitCopyEnd", null, 1000);
+                r = new SvcRequest( localName, 0, nodeTxNr++, "WaitCopyEnd", null, 1000);
                 SvcCatalog.getDispatcher().callNext( r);
                 // Update module config
                 catalog.updateConfiguration( mod, cfM);
                 break;
             case SVC_REMOVEMDOULE:
-                catalog.uninstallModule( "" + param);
+                catalog.uninstallModule("" + url);
                 break;
             case SVC_KEEPALIVE:
                 masterTimeStamp = System.currentTimeMillis();
                 if( isMaster()) {  // Conflict! The master is the one that call KeepAlive
-                    masterNodeName = "" + sn;   // Realliation
+                    masterName = "" + sn;   // Realliation
                 }
                 break;
             case SVC_SHUTDOWN:
@@ -273,12 +270,10 @@ public class SvcManager implements AsyncService, CoreModule {
                 }
                 break;
             default:
-                ++errorsOnCommands;
                  SvcMessage.addToPayload( resp, "Error", "Invalid command: " + cmd);
             }
         } catch( Exception x) {
-            LOG.info( "Command failed: " + cmd + " " + sn + " " + param, x);
-            ++errorsOnCommands;
+            LOG.info("Command failed: " + cmd + " " + sn + " " + url, x);
             throw x;
         }
         LOG.trace( " resp = " + resp);
@@ -288,12 +283,12 @@ public class SvcManager implements AsyncService, CoreModule {
     /** Stop and release all the allocated resources. */
     @Override
     public void shutdown() {
-        if( isMaster()) {  // Choose another Master
+        if( isMaster() && knownServers.size() > 0) {  // Choose another Master
             String newMaster = "" + knownServers.keySet().toArray()[ 0];
             LOG.trace( "newMaster=" + newMaster);
             notifyAllServers( SVC_SETMASTER, newMaster);
         }
-        notifyAllServers( SVC_REMOVESERVER, localNodeName);
+        notifyAllServers( SVC_REMOVESERVER, localName);
         stop = true;
     }
 
@@ -328,31 +323,40 @@ public class SvcManager implements AsyncService, CoreModule {
         }
     }
 
-    /** Local method used by SvcDeployer to check status.
+    /** Method used by SvcDeployer to check status.
      * @return Boolean is alive
      */
     static boolean isAlive( ) {
         try {
-            if( svcMgr.isMaster()) {
-                if( System.currentTimeMillis() > svcMgr.masterTimeStamp + svcMgr.keepAliveTime) {
-                    // Time to send a new KEEP_ALIVE
-                    svcMgr.masterTimeStamp = System.currentTimeMillis();
-                    svcMgr.notifyAllServers( SVC_KEEPALIVE, svcMgr.localNodeName);
-                }
-            } else {   // This is a slave
-                // The master is alive?
-                if( System.currentTimeMillis() > svcMgr.masterTimeStamp + svcMgr.keepAliveTimeout) {
-                    // This is the new master
-                    svcMgr.masterNodeName = svcMgr.localNodeName;
-                    svcMgr.masterTimeStamp = System.currentTimeMillis();
-                    svcMgr.notifyAllServers( SVC_SETMASTER, svcMgr.localNodeName);
-                }
-            }
+            svcMgr.keepAlive();
             Thread.sleep( 1000);  // Avoid closed loop
         } catch( Exception ex) {
             LOG.warn( "Error on keepAlive", ex);
         }
         return !stop;
+    }
+    
+    private void keepAlive() {
+        if( isMaster()) {
+            if( System.currentTimeMillis() > masterTimeStamp + keepAliveTime) {
+                masterTimeStamp = System.currentTimeMillis();
+                // Time to send a new KEEP_ALIVE
+                notifyAllServers( SVC_KEEPALIVE, localName);
+            }
+        } else if( masterName != null) {   // There are a master, and is other
+            // The master is alive?
+            if( System.currentTimeMillis() > masterTimeStamp + keepAliveTimeout) {
+                masterTimeStamp = System.currentTimeMillis();
+                // This is the new master
+                masterName = localName;
+                notifyAllServers( SVC_SETMASTER, localName);
+            }
+        } else if( remoteUrl != null) {   // Unknown master, tyy to find one
+            if( System.currentTimeMillis() > masterTimeStamp + keepAliveTime) {
+                masterTimeStamp = System.currentTimeMillis();
+                notifyAllServers( SVC_ADDSERVER, localName);
+            }              
+        }
     }
     
     /* Search for a module by its class name */
@@ -375,41 +379,37 @@ public class SvcManager implements AsyncService, CoreModule {
     private void updateDestinations() throws Exception {
         // Prepare String
         StringBuilder sb = new StringBuilder();
+        sb.append( localName);
         for( String s: knownServers.keySet()) {
             sb.append( ',');
             sb.append( s);
         }
-        String ss = sb.toString();
-        if( !ss.isEmpty()) {
-            ss = ss.substring( 1);
-        }
-        LOG.trace( "ss=" + ss);
         // Search for a Balancer
         ModuleInfo mi = getModInfoEndsWith( "Balancer");
         if( mi != null) {
             Configuration c = mi.getConfiguration();
-            c.put( "Modules", ss);
+            c.put( "Modules", sb.toString());
             mi.setConfiguration( c);
         }    
     }
     
     private boolean isMaster() {
-        return ( masterNodeName != null) &&
-                masterNodeName.equals( localNodeName) &&
-                !knownServers.isEmpty();
+        return ( masterName != null) &&
+                masterName.equals( localName);
     }
     
     private void notifyAllServers( String command, String name) {
         for( String sn: knownServers.keySet()) {
             try {
-                if( sn.equals( localNodeName)) {  // Do not notify it self!
+                LOG.debug( " to notify" + sn + " from " + localName + " " + localUrl);
+                if( sn.equals( localName)) {  // Do not notify it self!
                     continue;
                 }
-                SvcRequest r = new SvcRequest( localNodeName, 0, nodeTxNr++, knownServers.get(sn) 
+                SvcRequest r = new SvcRequest( localName, 0, nodeTxNr++, knownServers.get( sn) 
                         + "/" + command, null, 1000);
                 r.put( "Name", name);
                 r.put( "Url", localUrl);
-                SvcCatalog.getDispatcher().callPipeline( "Send", r);
+                SvcCatalog.getDispatcher().callPipeline( "SvcManager", r);
             } catch( Exception ex) {
                 LOG.debug( "Failed to notify " + command + " " + name, ex);
             }
