@@ -226,7 +226,7 @@ public class ToHtml implements AsyncService {
             }
         }
         sb.append( "</body></html>");
-        resp.put( "Serialized", sb.toString());
+        resp.put( "SerializedHtml", sb.toString());
         return resp;
     }
     
