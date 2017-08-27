@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ArrayList;
 import com.google.gson.Gson;
 import org.apache.log4j.Logger;
 import uy.com.r2.core.api.AsyncService;
@@ -110,8 +111,13 @@ public class Json implements AsyncService {
             res = res.clone( r);
             res.getPayload().remove( SERIALIZED);
         } else {
-            // Add or replace a "Serial" field with JSON
-            res.put( SERIALIZED, toJSON( res.getPayload()));
+            // Add some fields
+            Map<String,List<Object>> m = new HashMap( res.getPayload());
+            List<Object> l = new ArrayList();
+            l.add( "" + res.getResultCode());
+            m.put( "ResultCode", l);
+            // Add or replace a "SerialisexJson" field with JSON
+            res.put( SERIALIZED, toJSON( m));
         }
         return res;
     }
