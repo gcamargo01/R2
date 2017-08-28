@@ -163,7 +163,7 @@ public class MiniHttpServer implements CoreModule {
                     ++callingErrors;
                     LOG.warn( thr + " dispatch error " + ex, ex);
                 }     
-                LOG.trace( thr + " *** to send" + resp.toString());
+                LOG.trace( thr + " *** to send " + resp.toString().substring( 40) + "...");
                 // Prepare and send HTTP response
                 String response;
                 if( userAgent != null && resp.get( "SerializedHtml") != null) {

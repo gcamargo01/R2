@@ -20,7 +20,8 @@ import uy.com.r2.core.api.SvcMessage;
 
 
 /** HTTP client connector.
- * It invokes a HTTP service to getDataField the response.
+ * It invokes a remote service with getPayLoad() parameters nor get( "serializedJson")
+ * and stores with put( "SerializedJson") the response.
  * This is a reference implementation !!!!.
  * This module should return NULL to put to wait the response, and use a 
  * second Thread to call onMessage when has the response.
@@ -28,7 +29,8 @@ import uy.com.r2.core.api.SvcMessage;
  */
 public class HttpClient implements AsyncService {
     private static final Logger log = Logger.getLogger(HttpClient.class);
-    private Map<String,String> svcUrl = new HashMap<String,String>();
+    private Map<String,String> svcUrl = new HashMap();
+    private String url = null;
     private int sleepTimeWait = 10;
     
     /** Get the configuration descriptors of this module.
@@ -36,9 +38,11 @@ public class HttpClient implements AsyncService {
      */
     @Override
     public List<ConfigItemDescriptor> getConfigDescriptors() {
-        LinkedList<ConfigItemDescriptor> l = new LinkedList<ConfigItemDescriptor>();
+        LinkedList<ConfigItemDescriptor> l = new LinkedList();
         l.add( new ConfigItemDescriptor( "Service.*", ConfigItemDescriptor.URL,
                 "Service names and URL to call", null));
+        l.add( new ConfigItemDescriptor( "Url", ConfigItemDescriptor.URL,
+                "Default URL to call", null));
         l.add( new ConfigItemDescriptor( "SleepWaitingTime", ConfigItemDescriptor.INTEGER,
                 "Sleep time waiting for a response, in mS", "10"));
         return l;
@@ -46,6 +50,7 @@ public class HttpClient implements AsyncService {
     
     private void setConfiguration( Configuration cfg) throws Exception {
         svcUrl = cfg.getStringMap( "Service.*");
+        url = cfg.getString( "Url");
         sleepTimeWait = cfg.getInt( "SleepTimeWait");
     }
 
@@ -65,8 +70,8 @@ public class HttpClient implements AsyncService {
             at = Long.MAX_VALUE;
         }
         String r = invoke( req, at);
-        Map<String, List<Object>> d = SvcMessage.addToPayload( null, "Data", r);
-        SvcResponse resp = new SvcResponse( d, 0, req);
+        SvcResponse resp = new SvcResponse( 0, req);
+        resp.put( "SerializedJson", r);
         return resp;
     }
 
@@ -94,26 +99,16 @@ public class HttpClient implements AsyncService {
         String service = params.getServiceName();
         String strUrl = svcUrl.get( service);
         if( strUrl == null) {
-            if( service.contains( "/")) {
-                int i = service.lastIndexOf( '/');
-                StringBuilder su = new StringBuilder( service);
-                su.append( "?");
-                for( String k: params.getPayload().keySet()) {
-                    su.append( k);
-                    su.append( '=');
-                    su.append( params.get( k));
-                    su.append( '&');
-                }
-                service = service.substring( i + 1);
-                strUrl = su.toString();
-            } else {
-                log.warn( "Service w/o URL defined: " + service);
-                throw new Exception( "Service w/o URL defined: " + service); 
-            }
+            strUrl = url;
+        }
+        if( strUrl == null) {
+            log.warn( "No URL defined, " + service);
+            throw new Exception( "No URL defined, " + service); 
         }
         log.trace( "strUrl=" + strUrl + " svc=" + service); 
         try {
-            HashMap<String,String> vv = new HashMap<String,String>();
+            // Find $(KEY) vars to replace un URL
+            HashMap<String,String> vv = new HashMap();
             int p = -1;
             for( ; ; ) {
                 String q = strUrl.substring( p + 1);
@@ -141,15 +136,28 @@ public class HttpClient implements AsyncService {
             for( String k: vv.keySet()) {
                 strUrl = strUrl.replace( "$(" + k + ")", vv.get( k));
             }
-            log.debug( "***** strUrl2=" + strUrl + " p=" + params); 
+            // Add other parameters
+            if( !strUrl.contains( "?")) {
+                if( !strUrl.endsWith( "/")) {
+                    strUrl += "/" + params.getServiceName();
+                }
+                strUrl += "?";
+            }
+            for( String k: params.getPayload().keySet()) {
+                if( vv.containsKey( k)) {
+                    continue;  // already present on URL
+                }
+                strUrl += "&" + k + "=" + params.get( k);
+            }
+            log.debug( "***** strUrl2=" + strUrl); 
             URL url = new URL( strUrl);
             HttpURLConnection conn = ( HttpURLConnection)url.openConnection();
             conn.setRequestMethod( "GET");
-            conn.setRequestProperty( "User-Agent", "R2");
+            //conn.setRequestProperty( "User-Agent", "R2");
             //conn.setRequestProperty( "Accept", "application/json");
             //log.trace( "conn.getResponseMessage=" + conn.getResponseMessage());
             if( conn.getResponseCode() != 200) {
-                throw new RuntimeException( "Failed service '" + service + "' " 
+                throw new RuntimeException( "Failed call remote service '" + service + "' " 
                         + strUrl + ", HTTP error code: " 
                         + conn.getResponseCode());
             }    

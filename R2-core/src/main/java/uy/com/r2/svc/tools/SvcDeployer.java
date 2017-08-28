@@ -293,6 +293,7 @@ public class SvcDeployer implements AsyncService {
                 pr.put( "1.LocalUrl", localUrl);
                 if( rmtUrl != null && !rmtUrl.isEmpty()) {
                     pr.put( "1.RemoteUrl", rmtUrl);
+                    pr.put( "7.Url", rmtUrl);
                 }
             }
             LOG.debug( "Init Pipe =" + pr);
@@ -330,9 +331,7 @@ public class SvcDeployer implements AsyncService {
         DEFAULT_PIPE.put( "Module.2", SvcCatalog.DISPATCHER_NAME);
         DEFAULT_PIPE.put( "2.class", SimpleDispatcher.class.getName());
         DEFAULT_PIPE.put( "2.DefaultServicePipeline", "ToHtml,ToJson,JdbcService,SvcDeployer,SvcManager");
-        //DEFAULT_PIPE.put( "2.DefaultServicePipeline", "JdbcService,SvcDeployer,SvcManager");
-        //DEFAULT_PIPE.put( "2.Pipeline.SvcManager", "FileServices,Serializer,HttpClient");
-        DEFAULT_PIPE.put( "2.Pipeline.SvcManager", "HttpClient");
+        DEFAULT_PIPE.put( "2.Pipeline._Undefined_", "FromJson,HttpClient");
         DEFAULT_PIPE.put( "Module.3", ToHtml.class.getSimpleName());
         DEFAULT_PIPE.put( "3.class", ToHtml.class.getName());
         DEFAULT_PIPE.put( "Module.4", "ToJson");
@@ -349,8 +348,14 @@ public class SvcDeployer implements AsyncService {
         DEFAULT_PIPE.put( "5.Service.ListClients.SQL", "SELECT * FROM clients");
         DEFAULT_PIPE.put( "5.Service.AddClient.SQL", "INSERT INTO clients(id,name) VALUES (?,?)");
         DEFAULT_PIPE.put( "5.Service.AddClient.Params", "Id,Name");
-        DEFAULT_PIPE.put( "Module.6", HttpClient.class.getSimpleName());
-        DEFAULT_PIPE.put( "6.class", HttpClient.class.getName());
+        DEFAULT_PIPE.put( "Module.6", "FromJson");
+        DEFAULT_PIPE.put( "6.class", Json.class.getName());
+        DEFAULT_PIPE.put( "6.ToSerial", "true");
+        DEFAULT_PIPE.put( "6.ProcessRequest", "false");
+        DEFAULT_PIPE.put( "6.ProcessResponse", "true");
+        DEFAULT_PIPE.put( "Module.7", HttpClient.class.getSimpleName());
+        DEFAULT_PIPE.put( "7.class", HttpClient.class.getName());
+        // Default add 7.lUrl
    }
     
 }
