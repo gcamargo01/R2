@@ -46,6 +46,7 @@ public class SvcDeployer implements AsyncService {
     };
     private static final Logger LOG = Logger.getLogger( SvcDeployer.class);
     private static String commands = "";
+
     private final SvcCatalog catalog = SvcCatalog.getCatalog();
     private int receivedCommands = 0;
     private int errorsOnCommands = 0;
@@ -212,25 +213,7 @@ public class SvcDeployer implements AsyncService {
                 }
                 break;
             case SVC_PERSISTCONFIG:
-                Properties pr = new Properties();
-                int n = 0;
-                TreeSet<String> ts = new TreeSet( catalog.getModuleNames());
-                ts.remove( DEPLOYER_NAME);  // Auto-started
-                for( String m: ts) {
-                    pr.put( "Module." + n, m);
-                    Configuration c = catalog.getModuleInfo( m).getConfiguration();
-                    for( String k: c.getStringMap( "*").keySet()) {
-                        pr.put( "" + n + "." + k, c.getStringMap( "*").get(  k));                        
-                    }
-                    ++n;
-                }
-                String r2Path = System.getProperty( "R2_PATH", "");
-                if( r2Path.length() > 0 && !r2Path.endsWith( File.separator)) {
-                    r2Path += File.separator;
-                }
-                FileOutputStream fos = new FileOutputStream( r2Path + "R2.properties");
-                pr.store( fos, null);
-                fos.close();
+                persistConfig();
                 break;
             case SVC_RESTARTMODULE:
                 catalog.getModuleInfo( mn).setConfiguration( cfg);
@@ -267,36 +250,9 @@ public class SvcDeployer implements AsyncService {
             case 1:
                localPort = Integer.parseInt( args[ 0]);
             }
-            LOG.debug( "start " + localPort + " " + rmtUrl);
-            // Read basic basic service pipe
-            String r2Path = System.getProperty( "R2_PATH", "");
-            if( r2Path.length() > 0 && !r2Path.endsWith( File.separator)) {
-                r2Path += File.separator;
-            }
-            Properties pr = new Properties();
-            try {
-                FileInputStream fi = new FileInputStream( r2Path + "R2.properties");
-                pr.load( fi);
-                fi.close();
-            } catch( Exception x) {
-                LOG.info( "Can't load R2.properties: " + x);
-            }    
-            if( pr.isEmpty()) {
-                // calculate default server name
-                String hostName = InetAddress.getLocalHost().getHostName();
-                String localUrl = "http://" + hostName + ":" + localPort;
-                String localName = hostName + localPort;
-                // configure
-                pr.putAll( DEFAULT_PIPE);
-                pr.put( "0.Port", "" + localPort);
-                pr.put( "1.LocalName", localName);
-                pr.put( "1.LocalUrl", localUrl);
-                if( rmtUrl != null && !rmtUrl.isEmpty()) {
-                    pr.put( "1.RemoteUrl", rmtUrl);
-                    pr.put( "7.Url", rmtUrl);
-                }
-            }
-            LOG.debug( "Init Pipe =" + pr);
+            LOG.trace( "start " + localPort + " " + rmtUrl);
+            // Read previous configuration o basic config
+            Properties pr = readConfig( localPort, rmtUrl);
             // Deploy initial pipe
             for( int i = 0; pr.getProperty( "Module." + i) != null; ++i) {
                 String mod = pr.getProperty( "Module." + i);
@@ -316,6 +272,60 @@ public class SvcDeployer implements AsyncService {
             System.err.println( "Error " + ex);
             ex.printStackTrace( System.err);
         }
+    }
+
+    private void persistConfig() throws Exception {
+        Properties pr = new Properties();
+        int n = 0;
+        TreeSet<String> ts = new TreeSet( catalog.getModuleNames());
+        ts.remove( DEPLOYER_NAME);  // Auto-started itself
+        for( String m: ts) {
+            pr.put( "Module." + n, m);
+            Configuration c = catalog.getModuleInfo( m).getConfiguration();
+            for( String k: c.getStringMap( "*").keySet()) {
+                pr.put( "" + n + "." + k, c.getStringMap( "*").get(  k));                        
+            }
+            ++n;
+        }
+        String r2Path = System.getProperty( "R2_PATH", "");
+        if( r2Path.length() > 0 && !r2Path.endsWith( File.separator)) {
+            r2Path += File.separator;
+        }
+        FileOutputStream fos = new FileOutputStream( r2Path + "R2.properties");
+        pr.store( fos, null);
+        fos.close();
+    }
+    
+    private static Properties readConfig( int localPort, String rmtUrl) throws Exception {
+        String r2Path = System.getProperty( "R2_PATH", "");
+        if( r2Path.length() > 0 && !r2Path.endsWith( File.separator)) {
+            r2Path += File.separator;
+        }
+        Properties pr = new Properties();
+        try {
+            FileInputStream fi = new FileInputStream( r2Path + "R2.properties");
+            pr.load( fi);
+            fi.close();
+        } catch( Exception x) {
+            LOG.info( "Can't load R2.properties: " + x);
+        }    
+        if( pr.isEmpty()) {
+            // calculate default server name
+            String hostName = InetAddress.getLocalHost().getHostName();
+            String localUrl = "http://" + hostName + ":" + localPort;
+            String localName = hostName + localPort;
+            // configure
+            pr.putAll( DEFAULT_PIPE);
+            pr.put( "0.Port", "" + localPort);
+            pr.put( "1.LocalName", localName);
+            pr.put( "1.LocalUrl", localUrl);
+            if( rmtUrl != null && !rmtUrl.isEmpty()) {
+                pr.put( "1.RemoteUrl", rmtUrl);
+                pr.put( "7.Url", rmtUrl);
+            }
+        }
+        LOG.trace( "Init Pipe =" + pr);
+        return pr;
     }
 
     static final Map<String,String> DEFAULT_PIPE = new HashMap();
@@ -356,8 +366,8 @@ public class SvcDeployer implements AsyncService {
         DEFAULT_PIPE.put( "Module.7", HttpClient.class.getSimpleName());
         DEFAULT_PIPE.put( "7.class", HttpClient.class.getName());
         // Default add 7.lUrl
-   }
-    
+    }
+
 }
 
 
