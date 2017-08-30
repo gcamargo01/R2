@@ -22,6 +22,7 @@ import uy.com.r2.core.api.SvcResponse;
  */
 public class Json implements AsyncService {
     public static final String SERIALIZED = "SerializedJson";
+    private static final String RESULT_CODE = "ResultCode";
     private static final Logger log = Logger.getLogger( Json.class);
     private Gson mapper = new Gson();
     private boolean toSerial = true;
@@ -106,10 +107,15 @@ public class Json implements AsyncService {
         }
         if( toSerial) {
             // Take one field Data an serialize it
-            Map<String, List<Object>> r;
-            r = fromJSON( "" + res.get( SERIALIZED));
-            res = res.clone( r);
-            res.getPayload().remove( SERIALIZED);
+            Map<String, List<Object>> r = fromJSON( "" + res.get( SERIALIZED));
+            // Remove SerializedJson and try to parse ResultCode
+            r.remove( SERIALIZED);
+            int rc = res.getResultCode();
+            if( r.containsKey( RESULT_CODE) && rc == 0) {
+                rc = Integer.parseInt( "" + r.get( RESULT_CODE).toArray()[ 0]);
+                r.remove( RESULT_CODE);
+            }
+            res = new SvcResponse( r, rc, res.getRequest());
         } else {
             // Add some fields
             Map<String,List<Object>> m = new HashMap( res.getPayload());
