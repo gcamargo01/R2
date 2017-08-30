@@ -155,6 +155,8 @@ public class ToHtml implements AsyncService {
         sb.append( "&nbsp;"); 
         sb.append( "<form action=\"/GetServicesList\" style=\"display: inline;\"><input type=\"submit\" value=\"GetServicesList\"></form>\n"); 
         sb.append( "&nbsp;"); 
+        sb.append( "<form action=\"/GetMasterServer\" style=\"display: inline;\"><input type=\"submit\" value=\"GetMasterServer\"></form>\n"); 
+        sb.append( "&nbsp;"); 
         sb.append( "<form action=\"/Shutdown\"        style=\"display: inline;\"><input type=\"submit\" value=\"Shutdown\"></form>\n");
         // Modules actions
         if( resp.getResultCode() == 0) {
@@ -162,6 +164,9 @@ public class ToHtml implements AsyncService {
                 sb.append( "<p/>\n"); 
                 sb.append( "<div class=\"divTable\">\n"); 
                 for( String k: new TreeSet<String>( resp.getPayload().keySet())) {
+                    if( k.equals( "SerializedJson")) {
+                        continue;
+                    }
                     List l = resp.getPayload().get( k);
                     for( Object o: l) {
                         String m = "" + o;
@@ -208,6 +213,9 @@ public class ToHtml implements AsyncService {
                 sb.append( "<p/>\n"); 
                 sb.append( "<div class=\"divTable\">\n"); 
                 for( String s: new TreeSet<String>( resp.getPayload().keySet())) {
+                    if( s.equals( "SerializedJson")) {
+                        continue;
+                    }
                     sb.append( " <div class=\"divRow\">\n");
                     sb.append( "  <div class=\"divCell0\">\n");
                     sb.append( s);  
@@ -249,7 +257,7 @@ public class ToHtml implements AsyncService {
     }
     
     private void toHtml( Object o, StringBuilder sb) {
-        LOG.debug( "toHTML" + o);
+        //LOG.debug( "toHTML" + o);
         boolean firstOne = true;
         if( o == null) {
             sb.append( "(NULL)");
@@ -286,7 +294,7 @@ public class ToHtml implements AsyncService {
             }
             sb.append( "</div>");
         } else {
-            LOG.debug( "toHTML class=" + o.getClass());
+            //LOG.debug( "toHTML class=" + o.getClass());
             sb.append( "" + o);
         }
     }
