@@ -153,8 +153,8 @@ public class HttpClient implements AsyncService {
             URL url = new URL( strUrl);
             HttpURLConnection conn = ( HttpURLConnection)url.openConnection();
             conn.setRequestMethod( "GET");
-            //conn.setRequestProperty( "User-Agent", "R2");
-            //conn.setRequestProperty( "Accept", "application/json");
+            conn.setRequestProperty( "User-Agent", "");
+            conn.setRequestProperty( "Accept", "application/json");
             //log.trace( "conn.getResponseMessage=" + conn.getResponseMessage());
             if( conn.getResponseCode() != 200) {
                 throw new RuntimeException( "Failed call remote service '" + service + "' " 
