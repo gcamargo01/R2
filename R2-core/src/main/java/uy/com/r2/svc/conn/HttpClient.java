@@ -147,7 +147,10 @@ public class HttpClient implements AsyncService {
                 if( vv.containsKey( k)) {
                     continue;  // already present on URL
                 }
-                strUrl += "&" + k + "=" + params.get( k);
+                if( !strUrl.endsWith( "?" )) {
+                    strUrl += "&";
+                }
+                strUrl += k + "=" + params.get( k);
             }
             log.debug( "***** strUrl2=" + strUrl); 
             URL url = new URL( strUrl);
