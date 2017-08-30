@@ -175,7 +175,7 @@ public class SvcCatalog implements CoreModule {
         }
         modules.remove( moduleName);
         mi.getImplementation().shutdown();
-        //SvcManager.onModuleUndeploy( moduleName);
+        SvcManager.onModuleUndeploy( moduleName);
     } 
     
     /** Get module information by its name.
