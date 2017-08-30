@@ -136,6 +136,9 @@ public class MiniHttpServer implements CoreModule {
                     node = rqh.getFirst( "Node");
                 }
                 String userAgent = rqh.getFirst( "User-Agent");
+                if( userAgent.isEmpty()) {
+                    userAgent = null;
+                }
                 // Parse HTTP parameters
                 String query = t.getRequestURI().getRawQuery();
                 Map<String, List<Object>> params = null;
@@ -163,26 +166,29 @@ public class MiniHttpServer implements CoreModule {
                     ++callingErrors;
                     LOG.warn( thr + " dispatch error " + ex, ex);
                 }     
-                LOG.trace( thr + " *** to send " + resp.toString().substring( 40) + "...");
+                //LOG.trace( thr + " *** to send " + resp.toString().substring( 40) + "...");
                 // Prepare and send HTTP response
-                String response;
+                StringBuilder response = new StringBuilder();
                 if( userAgent != null && resp.get( "SerializedHtml") != null) {
+                    LOG.trace( "**** HTML response");
                     t.getResponseHeaders().add( "Content-Type", "text/html");
-                    response = "" + resp.get( "SerializedHtml");
+                    response.append( "" + resp.get( "SerializedHtml"));
                 } else if( resp.get( "SerializedJson") != null) {
+                    LOG.trace( "**** JSON response");
                     t.getResponseHeaders().add( "Content-Typee", "application/json");
-                    response = "" + resp.get( "SerializedJson");
+                    response.append( "" + resp.get( "SerializedJson"));
                 } else {
-                    response = "" + resp.getPayload();
+                    LOG.trace( "**** TXT response");
+                    response.append( "" + resp.getPayload());
                 }
-                response += "\n";
+                response.append( "\n");
                 t.getResponseHeaders().add( "ResultCode", "" + resp.getResultCode());
                 t.sendResponseHeaders( 200, response.length());
                 OutputStream os = t.getResponseBody();
-                os.write( response.getBytes());
+                os.write( response.toString().getBytes());
                 os.flush();
                 os.close();
-                LOG.trace( thr + " *** end response");
+                LOG.trace( thr + " *** end response lrg=" + response.length());
             } catch( Exception x) {
                 LOG.info( "" + x, x);
                 throw new IOException( x);
