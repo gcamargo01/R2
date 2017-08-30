@@ -200,7 +200,7 @@ public class SimpleDispatcher implements Dispatcher, CoreModule {
         Map<String,String> rps = cfg.getStringMap( "Pipeline.*");
         for( String n: rps.keySet()) {
             defPipes.put(  n, rps.get( n).split( ","));
-            LOG.debug( "Pipeline." + n + "" + defPipes.get( n));
+            LOG.debug( "Pipeline." + n + "" + rps.get( n));
         }
         nodePipes = cfg.getStringMap( "Node.*");
     }
