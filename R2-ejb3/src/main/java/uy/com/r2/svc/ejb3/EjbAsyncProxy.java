@@ -41,6 +41,7 @@ public class EjbAsyncProxy implements AsyncService {
             final String beanName = cfg.getString( "ServiceImpl");
             url = "" + appName + "/" + moduleName + "/" + beanName + "!" + AsyncService.class.getName();
             service = (AsyncService)context.lookup( url);
+            cfg.resetChanged();
         } catch( Exception x) {
             Exception xx = new Exception( "Error biding " + url, x);
             LOG.warn( xx.getMessage(), x);
