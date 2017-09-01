@@ -17,13 +17,13 @@ import uy.com.r2.core.api.Module;
 import uy.com.r2.core.api.SvcMessage;
 import uy.com.r2.core.api.SimpleService;
 
-/** Internal service to diagnostic any other service.
+/** Internal service to monitor any other service.
  * It keeps track of service usage and store statistics information.
  * @author G.Camargo
  */
 public class SvcMonitor implements AsyncService, SimpleService {
     private final static String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
-    private static final Logger log = Logger.getLogger(SvcMonitor.class);
+    private static final Logger LOG = Logger.getLogger(SvcMonitor.class);
     
     private final AsyncService svc;
     private final SimpleService sSvc;
@@ -60,7 +60,7 @@ public class SvcMonitor implements AsyncService, SimpleService {
         this.name = name;
         this.deployTime = System.currentTimeMillis();
         this.setupTime = this.deployTime;
-        log.debug( name + " instanced ");
+        LOG.info( name + " instanced ");
     }
     
     /** Get the configuration descriptors of this module.
@@ -72,7 +72,7 @@ public class SvcMonitor implements AsyncService, SimpleService {
         if( l == null) {
             l = new LinkedList();
         }
-        log.info( name + " getConfigDescriptors: " + l);
+        LOG.info( name + " getConfigDescriptors: " + l);
         l.add( new ConfigItemDescriptor( "MonitorLastNr", ConfigItemDescriptor.BOOLEAN, 
                 "Keep last messages to show it", "0"));
         return l;
@@ -81,7 +81,7 @@ public class SvcMonitor implements AsyncService, SimpleService {
     private void setConfiguration( Configuration cfg) throws Exception {
         // Resest statistics
         if( cfg.isChanged()) {
-            log.info( name + " New Configuration " + cfg);
+            LOG.info( name + " New Configuration " + cfg);
             setupTime = System.currentTimeMillis();
             invocationsCount = 0;
             errorsCount = 0;
@@ -116,7 +116,7 @@ public class SvcMonitor implements AsyncService, SimpleService {
      */
     @Override
     public SvcMessage onRequest( SvcRequest req, Configuration cfg) throws Exception {
-        log.info( name + ".onRequest called  " + req);
+        LOG.info( name + ".onRequest called  " + req);
         setConfiguration( cfg);
         ++invocationsCount;
         putReq( req);
@@ -140,7 +140,7 @@ public class SvcMonitor implements AsyncService, SimpleService {
             }
             putResp( rr);
         }
-        log.info( name + ".onRequest returns " + r);
+        LOG.info( name + ".onRequest returns " + r);
         return r;
     }
 
@@ -153,7 +153,7 @@ public class SvcMonitor implements AsyncService, SimpleService {
      */
     @Override
     public SvcResponse onResponse( SvcResponse r, Configuration cfg) throws Exception {
-        log.info( name + ".onResponse called " + r);
+        LOG.info( name + ".onResponse called " + r);
         setConfiguration( cfg);
         long t0 = System.currentTimeMillis();
         try {
@@ -173,8 +173,8 @@ public class SvcMonitor implements AsyncService, SimpleService {
             ++errorsCount;
         }
         putResp( r);
-        log.debug( name + " keepLast=" + keepLast + " lastRespIndex=" + lastRespIndex + " " + lastResp);
-        log.info( name + ".onResponse returns " + r);
+        LOG.trace( name + " keepLast=" + keepLast + " lastRespIndex=" + lastRespIndex + " " + lastResp);
+        LOG.info( name + ".onResponse returns " + r);
         return r;
     }
 
@@ -185,7 +185,7 @@ public class SvcMonitor implements AsyncService, SimpleService {
      */
     @Override
     public SvcResponse call( SvcRequest req, Configuration cfg) throws Exception {
-        log.info( name + ".call called " + req);
+        LOG.info( name + ".call called " + req);
         ++invocationsCount;
         putReq( req);
         SvcResponse r;
@@ -200,7 +200,7 @@ public class SvcMonitor implements AsyncService, SimpleService {
         if( r.getResultCode() < 0) {
             ++errorsCount;
         }
-        log.debug( name + ".call returns " + r);
+        LOG.info( name + ".call returns " + r);
         putResp( r);
         return r;
     }
@@ -210,7 +210,7 @@ public class SvcMonitor implements AsyncService, SimpleService {
      */
     @Override
     public Map<String, Object> getStatusVars() {
-        Map<String,Object> m = new TreeMap<String,Object>();
+        Map<String,Object> m = new TreeMap();
         m.put( "Count", invocationsCount);
         m.put( "ErrorCount", errorsCount);
         m.put( "TimeOuts", timeoutCount);
@@ -236,16 +236,16 @@ public class SvcMonitor implements AsyncService, SimpleService {
                 m.put( k, mm.get( k));
             }
         }
-        log.debug( name + " getStatusVars " + m);
+        LOG.trace( name + " getStatusVars " + m);
         return m;
     }
 
     /** Release all the allocated resources. */
     @Override
     public void shutdown() {
-        log.info( name + " shutdown");
+        LOG.info( name + " shutdown");
         svc.shutdown();
-        log.debug( name + " shutdown ended");
+        LOG.trace( name + " shutdown ended");
     }
 
     private synchronized void putReq( SvcRequest req) {
