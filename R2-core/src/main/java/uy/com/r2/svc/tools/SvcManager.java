@@ -110,18 +110,10 @@ public class SvcManager implements AsyncService, CoreModule {
     
     @Override
     public void startup( Configuration cfg) throws Exception {
-        if( cfg.containsKey( "Commands.*")) {
-            Map<String,String> m = cfg.getStringMap( "Commands.*.Cmd");
-            for( String k: m.keySet()) {
-                String cmd = m.get( k);
-                command( cmd, cfg.getString( "Commands." + k + ".Server"),
-                        cfg.getString( "Commands." + k + ".Url")); 
-            }
-        }
         localName = cfg.getString( "LocalName");
         localUrl = cfg.getUrl( "LocalUrl");
         remoteUrl = cfg.getUrl( "RemoteUrl");
-        masterName = cfg.getString( "MasterServer");
+        masterName = cfg.getString( "MasterServer", localName);
         knownServers = cfg.getStringMap( "Server.*");
         outPipeline = cfg.getString( "OuterPipeline");
         keepAliveTimeout = cfg.getInt( "KeepAliveTimeout");
@@ -150,7 +142,17 @@ public class SvcManager implements AsyncService, CoreModule {
     @Override
     public SvcMessage onRequest( SvcRequest req, Configuration cfg) throws Exception {
         String cmd = req.getServiceName();
-        Map<String,List<Object>> m = command( cmd, req.get( "Name"), req.get( "Url"));
+        String mod = null;
+        String url = null;
+        Map<String,String> map = null;
+        try {
+            mod = ( String)req.get( "Name");
+            url = ( String)req.get( "Url");
+            map = ( Map<String,String>)req.get( "Servers");
+        } catch( Exception x) {
+            LOG.info( "Parameter cast error con command " + cmd, x);
+        }
+        Map<String,List<Object>> m = command( cmd, mod, url, map);
         int cr = ( m.get( "Error") != null)? 100: 0;
         SvcResponse resp = new SvcResponse( m, cr, req);
         LOG.trace( "Command response: " + resp);
@@ -196,22 +198,23 @@ public class SvcManager implements AsyncService, CoreModule {
 
     /** Execute command.
      * @param cmd Command verb
-     * @param sn Name
-     * @param url URL o Module name
+     * @param name Module Name or Server name
+     * @param url URL as String
+     * @param map Server map (name, Url)
      * @return Response Map with REMOVE sub-key (Multimap)
      * @throws Exception Error on command execution
      */
-    private Map<String,List<Object>> command( String cmd, Object sn, Object url) 
-            throws Exception {
-        LOG.trace( "Command: " + cmd + " " + sn + " " + url);
+    private Map<String,List<Object>> command( String cmd, String name, String url, 
+            Map<String,String> map) throws Exception {
+        LOG.trace("Command: " + cmd + " " + name + " " + url + " " + map);
         Map<String,List<Object>> resp = new TreeMap();
         try {
             switch( cmd) {
             case SVC_ADDSERVER:
-                if( ( "" + url).equals( "" + remoteUrl)) {
+                if( url.equals( "" + remoteUrl)) {
                     knownServers.remove( UNDEFINED);
                 }
-                knownServers.put( "" + sn, "" + url);
+                knownServers.put( name, url);
                 updateDestinations();
             case SVC_GETSERVERSLIST:
                 for( String k: knownServers.keySet()) {
@@ -219,7 +222,7 @@ public class SvcManager implements AsyncService, CoreModule {
                 }
                 break;
             case SVC_REMOVESERVER:
-                knownServers.remove( "" + sn);
+                knownServers.remove(name);
                 updateDestinations();
                 break;
             case SVC_GETMASTER: 
@@ -231,45 +234,71 @@ public class SvcManager implements AsyncService, CoreModule {
                 }
                 break;
             case SVC_SETMASTER: 
-                if( sn != null) {
+                if( name != null) {
                     masterTimeStamp = System.currentTimeMillis();
-                    masterName = "" + sn;
-                    knownServers.put( "" + sn, "" + url);
+                    masterName = name;
+                    knownServers.put( name, url);
                     updateDestinations();
                 }
                 break;
             case SVC_UPDATEMDOULE:
                 Configuration cfM = null;
-                String mod = "" + sn;
-                // Get config from master
+                // Get config from master, the Module cfg.
                 if( !isMaster()) {
                     SvcRequest rq = new SvcRequest( localName, 0, nodeTxNr++,"GetModuleConfig", null, 1000);
-                    rq.put( "Module", mod);
+                    rq.put( "Module", name);
                     SvcResponse rp = SvcCatalog.getDispatcher().callPipeline( masterName, rq);
-                    if( rp.getResultCode() > 0) {
+                    if( rp.getResultCode() != 0) {
+                        LOG.warn("Failed to update " +  name + ": " + cfM);
+                        SvcMessage.addToPayload( resp, "Error", "Failed UpdateModule: " + cmd);
+                        break;
+                    }
                     cfM = new Configuration();
-                        for( String k: rp.getPayload().keySet()) {
-                            cfM.put( k, rp.get( k));
-                        }
+                    Map<String,String> cm = ( Map<String,String>)rp.get( "_Configuration");
+                    if( cm != null || cm.isEmpty()) {
+                        LOG.warn( "Empty config. on UpdateModule " + name);
+                        break;
+                    }
+                    for( String k: cm.keySet()) {
+                        cfM.put( k, rp.get( k));
                     }
                     // Wait JAR copy
                     //r = new SvcRequest( localName, 0, nodeTxNr++, "WaitCopyEnd", null, 1000);
-                    //SvcCatalog.getDispatcher().callNext( r);
+                    //SvcCatalog.getDispatcher().callNext( rq);
                     // Update module config
-                    catalog.updateConfiguration( mod, cfM);
+                    LOG.trace( "update " +  name + ": " + cfM);
+                    catalog.updateConfiguration(name, cfM);
                 }
                 break;
             case SVC_REMOVEMDOULE:
-                catalog.uninstallModule( "" + sn);
+                catalog.uninstallModule( name);
                 break;
             case SVC_KEEPALIVE:
                 masterTimeStamp = System.currentTimeMillis();
                 if( isMaster()) {  // Conflict! The master is the one that call KeepAlive
-                    masterName = "" + sn;   // Ok, this is the newMaster
+                    masterName = name;   // Ok, this is the newMaster
+                    LOG.info( "Released as Master by " + name);
+                    // Now check if all the knownServers are known by new master
+                    for( String s: knownServers.keySet()) {
+                        if( !map.containsKey( s)) {
+                            SvcRequest rq = new SvcRequest( localName, 0, nodeTxNr++, 
+                                    SVC_ADDSERVER, null, 1000);
+                            rq.put( "Name", localName);
+                            rq.put( "Url", localUrl);
+                            SvcCatalog.getDispatcher().callPipeline( masterName, rq);
+                        }
+                    }
+                } 
+                // Update the knownServers from master
+                for( String s: map.keySet()) {
+                    if( !knownServers.containsKey( s)) {
+                        knownServers.put( "" + s, "" + map.get( s));
+                    }
                 }
+                // The master may KEEP_ALIIVE w/o know the real localname & localurl
                 SvcMessage.addToPayload( resp, "Name", localName);
                 SvcMessage.addToPayload( resp, "Url", "" + localUrl);
-                break;
+          break;
             case SVC_SHUTDOWN:
                 stop = true;
                 catalog.shutdown();
@@ -285,7 +314,7 @@ public class SvcManager implements AsyncService, CoreModule {
                 SvcMessage.addToPayload( resp, "Error", "Invalid command: " + cmd);
             }
         } catch( Exception x) {
-            LOG.info("Command failed: " + cmd + " " + sn + " " + url, x);
+            LOG.info( "Command failed: " + cmd + " " + name + " " + url, x);
             throw x;
         }
         LOG.trace( " resp = " + resp);
@@ -372,6 +401,7 @@ public class SvcManager implements AsyncService, CoreModule {
                             SVC_GETMASTER, null, 1000);
                     SvcResponse rs = SvcCatalog.getDispatcher().callPipeline( UNDEFINED, rq);
                     if( rs.getResultCode() != 0) {
+                        LOG.warn( "Failed GetMaster from " + remoteUrl);
                         return;
                     }    
                     masterName = "" + rs.get( "Name");
@@ -384,6 +414,7 @@ public class SvcManager implements AsyncService, CoreModule {
                     rq.put( "Url", localUrl);
                     rs = SvcCatalog.getDispatcher().callPipeline( masterName, rq);
                     if( rs.getResultCode() != 0) {
+                        LOG.warn( "Failed AddServer to Master " + masterName);
                         return;
                     }    
                     masterTimeStamp = t;
@@ -435,6 +466,11 @@ public class SvcManager implements AsyncService, CoreModule {
         // Check Pipelines
         boolean changes = false;
         ModuleInfo dmi = catalog.getModuleInfo( "SvcDispatcher");
+        if( dmi == null) {
+            LOG.warn( "Can't find SvcDispatcher to update destinations", 
+                    new Exception( "Ignore changes"));
+            return;
+        }
         Configuration dc = dmi.getConfiguration();
         Map<String,String> cm = dc.getStringMap( "Pipeline.*");
         for( String sn: knownServers.keySet()) {
@@ -472,11 +508,12 @@ public class SvcManager implements AsyncService, CoreModule {
             }
             try {
                 LOG.debug( " to notify " + sn + " from " + localName + " " + localUrl);
-                SvcRequest r = new SvcRequest( localName, 0, nodeTxNr++, command, null, 
+                SvcRequest rq = new SvcRequest( localName, 0, nodeTxNr++, command, null, 
                         1000);
-                r.put( "Name", name);
-                r.put( "Url", localUrl);
-                SvcResponse rn = SvcCatalog.getDispatcher().callPipeline( sn, r);
+                rq.put( "Name", name);
+                rq.put( "Url", localUrl);
+                rq.put( "Servers", knownServers);
+                SvcResponse rn = SvcCatalog.getDispatcher().callPipeline(sn, rq);
                 // Check KEEP_ALIVE response
                 if( command.equals( SVC_KEEPALIVE)) {
                     if( rn.getResultCode() == 0) {
