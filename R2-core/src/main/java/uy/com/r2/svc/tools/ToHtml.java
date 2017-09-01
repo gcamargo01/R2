@@ -218,14 +218,18 @@ public class ToHtml implements AsyncService {
                     }
                     sb.append( " <div class=\"divRow\">\n");
                     sb.append( "  <div class=\"divCell0\">\n");
+                    sb.append( "  <a href=\"");  sb.append( resp.get( s));  sb.append( "/GetServersList\">"); 
                     sb.append( s);  
+                    sb.append( "  </a>");
                     sb.append( " :  </div>\n");  
                     sb.append( "  <div class=\"divCell0\">\n");
                     sb.append( "<form action=\"/SetMasterServer\">");
-                    sb.append( "<input type=\"hidden\" name=\"Server\" value=\"");
+                    sb.append( "<input type=\"hidden\" name=\"Name\" value=\"");
                     sb.append( s);
+                    sb.append( "\"><input type=\"hidden\" name=\"Url\" value=\"");
+                    sb.append( resp.get( s));
                     sb.append( "\"><input type=\"submit\" value=\"SetMasterServer\">\n"); 
-                    sb.append( "</form><br/>\n");  
+                    sb.append( "</form>\n");  
                     sb.append( "  </div>\n");  
                     sb.append( " </div>\n");  // Row end
                 }
