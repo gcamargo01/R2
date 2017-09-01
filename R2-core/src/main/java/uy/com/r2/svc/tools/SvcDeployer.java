@@ -25,7 +25,12 @@ import uy.com.r2.svc.conn.JdbcService;
 
 /** Command interpreter service that deploy and un-deploy modules.
  * This is a in-memory Deployer, that allows system remote control,
- * and it startup a basic or initial service pipe. 
+ * and it startup a basic or initial service pipe. <p>
+ * Its: functions include: <br>
+ * - Try to load last configuration from R2.properties file <br>
+ * - Startup a minimal configuration <br>
+ * - Configure basic items: LocalName, LocalPort, RemoteUrl <br>
+ * - And execute commands as a in-memory deployer <br>
  * @author G.Camargo
  */
 public class SvcDeployer implements AsyncService {

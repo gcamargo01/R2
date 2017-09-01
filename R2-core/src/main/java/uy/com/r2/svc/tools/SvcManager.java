@@ -24,15 +24,30 @@ import uy.com.r2.svc.conn.HttpClient;
 
 /** System manager module. 
  * Its functions are: <br>
- * - Startup a minimal configuration  <br>
  * - Keeps track of registered servers <br>
  * - Notify changes to master <br>
  * - If its a master notify changes to servers <br>
- * Basic rules: <br>
- * - The  master is the only one, and it sends KEEP_ALIVE all the time (KeepAliveDelay mS)<br>
- * - Each node are master until receives a KEEP_ALIVE, an then is a slave <br>
- * - If a node detects a time-out (KeepAliveTimeout mS), set it self the Master, and inform that <br>
- * WORK IN PROGRESS !!!!
+ * <p> Master - Slave rules: <br>
+ * - The  master is the only one, and it sends KEEP_ALIVE all the time (KeepAliveDelay mS) to all other servers<br>
+ * - Each node are master until receives a KEEP_ALIVE, an then is turned to slave <br>
+ * - If a slave detects a time-out (KeepAliveTimeout mS), promote it self as the Master, and notify all servers<br>
+ * <p> Known servers rules: <br>
+ * - The master send KEEP_ALIVE with a list of know servers, each server keep a copy of that list <br>
+ * - When a master releases it role, notify the real master all the servers he knows (and the master not know) <br>
+ * - Each new node asks who is the master (to any server), and then add himself to the master <br>
+ * - When a new node starts it only knows his name, url and a remoteUrl, with the first KEEP_ALIVE, set-up the master name <br>
+ * <p> Configuration rules: <br>
+ * - All the servers run with the same configuration <br>
+ * - The changes to the master are notified, and spread all over the known servers <br>
+ * - The changes to a slave servers are done w/o spread changes <br>
+ * - When the changes are ready to be distributed, first set this node as Master, and then 
+ *    execute SPREAD_CONFIG to spread the configuration all over the network <br>
+ *  <p> Security (PENDING): <br>
+ * - All the nodes must be in the same domain (DomainName) <br>
+ * - All service requests must be signed with de DomainKey (R2 request) or AdminKey (human user) <br>
+ * - The administrator user must log-in and its session is keep and tracked by the servers <br>
+ * <p>
+ * THIS IS A WORK IN PROGRESS !!!!
  * @author G.Camargo
  */
 public class SvcManager implements AsyncService, CoreModule {
@@ -42,13 +57,10 @@ public class SvcManager implements AsyncService, CoreModule {
     public static final String SVC_GETSERVICESLIST = "GetServicesList";
     public static final String SVC_KEEPALIVE       = "KeepAlive";
     public static final String SVC_REMOVESERVER    = "RemoveServer";
-    public static final String SVC_REMOVEMDOULE    = "RemoveModule";
     public static final String SVC_SETMASTER       = "SetMasterServer";
     public static final String SVC_SHUTDOWN        = "Shutdown";
     public static final String SVC_UPDATEMDOULE    = "UpdateModule";
-    //public static final String SVC_STANDALONE      = "CfgStandalone";
-    //public static final String SVC_COMMITCFG       = "CfgCommit";
-    //public static final String SVC_ROLLBACKCFG     = "CfgRollback";
+    public static final String SVC_SPREADCONFIG    = "SpreadConfig";
     private static final String[] SERVICES = {
         SVC_ADDSERVER, 
         SVC_GETMASTER, 
@@ -56,9 +68,9 @@ public class SvcManager implements AsyncService, CoreModule {
         SVC_GETSERVICESLIST,
         SVC_KEEPALIVE, 
         SVC_REMOVESERVER, 
-        SVC_REMOVEMDOULE, 
         SVC_SETMASTER, 
         SVC_SHUTDOWN,
+        SVC_SPREADCONFIG,
         SVC_UPDATEMDOULE 
     };
     private static final String UNDEFINED = "_Undefined_";
@@ -270,8 +282,10 @@ public class SvcManager implements AsyncService, CoreModule {
                     catalog.updateConfiguration(name, cfM);
                 }
                 break;
-            case SVC_REMOVEMDOULE:
-                catalog.uninstallModule( name);
+            case SVC_SPREADCONFIG:
+                for( String m: catalog.getModuleNames()) {
+                    notifyAllServers( SVC_UPDATEMDOULE, m);
+                }
                 break;
             case SVC_KEEPALIVE:
                 masterTimeStamp = System.currentTimeMillis();
@@ -359,7 +373,7 @@ public class SvcManager implements AsyncService, CoreModule {
         MBeanConfigurator.moduleUndeploy( module);
         try {
             if( svcMgr != null && svcMgr.isMaster()) {
-                svcMgr.notifyAllServers( SVC_REMOVEMDOULE, module);
+                svcMgr.notifyAllServers( SvcDeployer.SVC_UNDEPLOYMODULE, module);
             } 
         } catch( Exception ex) {
             LOG.warn( "Error on notify moduleDeploy '" + module + "'", ex);
