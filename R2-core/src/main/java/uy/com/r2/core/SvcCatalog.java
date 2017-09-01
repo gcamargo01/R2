@@ -15,7 +15,6 @@ import uy.com.r2.core.api.Dispatcher;
 import uy.com.r2.core.api.ConfigItemDescriptor;
 import uy.com.r2.core.api.Configuration;
 import uy.com.r2.core.api.Module;
-import uy.com.r2.svc.tools.SvcManager;
 
 /** Service modules catalog.
  * This module is almost the core of the entire system. It keeps the list
@@ -155,7 +154,6 @@ public class SvcCatalog implements CoreModule {
             installModule( moduleName, cfg);
         } else {
              mi.setConfiguration( cfg);
-             SvcManager.onModuleUpdate( moduleName);
         }
     }
      
@@ -174,8 +172,7 @@ public class SvcCatalog implements CoreModule {
             throw new Exception( "Module '" + moduleName + "' not found");
         }
         modules.remove( moduleName);
-        mi.getImplementation().shutdown();
-        SvcManager.onModuleUndeploy( moduleName);
+        mi.shutdown();
     } 
     
     /** Get module information by its name.

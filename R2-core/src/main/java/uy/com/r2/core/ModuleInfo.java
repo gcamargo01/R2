@@ -15,6 +15,7 @@ import uy.com.r2.core.api.SvcMessage;
 import uy.com.r2.core.api.SvcRequest;
 import uy.com.r2.core.api.SvcResponse;
 import uy.com.r2.core.api.SvcException;
+import uy.com.r2.svc.tools.SvcManager;
 import uy.com.r2.svc.tools.SvcMonitor;
 
 /** Module Information structure and methods.
@@ -182,45 +183,58 @@ public class ModuleInfo implements Module {
         if( moduleImpl instanceof CoreModule) {  
             ( (CoreModule)moduleImpl).startup( this.cfg);
         }
+        // Notify SvcManager
+        SvcManager.onModuleUpdate( moduleName);
     }
     
-    /** Running instances accounting, if can add one more. */
-    boolean takeOne() {
+    /** Report module status plus active count.
+     * @return Status vars Map 
+     */
+    @Override
+    public Map<String,Object> getStatusVars() {
+        Map<String,Object> m = new TreeMap();
+        m.put( "Count", count);
+        m.put( "ErrorCount", errorCount);
+        m.put( "ServiceLevel", 1 - errorCount / ( count + 0.000001));
         if( concCtrl) {
-            synchronized( lockConcCtrl) {  
-                if( activeCount >= limitActiveCount) {
-                    return false;
-                }
-                ++activeCount;
-                if( activeCount > topActiveCount) {
-                    topActiveCount = activeCount;
-                }
-            }
+            m.put( "ActiveCount", activeCount);
+            m.put( "TopActiveCount", topActiveCount);
         }
-        return true;
+        Map<String,Object> mm = getImplementation().getStatusVars();
+        if( mm != null) {
+            m.putAll( mm);
+        }
+        return m;        
+    }
+    
+    /** Get configuration descriptors. */
+    @Override
+    public List<ConfigItemDescriptor> getConfigDescriptors() {
+        // Get from module
+        List<ConfigItemDescriptor> cdl = getImplementation().getConfigDescriptors();
+        if( cdl == null) {
+            cdl = new LinkedList();
+        }
+        // Add generic config descriptors
+        cdl.add( new ConfigItemDescriptor( "class", ConfigItemDescriptor.STRING,
+               "Long class name of the service impelmentation (internal)", null));
+        cdl.add( new ConfigItemDescriptor( "classUrl", ConfigItemDescriptor.URL,
+               "URL to load class of the service impelmentation (internal)", null));
+        cdl.add( new ConfigItemDescriptor( "LimitActiveThreads", ConfigItemDescriptor.BOOLEAN,
+               "Keep track and limit the concurrent threads ons this module (internal)", null));
+        cdl.add( new ConfigItemDescriptor( "Monitor", ConfigItemDescriptor.BOOLEAN,
+               "Wrap module with SvcMonitor to get statistics and acitvity (internal)", null));
+        cdl.add( new ConfigItemDescriptor( "TimeOut", ConfigItemDescriptor.BOOLEAN,
+               "Time out of this module (internal)", null));
+        return cdl;
     }
 
-    int getTimeOut( SvcRequest req) {
-        int to = req.getTimeOut();
-        if( to == 0) {
-            to = DEFAULT_TIME_OUT;
-        }
-        try {
-            int t = cfg.getInt( "TimeOut", DEFAULT_TIME_OUT);
-            to = Integer.min( to, t);
-        } catch( Exception x) { }
-        return to;
-    }
-
-    /** Decrement running instances accounting. */
-    void releaseOne() {
-        if( concCtrl) {
-            synchronized( lockConcCtrl) {  
-                if( activeCount > 0) {
-                    --activeCount;
-                }
-            }
-        }
+    /** Stop service. */
+    @Override
+    public void shutdown() {
+        getImplementation().shutdown();
+        // Notify SvcManager
+        SvcManager.onModuleUpdate( moduleName);
     }
     
     SvcMessage processMessage( SvcMessage msg) {
@@ -287,52 +301,43 @@ public class ModuleInfo implements Module {
         return msg;
     }
 
-    /** Report module status plus active count.
-     * @return Status vars Map 
-     */
-    @Override
-    public Map<String,Object> getStatusVars() {
-        Map<String,Object> m = new TreeMap();
-        m.put( "Count", count);
-        m.put( "ErrorCount", errorCount);
-        m.put( "ServiceLevel", 1 - errorCount / ( count + 0.000001));
+    /** Running instances accounting, if can add one more. */
+    private boolean takeOne() {
         if( concCtrl) {
-            m.put( "ActiveCount", activeCount);
-            m.put( "TopActiveCount", topActiveCount);
+            synchronized( lockConcCtrl) {  
+                if( activeCount >= limitActiveCount) {
+                    return false;
+                }
+                ++activeCount;
+                if( activeCount > topActiveCount) {
+                    topActiveCount = activeCount;
+                }
+            }
         }
-        Map<String,Object> mm = getImplementation().getStatusVars();
-        if( mm != null) {
-            m.putAll( mm);
-        }
-        return m;        
-    }
-    
-    /** Get configuration descriptors. */
-    @Override
-    public List<ConfigItemDescriptor> getConfigDescriptors() {
-        // Get from module
-        List<ConfigItemDescriptor> cdl = getImplementation().getConfigDescriptors();
-        if( cdl == null) {
-            cdl = new LinkedList();
-        }
-        // Add generic config descriptors
-        cdl.add( new ConfigItemDescriptor( "class", ConfigItemDescriptor.STRING,
-               "Long class name of the service impelmentation (internal)", null));
-        cdl.add( new ConfigItemDescriptor( "classUrl", ConfigItemDescriptor.URL,
-               "URL to load class of the service impelmentation (internal)", null));
-        cdl.add( new ConfigItemDescriptor( "LimitActiveThreads", ConfigItemDescriptor.BOOLEAN,
-               "Keep track and limit the concurrent threads ons this module (internal)", null));
-        cdl.add( new ConfigItemDescriptor( "Monitor", ConfigItemDescriptor.BOOLEAN,
-               "Wrap module with SvcMonitor to get statistics and acitvity (internal)", null));
-        cdl.add( new ConfigItemDescriptor( "TimeOut", ConfigItemDescriptor.BOOLEAN,
-               "Time out of this module (internal)", null));
-        return cdl;
+        return true;
     }
 
-    /** Stop service. */
-    @Override
-    public void shutdown() {
-        getImplementation().shutdown();
+    private int getTimeOut( SvcRequest req) {
+        int to = req.getTimeOut();
+        if( to == 0) {
+            to = DEFAULT_TIME_OUT;
+        }
+        try {
+            int t = cfg.getInt( "TimeOut", DEFAULT_TIME_OUT);
+            to = Integer.min( to, t);
+        } catch( Exception x) { }
+        return to;
+    }
+
+    /** Decrement running instances accounting. */
+    private void releaseOne() {
+        if( concCtrl) {
+            synchronized( lockConcCtrl) {  
+                if( activeCount > 0) {
+                    --activeCount;
+                }
+            }
+        }
     }
     
     /** SimpleService wrapper as a AsyncService. */
