@@ -243,13 +243,13 @@ public class SvcCatalog implements CoreModule {
         stopping = true;
         try {
             Thread.sleep( 500);  // Let deployers shutdown itself
-        } catch (InterruptedException ex) { }
+        } catch( InterruptedException ex) { }
         Set<String> nml = new HashSet( SvcCatalog.getCatalog().getModuleNames());
         nml.remove( CATALOG_NAME);  // avoid loop
         for( String n: nml) {
             try {
                 uninstallModule( n);
-            } catch ( Exception ex) { }
+            } catch( Exception ex) { }
         }
         dispatcher.shutdown();
     }    

@@ -159,7 +159,7 @@ public class ModuleInfo implements Module {
                    try {
                        throw new Exception( "Undefined configuration!: " + k + "=" + unknowCfg.get( k));                       
                    } catch( Exception x) {
-                       LOG.trace( "" + x, x);
+                       LOG.debug( "" + x, x);
                    }
                 }
             }
