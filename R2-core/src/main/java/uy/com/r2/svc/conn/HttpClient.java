@@ -185,7 +185,6 @@ public class HttpClient implements AsyncService {
             log.trace( "resp: " + sb.toString());
             return sb.toString();
         } catch( Exception x) {
-            log.warn( x + " invoking " + service + " " + strUrl, x);
             throw new Exception( x + " invoking " + service + " " + strUrl, x);
         }
     }
