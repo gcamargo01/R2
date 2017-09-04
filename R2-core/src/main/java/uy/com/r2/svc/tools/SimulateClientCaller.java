@@ -218,7 +218,7 @@ public class SimulateClientCaller implements CoreModule {
                         if( sleepTime > 0) {
                             Thread.sleep( sleepTime);
                         }
-                    } catch ( Exception ex) {
+                    } catch( Exception ex) {
                         synchronized( this) {
                             ++errors;
                         }
