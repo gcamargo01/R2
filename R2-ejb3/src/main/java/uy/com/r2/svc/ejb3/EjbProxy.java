@@ -10,6 +10,7 @@ import org.apache.log4j.Logger;
 import uy.com.r2.core.api.Configuration;
 import uy.com.r2.core.api.SimpleService;
 import uy.com.r2.core.api.ConfigItemDescriptor;
+import uy.com.r2.core.api.SvcException;
 import uy.com.r2.core.api.SvcRequest;
 import uy.com.r2.core.api.SvcResponse;
 
@@ -42,7 +43,6 @@ public class EjbProxy implements SimpleService {
             cfg.resetChanged();
         } catch( Exception x) {
             Exception xx = new Exception( "Error biding " + url, x);
-            LOG.warn( xx.getMessage(), x);
             throw xx;
         }         
     }
@@ -71,8 +71,8 @@ public class EjbProxy implements SimpleService {
      */
     @Override
     public List<ConfigItemDescriptor> getConfigDescriptors() {
-        throw new UnsupportedOperationException( "Not supported yet." ); //To change body of generated methods, choose Tools | Templates.
-    }
+        return null;
+   }
 
     /** Get the status report of the module.
      * It may occurs at any time to get the current status of the module.

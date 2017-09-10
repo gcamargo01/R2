@@ -44,7 +44,6 @@ public class EjbAsyncProxy implements AsyncService {
             cfg.resetChanged();
         } catch( Exception x) {
             Exception xx = new Exception( "Error biding " + url, x);
-            LOG.warn( xx.getMessage(), x);
             throw xx;
         }         
     }
