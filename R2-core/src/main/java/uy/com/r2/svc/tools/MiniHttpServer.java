@@ -37,6 +37,7 @@ public class MiniHttpServer implements CoreModule {
     private ExecutorService pool = null;
     private HttpServer server = null;
     private String pipe = "";
+    private boolean stop = false;
     private int calledTimes = 0;
     private int callingErrors = 0;
 
@@ -105,6 +106,7 @@ public class MiniHttpServer implements CoreModule {
     @Override
     public void shutdown() {
         LOG.debug( "shutdown");
+        stop = true;
         if( pool != null) {
             pool.shutdown();
         }
@@ -190,8 +192,10 @@ public class MiniHttpServer implements CoreModule {
                 os.close();
                 LOG.trace( thr + " *** end response lrg=" + response.length());
             } catch( Exception x) {
-                LOG.info( "" + x, x);
-                throw new IOException( x);
+                if( !stop) {
+                    LOG.info( "" + x, x);
+                    throw new IOException( x);
+                }
             }    
         }
     }
