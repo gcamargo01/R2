@@ -1,4 +1,4 @@
-/* CoreService.java */
+/* CoreModule.java */
 package uy.com.r2.core;
 
 import uy.com.r2.core.api.Configuration;
