@@ -3,6 +3,7 @@ package uy.com.r2.svc.tools;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.Map;
@@ -125,6 +126,7 @@ public class SvcMonitor implements AsyncService, SimpleService {
         try {
             r = svc.onRequest( req, cfg);
         } catch( Exception x) {
+            LOG.warn( "onRequest failed: " + x);
             r = new SvcResponse( "Failed to process request to module " + name, 
                     SvcResponse.RES_CODE_EXCEPTION, x, req);
         }
@@ -159,6 +161,7 @@ public class SvcMonitor implements AsyncService, SimpleService {
         try {
             r = svc.onResponse( r, cfg);
         } catch( Exception x) {
+            LOG.warn( "onResponse failed: " + x);
             r = new SvcResponse( "Failed to process reposne on module " + name, 
                     SvcResponse.RES_CODE_EXCEPTION, x, r.getRequest());
         }    
@@ -193,6 +196,7 @@ public class SvcMonitor implements AsyncService, SimpleService {
         try {
             r = sSvc.call( req, cfg);
         } catch( Exception x) {
+            LOG.warn( "call failed: " + x);
             r = new SvcResponse( "Failed to process call to module " + name, 
                     SvcResponse.RES_CODE_EXCEPTION, x, req);
         }
@@ -230,7 +234,12 @@ public class SvcMonitor implements AsyncService, SimpleService {
                 m.put( "Response_" + i, lastResp[ ir]);
             }
         }
-        Map<String,Object> mm = svc.getStatusVars();
+        Map<String,Object> mm = new HashMap();
+        try {
+            mm = svc.getStatusVars();
+        } catch( Exception x) {
+            LOG.warn( "getStatusVars failed: " + x, x);
+        }
         if( mm != null) {
             for( String k: mm.keySet()) {
                 m.put( k, mm.get( k));
@@ -244,7 +253,11 @@ public class SvcMonitor implements AsyncService, SimpleService {
     @Override
     public void shutdown() {
         LOG.info( name + " shutdown");
-        svc.shutdown();
+        try {
+            svc.shutdown();
+        } catch( Exception x) {
+            LOG.warn( "shutdown failed: " + x, x);
+        }
         LOG.trace( name + " shutdown ended");
     }
 
