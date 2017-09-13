@@ -32,6 +32,7 @@ public class SimpleDispatcher implements Dispatcher, CoreModule {
     private Map<String,String[]> defPipes = new ConcurrentHashMap();
     private Map<String,String> nodePipes = new ConcurrentHashMap();
     private String defaultServicePipeline[] = new String[ 0];
+    private boolean stopped = false;
       
     SimpleDispatcher( ) {
         if( instanced) {
@@ -161,12 +162,13 @@ public class SimpleDispatcher implements Dispatcher, CoreModule {
      */
     @Override
     public Map<String,Object> getStatusVars() {
-        Map<String,Object> map = new TreeMap<String,Object>();
+        Map<String,Object> map = new TreeMap();
         Package pak = getClass().getPackage();
         if( pak != null) {
             map.put( "Version", "" + pak.getImplementationVersion());
         } 
         map.put( "RunningPipelinesCount", runningPipelines.size());
+        map.put( "Stopped", stopped);
         return map;
     } 
     
@@ -226,6 +228,7 @@ public class SimpleDispatcher implements Dispatcher, CoreModule {
     @Override
     public void shutdown() {
         LOG.debug( "shutdown");
+        stopped = true;
         for( String k: runningPipelines.keySet()) {
             runningPipelines.get(  k).stop();
         }
