@@ -142,7 +142,7 @@ public class RunningPipeline {
     
     void stop() {
         stop = true;
-        LOG.debug( "stopping" + toString());
+        LOG.debug( "stopping " + toString());
     }
 
     /** Dump status.
