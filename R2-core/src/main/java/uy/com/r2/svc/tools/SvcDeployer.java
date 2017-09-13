@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.net.InetAddress;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,21 +50,12 @@ public class SvcDeployer implements AsyncService {
             SVC_GETMODULESTATUS, SVC_SETMODULECONFIG, SVC_PERSISTCONFIG,   
             SVC_RESTARTMODULE,   SVC_UNDEPLOYMODULE
     };
+    private static final List<String> COMMANDS = Arrays.asList( SERVICES);
     private static final Logger LOG = Logger.getLogger( SvcDeployer.class);
-    private static String commands = "";
 
     private final SvcCatalog catalog = SvcCatalog.getCatalog();
     private int receivedCommands = 0;
     private int errorsOnCommands = 0;
-
-    static {
-        StringBuilder sb = new StringBuilder( "|");
-        for( String n: SERVICES) {
-            sb.append(  n);
-            sb.append(  "|");
-        }
-        commands = sb.toString();
-    }
     
     /** Constructor.
      * @throws Exception Unexpected failure
@@ -117,7 +109,7 @@ public class SvcDeployer implements AsyncService {
         updateCfg( cfg);
         LOG.trace( "onRequest " + req + " " + cfg);
         // Is there a command?
-        if( commands.contains( "|" + req.getServiceName() + "|" )) {
+        if( COMMANDS.contains( req.getServiceName())) {
             String cmd = req.getServiceName();
             String md = "" + req.get( "Module");
             Configuration c = new Configuration();  // distint configuration
@@ -271,7 +263,7 @@ public class SvcDeployer implements AsyncService {
                 m.command( SVC_DEPLOYMODULE, mod, c);
             }
             // Wait till stop
-            while( SvcManager.isAlive()) { }
+            while( !(Boolean)SvcCatalog.getDispatcher().getStatusVars().get( "Stopped"));
             LOG.info( "Stopped");
         } catch ( Exception ex ) {
             System.err.println( "Error " + ex);
@@ -338,14 +330,14 @@ public class SvcDeployer implements AsyncService {
         DEFAULT_PIPE.put( "Module.0", MiniHttpServer.class.getSimpleName());
         DEFAULT_PIPE.put( "0.class", MiniHttpServer.class.getName());
         DEFAULT_PIPE.put( "0.Port", "8015");
-        DEFAULT_PIPE.put( "Module.1", SvcManager.class.getSimpleName());
-        DEFAULT_PIPE.put( "1.class", SvcManager.class.getName());
+        DEFAULT_PIPE.put( "Module.1", SvcAvailServers.class.getSimpleName());
+        DEFAULT_PIPE.put( "1.class", SvcAvailServers.class.getName());
         // Default add 1.LocalServier
         // Default add 1.LocalUrl
         // Default add 1.RemotelUrl
         DEFAULT_PIPE.put( "Module.2", SvcCatalog.DISPATCHER_NAME);
         DEFAULT_PIPE.put( "2.class", SimpleDispatcher.class.getName());
-        DEFAULT_PIPE.put( "2.DefaultServicePipeline", "ToHtml,ToJson,JdbcService,SvcDeployer,SvcManager");
+        DEFAULT_PIPE.put( "2.DefaultServicePipeline", "ToHtml,ToJson,JdbcService,SvcDeployer,SvcAvailServers");
         DEFAULT_PIPE.put( "2.Pipeline._Undefined_", "FromJson,HttpClient");
         DEFAULT_PIPE.put( "Module.3", ToHtml.class.getSimpleName());
         DEFAULT_PIPE.put( "3.class", ToHtml.class.getName());
