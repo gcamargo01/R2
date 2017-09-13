@@ -22,7 +22,7 @@ import uy.com.r2.core.api.SvcResponse;
  */
 public class Json implements AsyncService {
     public static final String SERIALIZED = "SerializedJson";
-    private static final String RESULT_CODE = "ResultCode";
+    public static final String RESULT_CODE = "ResultCode";
     private static final Logger log = Logger.getLogger( Json.class);
     private Gson mapper = new Gson();
     private boolean toSerial = true;
@@ -115,13 +115,14 @@ public class Json implements AsyncService {
                 rc = Integer.parseInt( "" + r.get( RESULT_CODE).toArray()[ 0]);
                 r.remove( RESULT_CODE);
             }
-            res = new SvcResponse( r, rc, res.getRequest());
+            res = new SvcResponse( rc, res.getRequest());
+            res.getPayload().putAll( r);
         } else {
             // Add some fields
             Map<String,List<Object>> m = new HashMap( res.getPayload());
             List<Object> l = new ArrayList();
             l.add( "" + res.getResultCode());
-            m.put( "ResultCode", l);
+            m.put( RESULT_CODE, l);
             // Add or replace a "SerialisexJson" field with JSON
             res.put( SERIALIZED, toJSON( m));
         }
@@ -160,8 +161,11 @@ public class Json implements AsyncService {
         log.trace( "process fromJSON");
         StringReader sr = new StringReader( data);
         //Type t = new TypeToken<Map<String,String>>().getType();
-        Map<String,List<Object>> r = new HashMap<String,List<Object>>();
-        r = (Map<String,List<Object>>)mapper.fromJson( sr, r.getClass());
+        Map<String,List<Object>> t = new HashMap<String,List<Object>>();
+        Map<String,List<Object>> r = (Map<String,List<Object>>)mapper.fromJson( sr, t.getClass());
+        if( r == null) {   // Avoid return null
+            r = t;
+        }
         parsedCount += data.length();
         return r;
     }
