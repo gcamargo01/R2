@@ -2,7 +2,7 @@
 An easy way to expose back-end 24x7 services
 
 A set of interfaces to break down the business critical server in modules, 
-like microservices, in order to acquire this benefits:
+like micro-services, in order to acquire this benefits:
 
 * Modular approach
     * Easy to develop, in a pipeline of microservices
@@ -13,7 +13,7 @@ like microservices, in order to acquire this benefits:
     * Modules can be replaced on-line (hot deploy)
     * Continuous service level monitoring by tracking key information
     * Centralized and documented system configuration 
-    * On-line monitoring facility, to analize suspect modules (resources leakage)
+    * It easily monitors and analizes suspicious modules of malfuncions
     * Clustering, HA container friendly
     * Secure and robust (modules that avoid hacking)
 * Lightweight
@@ -22,10 +22,10 @@ like microservices, in order to acquire this benefits:
     * Optional java stand-alone implementation (no container required)
     * Extremely simple to use (just implement a Interface)
 
-This extensible architecture may change the way we develop applications, and maintain it
-along de time: One time development, after that just re-use o create a better one. 
-When we have a huge develoment team, with changing people, it's a good idea to keep it simple, 
-and never correct a module, just do it better. 
+This extensible arquitecture not only may change the way we develop applications but also the way
+they are maintained throughout time. One time development, after that just re-use o create a better 
+one. If the working personal in charge of devloping components is in constant change, it is better 
+to keep it simple and always create a new module, better that previous ones.
 
 And is a good practice to rule a simple and complete interface to the developer team.
 It forces to acquire requirements needed to bring services 24x7, while hiding its complexity.
