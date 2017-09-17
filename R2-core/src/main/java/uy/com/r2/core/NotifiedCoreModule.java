@@ -7,12 +7,12 @@ package uy.com.r2.core;
  */
 public interface NotifiedCoreModule extends CoreModule {
     
-    /** Configuration change.
+    /** Module or configuration change.
      * @param moduleName Module name
      */
     public void onModuleUpdate( String moduleName);
     
-    /** Configuration change.
+    /** Module removed.
      * @param moduleName Module name
      */
     public void onModuleRemove( String moduleName);
