@@ -29,7 +29,7 @@ public class SampleAsyncService implements AsyncService {
         if( cfg.getInt( "Tmp") > 0) {
             try {
                 Thread.sleep( cfg.getInt( "Tmp"));
-            } catch( Exception xx) { }
+            } catch( InterruptedException xx) { }
         }
         return req;
     } 
@@ -43,7 +43,7 @@ public class SampleAsyncService implements AsyncService {
         if( cfg.getInt( "Tmp") > 0) {
             try {
                 Thread.sleep( cfg.getInt( "Tmp"));
-            } catch( Exception xx) { }
+            } catch( InterruptedException xx) { }
         }
         resp.put( "DatpRespuesta", "" + this.toString());
         return resp;
