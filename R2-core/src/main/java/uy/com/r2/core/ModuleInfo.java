@@ -25,7 +25,6 @@ import uy.com.r2.svc.tools.SvcMonitor;
 public class ModuleInfo implements Module {
     private final static Logger LOG = Logger.getLogger(ModuleInfo.class);
     private final static int DEFAULT_TIME_OUT = Integer.MAX_VALUE;
-    private static NotifiedCoreModule cfgChgHandler = null;
     private final String moduleName;
     private final Module moduleImpl;
     private final AsyncService asyncImpl;  // Module Wrapped as AsyncService
@@ -53,10 +52,6 @@ public class ModuleInfo implements Module {
             this.asyncImpl = new WrapAsAsyncService( (SimpleService)impl); 
         } else {  // CoreModule, cant be monitored
             this.asyncImpl = null;
-            // Suscribe Config.Changes Handler
-            if( impl instanceof NotifiedCoreModule) {
-                cfgChgHandler = (NotifiedCoreModule)impl;
-            }
         }
     }    
 
@@ -187,10 +182,6 @@ public class ModuleInfo implements Module {
         if( moduleImpl instanceof CoreModule) {  
             ( (CoreModule)moduleImpl).startup( this.cfg);
         }
-        // Notify changes suscriptor
-        if( cfgChgHandler != null) {
-            cfgChgHandler.onModuleUpdate( moduleName);
-        }
     }
     
     /** Report module status plus active count.
@@ -239,10 +230,6 @@ public class ModuleInfo implements Module {
     @Override
     public void shutdown() {
         getImplementation().shutdown();
-        // Notify changes suscriptor
-        if( cfgChgHandler != null) {
-            cfgChgHandler.onModuleRemove( moduleName);
-        }
     }
     
     SvcMessage processMessage( SvcMessage msg) {
