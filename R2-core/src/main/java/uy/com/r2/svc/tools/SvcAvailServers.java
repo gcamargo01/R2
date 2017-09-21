@@ -22,9 +22,8 @@ import uy.com.r2.svc.conn.HttpClient;
 
 
 /** Keep alive based available servers and master selection module.
- * This is a special propose module, its functions are: <br>
- * - Keeps track of registered servers <br>
- * - Select one master <br>
+ * This core service module keep track of all the registered servers, and always 
+ * select on to be the Master. <br>
  * <p> Master - Slave rules: <br>
  * - The  master is the only one, and it sends KEEPALIVE all the time (KeepAliveDelay mS) to all other servers<br>
  * - Each node are master until receives a KEEPALIVE, then is turned to slave <br>
