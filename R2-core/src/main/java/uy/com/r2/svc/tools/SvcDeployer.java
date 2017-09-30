@@ -48,8 +48,8 @@ public class SvcDeployer implements AsyncService {
     private static final String DEPLOYER_NAME = SvcDeployer.class.getSimpleName();
     private static final String[] SERVICES = {
             SVC_DEPLOYMODULE,    SVC_GETMODULECONFIG, SVC_GETMODULELIST,   
-            SVC_GETMODULESTATUS, SVC_GETSERVICESLIST, SVC_SETMODULECONFIG, 
-            SVC_PERSISTCONFIG,   SVC_RESTARTMODULE,   SVC_UNDEPLOYMODULE
+            SVC_GETMODULESTATUS, SVC_SETMODULECONFIG, SVC_PERSISTCONFIG,   
+            SVC_RESTARTMODULE,   SVC_UNDEPLOYMODULE
     };
     private static final List<String> COMMANDS = Arrays.asList( SERVICES);
     private static final Logger LOG = Logger.getLogger( SvcDeployer.class);
