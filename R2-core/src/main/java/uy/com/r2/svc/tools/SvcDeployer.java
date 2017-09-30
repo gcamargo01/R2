@@ -39,6 +39,7 @@ public class SvcDeployer implements AsyncService {
     public static final String SVC_GETMODULECONFIG = "GetModuleConfig";
     public static final String SVC_GETMODULELIST   = "GetModulesList";
     public static final String SVC_GETMODULESTATUS = "GetModuleStatus";
+    public static final String SVC_GETSERVICESLIST = "GetServicesList";
     public static final String SVC_SETMODULECONFIG = "SetModuleConfig";
     public static final String SVC_PERSISTCONFIG   = "PersistConfig";
     public static final String SVC_RESTARTMODULE   = "RetartModule";
@@ -47,8 +48,8 @@ public class SvcDeployer implements AsyncService {
     private static final String DEPLOYER_NAME = SvcDeployer.class.getSimpleName();
     private static final String[] SERVICES = {
             SVC_DEPLOYMODULE,    SVC_GETMODULECONFIG, SVC_GETMODULELIST,   
-            SVC_GETMODULESTATUS, SVC_SETMODULECONFIG, SVC_PERSISTCONFIG,   
-            SVC_RESTARTMODULE,   SVC_UNDEPLOYMODULE
+            SVC_GETMODULESTATUS, SVC_GETSERVICESLIST, SVC_SETMODULECONFIG, 
+            SVC_PERSISTCONFIG,   SVC_RESTARTMODULE,   SVC_UNDEPLOYMODULE
     };
     private static final List<String> COMMANDS = Arrays.asList( SERVICES);
     private static final Logger LOG = Logger.getLogger( SvcDeployer.class);
@@ -142,7 +143,7 @@ public class SvcDeployer implements AsyncService {
     public SvcResponse onResponse( SvcResponse resp, Configuration cfg) throws Exception {
         updateCfg( cfg);
         SvcRequest req = resp.getRequest();
-        if( req.getServiceName().equals( SvcManager.SVC_GETSERVICESLIST)) {
+        if( req.getServiceName().equals( SVC_GETSERVICESLIST)) {
             for( String s: SERVICES) {
                 resp.add( "Services", s);
             }
