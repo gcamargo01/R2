@@ -2,7 +2,7 @@
 package uy.com.r2.core.api;
 
 /** R2 service exception.
- * An Exception with a message (error or failed action) a errorCode and a SvcRequest. 
+ * An Exception with a message (error or failed action) a errorCode and a original SvcRequest. 
  * @author G.Camargo
  */
 public class SvcException extends Exception {
