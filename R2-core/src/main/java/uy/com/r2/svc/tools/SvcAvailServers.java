@@ -46,13 +46,11 @@ public class SvcAvailServers implements AsyncService, CoreModule, Runnable {
     public static final String SVC_KEEPALIVE       = "KeepAlive";
     public static final String SVC_REMOVESERVER    = "RemoveServer";
     public static final String SVC_SETMASTER       = "SetMasterServer";
-    public static final String SVC_GETSERVICESLIST = "GetServicesList";
     public static final String SVC_SHUTDOWN        = "Shutdown";
     private static final String[] SERVICES = {
         SVC_ADDSERVER, 
         SVC_GETMASTER, 
         SVC_GETSERVERSLIST,
-        SVC_GETSERVICESLIST,
         SVC_KEEPALIVE, 
         SVC_REMOVESERVER, 
         SVC_SETMASTER, 
@@ -174,7 +172,7 @@ public class SvcAvailServers implements AsyncService, CoreModule, Runnable {
     @Override
     public SvcResponse onResponse( SvcResponse resp, Configuration cfg) throws Exception {
         SvcRequest req = resp.getRequest();
-        if( req.getServiceName().equals( SVC_GETSERVICESLIST)) {
+        if( req.getServiceName().equals( SvcDeployer.SVC_GETSERVICESLIST)) {
             for( String s: SERVICES) {
                 resp.add( "Services", s);
             }
