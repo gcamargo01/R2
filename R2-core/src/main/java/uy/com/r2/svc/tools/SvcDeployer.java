@@ -264,7 +264,9 @@ public class SvcDeployer implements AsyncService {
                 m.command( SVC_DEPLOYMODULE, mod, c);
             }
             // Wait till stop
-            while( !(Boolean)SvcCatalog.getDispatcher().getStatusVars().get( "Stopped"));
+            while( !(Boolean)SvcCatalog.getDispatcher().getStatusVars().get( "Stopped")) {
+                Thread.sleep( 1000);
+            }
             LOG.info( "Stopped");
         } catch ( Exception ex ) {
             System.err.println( "Error " + ex);
