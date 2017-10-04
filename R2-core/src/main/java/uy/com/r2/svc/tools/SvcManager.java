@@ -219,7 +219,7 @@ public class SvcManager implements AsyncService, CoreModule {
     private Map<String,List<Object>> command( String cmd, String name, String url, 
             Map<String,String> map) throws Exception {
         LOG.trace("Command: " + cmd + " " + name + " " + url + " " + map);
-        Map<String,List<Object>> resp = new TreeMap();
+        Map<String,List<Object>> mmap = new TreeMap();
         try {
             switch( cmd) {
             case SVC_ADDSERVER:
@@ -230,7 +230,7 @@ public class SvcManager implements AsyncService, CoreModule {
                 updateDestinations();
             case SVC_GETSERVERSLIST:
                 for( String k: knownServers.keySet()) {
-                    SvcMessage.addToPayload( resp, k, knownServers.get(  k));
+                    SvcMessage.addToMap( mmap, k, knownServers.get(  k));
                 }
                 break;
             case SVC_REMOVESERVER:
@@ -239,10 +239,10 @@ public class SvcManager implements AsyncService, CoreModule {
                 break;
             case SVC_GETMASTER: 
                 if( masterName != null && !masterName.isEmpty()) {
-                    SvcMessage.addToPayload( resp, "Name", masterName);
-                    SvcMessage.addToPayload( resp, "Url", knownServers.get( masterName));
+                    SvcMessage.addToMap( mmap, "Name", masterName);
+                    SvcMessage.addToMap( mmap, "Url", knownServers.get( masterName));
                 } else {
-                    SvcMessage.addToPayload( resp, "Error", "Undefined Master");
+                    SvcMessage.addToMap( mmap, "Error", "Undefined Master");
                 }
                 break;
             case SVC_SETMASTER: 
@@ -262,7 +262,7 @@ public class SvcManager implements AsyncService, CoreModule {
                     SvcResponse rp = SvcCatalog.getDispatcher().callPipeline( masterName, rq);
                     if( rp.getResultCode() != 0) {
                         LOG.warn("Failed to update " +  name + ": " + cfM);
-                        SvcMessage.addToPayload( resp, "Error", "Failed UpdateModule: " + cmd);
+                        SvcMessage.addToMap( mmap, "Error", "Failed UpdateModule: " + cmd);
                         break;
                     }
                     cfM = new Configuration();
@@ -310,8 +310,8 @@ public class SvcManager implements AsyncService, CoreModule {
                     }
                 }
                 // The master may KEEP_ALIIVE w/o know the real localname & localurl
-                SvcMessage.addToPayload( resp, "Name", localName);
-                SvcMessage.addToPayload( resp, "Url", "" + localUrl);
+                SvcMessage.addToMap( mmap, "Name", localName);
+                SvcMessage.addToMap( mmap, "Url", "" + localUrl);
           break;
             case SVC_SHUTDOWN:
                 stop = true;
@@ -321,18 +321,18 @@ public class SvcManager implements AsyncService, CoreModule {
                 Set<String> s = new TreeSet();
                 int i = 0;
                 for( String k: SERVICES) {
-                    SvcMessage.addToPayload( resp, "Services", k);
+                    SvcMessage.addToMap( mmap, "Services", k);
                 }
                 break;
             default:
-                SvcMessage.addToPayload( resp, "Error", "Invalid command: " + cmd);
+                SvcMessage.addToMap( mmap, "Error", "Invalid command: " + cmd);
             }
         } catch( Exception x) {
             LOG.info( "Command failed: " + cmd + " " + name + " " + url, x);
             throw x;
         }
-        LOG.trace( " resp = " + resp);
-        return resp;
+        LOG.trace( " resp = " + mmap);
+        return mmap;
     }    
 
     /** Stop and release all the allocated resources. */

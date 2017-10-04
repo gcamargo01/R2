@@ -42,6 +42,7 @@ import uy.com.r2.svc.conn.HttpClient;
 public class SvcAvailServers implements AsyncService, CoreModule, Runnable {
     public static final String SVC_ADDSERVER       = "AddServer";
     public static final String SVC_GETMASTER       = "GetMasterServer";
+    public static final String SVC_GETLOCAL        = "GetLocalServer";
     public static final String SVC_GETSERVERSLIST  = "GetServersList";
     public static final String SVC_KEEPALIVE       = "KeepAlive";
     public static final String SVC_REMOVESERVER    = "RemoveServer";
@@ -50,6 +51,7 @@ public class SvcAvailServers implements AsyncService, CoreModule, Runnable {
     private static final String[] SERVICES = {
         SVC_ADDSERVER, 
         SVC_GETMASTER, 
+        SVC_GETLOCAL,
         SVC_GETSERVERSLIST,
         SVC_KEEPALIVE, 
         SVC_REMOVESERVER, 
@@ -217,23 +219,6 @@ public class SvcAvailServers implements AsyncService, CoreModule, Runnable {
         }
     }
 
-    /** Notify and shutdown */   
-    private void notifyShutdown() {    
-        stop = true;
-        if( isMaster() && knownServers.size() > 1) {  // Choose another Master
-            for( String n: knownServers.keySet()) {
-                if( n.equals( localName)) {
-                    continue;
-                }
-                LOG.trace( "newMaster=" + n);
-                notifyAllServers( SVC_SETMASTER, n);
-                break;
-            }
-        }
-        notifyAllServers( SVC_REMOVESERVER, localName);
-        catalog.shutdown();
-    }
-
     /** Called time to time. */
     private void keepAlive() {
         long t = System.currentTimeMillis(); 
@@ -260,8 +245,8 @@ public class SvcAvailServers implements AsyncService, CoreModule, Runnable {
                         LOG.warn( "Failed GetMaster from " + remoteUrl);
                         return;
                     }    
-                    masterName = "" + rs.get( "Name");
-                    knownServers.put( masterName, "" + rs.get( "Url"));
+                    masterName = "" + rs.get( "MasterName");
+                    knownServers.put( masterName, "" + rs.get( "MasterUrl"));
                     updateDestinations();
                     // Add to local server to Master and get server list
                     rq = new SvcRequest( localName, 0, nodeTxNr++, 
@@ -297,7 +282,7 @@ public class SvcAvailServers implements AsyncService, CoreModule, Runnable {
     private Map<String,List<Object>> command( String cmd, String name, String url, 
             Map<String,String> map) throws Exception {
         LOG.trace("Command: " + cmd + " " + name + " " + url + " " + map);
-        Map<String,List<Object>> resp = new TreeMap();
+        Map<String,List<Object>> mmap = new TreeMap();
         try {
             switch( cmd) {
             case SVC_ADDSERVER:
@@ -308,8 +293,11 @@ public class SvcAvailServers implements AsyncService, CoreModule, Runnable {
                 updateDestinations();
             case SVC_GETSERVERSLIST:
                 for( String k: knownServers.keySet()) {
-                    SvcMessage.addToPayload( resp, k, knownServers.get(  k));
+                    SvcMessage.addToMap( mmap, k, knownServers.get(  k));
                 }
+                break;
+            case SVC_GETLOCAL:
+                SvcMessage.addToMap( mmap, "LocalName", localName);
                 break;
             case SVC_REMOVESERVER:
                 knownServers.remove(name);
@@ -317,10 +305,10 @@ public class SvcAvailServers implements AsyncService, CoreModule, Runnable {
                 break;
             case SVC_GETMASTER: 
                 if( masterName != null && !masterName.isEmpty()) {
-                    SvcMessage.addToPayload( resp, "Name", masterName);
-                    SvcMessage.addToPayload( resp, "Url", knownServers.get( masterName));
+                    SvcMessage.addToMap( mmap, "MasterName", masterName);
+                    SvcMessage.addToMap( mmap, "MasterUrl", knownServers.get( masterName));
                 } else {
-                    SvcMessage.addToPayload( resp, "Error", "Undefined Master");
+                    SvcMessage.addToMap( mmap, "Error", "Undefined Master");
                 }
                 break;
             case SVC_SETMASTER: 
@@ -354,22 +342,39 @@ public class SvcAvailServers implements AsyncService, CoreModule, Runnable {
                     }
                 }
                 // The master may KEEP_ALIIVE w/o know the localname 0& localurl, tell him
-                SvcMessage.addToPayload( resp, "Name", localName);
-                SvcMessage.addToPayload( resp, "Url", "" + localUrl);
+                SvcMessage.addToMap( mmap, "Name", localName);
+                SvcMessage.addToMap( mmap, "Url", "" + localUrl);
                 break;
             case SVC_SHUTDOWN:
+                notifyShutdown();
                 catalog.shutdown();
                 break;
             default:
-                SvcMessage.addToPayload( resp, "Error", "Invalid command: " + cmd);
+                SvcMessage.addToMap( mmap, "Error", "Invalid command: " + cmd);
             }
         } catch( Exception x) {
             LOG.info( "Command failed: " + cmd + " " + name + " " + url, x);
             throw x;
         }
-        LOG.trace( " resp = " + resp);
-        return resp;
+        LOG.trace(" resp = " + mmap);
+        return mmap;
     }    
+
+    /** Notify local shutdown */   
+    private void notifyShutdown() {    
+        stop = true;
+        if( isMaster() && knownServers.size() > 1) {  // Choose another Master
+            for( String n: knownServers.keySet()) {
+                if( n.equals( localName)) {
+                    continue;
+                }
+                LOG.trace( "newMaster=" + n);
+                notifyAllServers( SVC_SETMASTER, n);
+                break;
+            }
+        }
+        notifyAllServers( SVC_REMOVESERVER, localName);
+    }
 
     /* Search for a module by its class name */
     private ModuleInfo getModInfoEndsWith( String className) {
@@ -443,6 +448,7 @@ public class SvcAvailServers implements AsyncService, CoreModule, Runnable {
     }
     
     private void notifyAllServers( String command, String name) {
+        LOG.trace( "notifyAllServers " + command + " " + name);
         for(  String sn: new TreeSet<String>( knownServers.keySet())) {
             if( sn.equals( localName)) {  // Do not notify it self!
                 continue;

@@ -72,7 +72,7 @@ public class SignAndValidate implements AsyncService {
                 throw new Exception( "Invalid signature");
             }    
         } else {
-            SvcMessage.addToPayload( m, "Signature", sign( h)); 
+            SvcMessage.addToMap( m, "Signature", sign( h)); 
         }
         return req.clone( m);
     }
@@ -96,7 +96,7 @@ public class SignAndValidate implements AsyncService {
                 throw new Exception( "Invalid signature");
             }    
         } else {
-            SvcMessage.addToPayload( m, "Signature", sign( h)); 
+            SvcMessage.addToMap( m, "Signature", sign( h)); 
         }
         return res;
     }

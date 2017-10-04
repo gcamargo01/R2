@@ -184,9 +184,9 @@ public class SimulateClientCaller implements CoreModule {
                             LOG.debug(">>> " + pipe + " " + getName() + ":" + i + " " + getName());
                         }
                         String m = getMessage();
-                        Map<String,List<Object>> data = SvcMessage.addToPayload( null, "Data", m);
-                        SvcMessage.addToPayload( data, "ItCount", i);
-                        SvcMessage.addToPayload( data, "ThName", getName());
+                        Map<String,List<Object>> data = SvcMessage.addToMap( null, "Data", m);
+                        SvcMessage.addToMap( data, "ItCount", i);
+                        SvcMessage.addToMap( data, "ThName", getName());
                         SvcRequest rq = new SvcRequest( node, i, 0, service, data, invocationTimeout);
                         //long t0 = System.currentTimeMillis();
                         long t0 = System.nanoTime();

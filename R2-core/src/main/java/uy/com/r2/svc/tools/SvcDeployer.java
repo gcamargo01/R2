@@ -178,7 +178,7 @@ public class SvcDeployer implements AsyncService {
             throws Exception {
         LOG.trace( "Command: " + cmd + " " + mn + " " + cfg);
         ++receivedCommands;
-        Map<String,List<Object>> resp = new TreeMap();
+        Map<String,List<Object>> mmap = new TreeMap();
         try {
             switch( cmd) {
             case SVC_DEPLOYMODULE:    
@@ -190,7 +190,7 @@ public class SvcDeployer implements AsyncService {
             case SVC_GETMODULELIST:
                 int i = 0;
                 for( String s: catalog.getModuleNames()) {
-                    SvcMessage.addToPayload( resp, "Modules", s);                    
+                    SvcMessage.addToMap( mmap, "Modules", s);                    
                 }
                 break;
             case SVC_SETMODULECONFIG:    
@@ -199,15 +199,15 @@ public class SvcDeployer implements AsyncService {
             case SVC_GETMODULECONFIG:
                 Map<String,Map<String,Object>> mm = catalog.getModuleInfo( mn).getDetailedConfiguration();
                 for( String k: mm.keySet()) {
-                    SvcMessage.addToPayload( resp, k, mm.get( k)); 
+                    SvcMessage.addToMap( mmap, k, mm.get( k)); 
                 } 
-                SvcMessage.addToPayload( resp, TAG_ACTUALCONFIG, 
+                SvcMessage.addToMap( mmap, TAG_ACTUALCONFIG, 
                         catalog.getModuleInfo( mn).getConfiguration().getStringMap( "*")); 
                 break;
             case SVC_GETMODULESTATUS:
                 Map<String,Object> mo = catalog.getModuleInfo( mn).getStatusVars();
                 for( String k: mo.keySet()) {
-                    SvcMessage.addToPayload( resp, k, mo.get( k));
+                    SvcMessage.addToMap( mmap, k, mo.get( k));
                 }
                 break;
             case SVC_PERSISTCONFIG:
@@ -225,8 +225,8 @@ public class SvcDeployer implements AsyncService {
             ++errorsOnCommands;
             throw x;
         }
-        LOG.debug( "command " + cmd + " resp=" + resp);
-        return resp;
+        LOG.debug( "command " + cmd + " mmap=" + mmap);
+        return mmap;
     }    
 
     /** Stop and release all the allocated resources. */
