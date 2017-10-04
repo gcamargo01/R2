@@ -90,8 +90,8 @@ public class SvcResponse extends SvcMessage implements Serializable {
                 request.getAbsoluteTime());
         this.resultCode = resultCode;
         this.request = request;
-        addToPayload( super.getPayload(), "Exception", exception);
-        addToPayload( super.getPayload(), "ReasonOrAction", reasonOrAction);
+        addToMap( super.getPayload(), "Exception", exception);
+        addToMap( super.getPayload(), "ReasonOrAction", reasonOrAction);
     }
 
     /** Build a failure response from a message.
@@ -110,7 +110,7 @@ public class SvcResponse extends SvcMessage implements Serializable {
                 request.getAbsoluteTime());
         this.resultCode = resultCode;
         this.request = request;
-        addToPayload( super.getPayload(), "ReasonOrAction", reasonOrAction);
+        addToMap( super.getPayload(), "ReasonOrAction", reasonOrAction);
     }
 
     /** Clone with new data. To make a new message.

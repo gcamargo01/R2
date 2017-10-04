@@ -89,7 +89,7 @@ public abstract class SvcMessage implements Serializable {
      * @param obj Object 
      * @return Data
      */
-    public static Map<String,List<Object>> addToPayload( 
+    public static Map<String,List<Object>> addToMap( 
             Map<String,List<Object>> payload, String field, Object obj) {
         List<Object> l;
         if( payload == null) {
