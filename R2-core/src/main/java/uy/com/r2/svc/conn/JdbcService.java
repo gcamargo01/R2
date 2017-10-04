@@ -178,9 +178,9 @@ public class JdbcService implements AsyncService {
             while( rs != null && rs.next()) {
                 Map<String,List<Object>> row = new LinkedHashMap();
                 for( int i = 0; i < rsmd.getColumnCount(); ++i) {
-                    SvcMessage.addToPayload( row, rsmd.getColumnName( i + 1), rs.getString( i + 1));
+                    SvcMessage.addToMap( row, rsmd.getColumnName( i + 1), rs.getString( i + 1));
                 }
-                SvcMessage.addToPayload( resp, si.rowName, row);
+                SvcMessage.addToMap( resp, si.rowName, row);
             }    
             si.time += ( int)(System.currentTimeMillis() - t0);
             return resp;
