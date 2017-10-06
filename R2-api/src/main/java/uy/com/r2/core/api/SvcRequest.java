@@ -11,6 +11,8 @@ import java.io.Serializable;
 public class SvcRequest extends SvcMessage implements Serializable, Cloneable {
     private static final long serialVersionUID = 1L;
 
+    private static String defaultClientNode = null;
+    
     private final String clientNode;
     private final int nodeRqNr;
     private final int sessionNr;
@@ -23,10 +25,10 @@ public class SvcRequest extends SvcMessage implements Serializable, Cloneable {
     /** Build a request with amount and currency.
      * It should be created right on the event to make a service call, the time 
      * starts running.
-     * @param clientNode Client node name 
+     * @param clientNode Client node name or null
      * @param nodeRqNr Node transaction number, it must change every request
      * @param sessionNr Session ticket, only for auditory proposes
-     * @param service Service name
+     * @param service Requested service name
      * @param payload Message data multimap
      * @param amount Total amount of the service requested
      * @param currency Currency code of the amount
@@ -35,6 +37,9 @@ public class SvcRequest extends SvcMessage implements Serializable, Cloneable {
     public SvcRequest( String clientNode, int nodeRqNr, int sessionNr, String service, 
             Map<String,List<Object>> payload, double amount, String currency, int timeOut) {
         super( setReqId( clientNode, service, sessionNr, nodeRqNr), payload);
+        if( clientNode == null) {
+            clientNode = defaultClientNode;
+        }
         this.clientNode = clientNode;
         this.nodeRqNr = nodeRqNr;
         this.sessionNr = sessionNr;
@@ -48,16 +53,19 @@ public class SvcRequest extends SvcMessage implements Serializable, Cloneable {
     /** Build a request without amount and currency.
      * It should be created right on the event to make a service call, the time 
      * starts running.
-     * @param clientNode Client node name 
+     * @param clientNode Client node name or null
      * @param nodeRqNr Node request number, it must change every request
      * @param sessionNr Session ticket, only for auditory proposes
-     * @param service Service name
+     * @param service Requested service name
      * @param payload Message data multimap
      * @param timeOut Maximum response time in mS
      */
     public SvcRequest( String clientNode, int nodeRqNr, int sessionNr, String service, 
             Map<String,List<Object>> payload, int timeOut) {
         super( setReqId( clientNode, service, sessionNr, nodeRqNr), payload);
+        if( clientNode == null) {
+            clientNode = defaultClientNode;
+        }
         this.clientNode = clientNode;
         this.nodeRqNr = nodeRqNr;
         this.sessionNr = sessionNr;
@@ -69,6 +77,11 @@ public class SvcRequest extends SvcMessage implements Serializable, Cloneable {
     }
 
     private static String setReqId( String clientNode, String service, int sessionNr, int nodeRqNr) { 
+        if( clientNode == null) {
+            clientNode = defaultClientNode;
+        } else if( defaultClientNode == null) {
+            defaultClientNode = clientNode;
+        }
         StringBuilder sb = new StringBuilder();
         sb.append( clientNode);
         sb.append( '@');
