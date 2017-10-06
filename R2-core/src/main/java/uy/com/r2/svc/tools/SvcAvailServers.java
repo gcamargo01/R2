@@ -17,6 +17,7 @@ import uy.com.r2.core.api.SvcResponse;
 import uy.com.r2.core.api.AsyncService;
 import uy.com.r2.core.api.ConfigItemDescriptor;
 import uy.com.r2.core.api.Configuration;
+import uy.com.r2.core.api.Dispatcher;
 import uy.com.r2.core.api.SvcMessage;
 import uy.com.r2.svc.conn.HttpClient;
 
@@ -169,7 +170,7 @@ public class SvcAvailServers implements AsyncService, CoreModule, Runnable {
     @Override
     public SvcResponse onResponse( SvcResponse resp, Configuration cfg) throws Exception {
         SvcRequest req = resp.getRequest();
-        if( req.getServiceName().equals( SvcDeployer.SVC_GETSERVICESLIST)) {
+        if( req.getServiceName().equals( Dispatcher.SVC_GETSERVICESLIST)) {
             for( String s: SERVICES) {
                 resp.add( "Services", s);
             }

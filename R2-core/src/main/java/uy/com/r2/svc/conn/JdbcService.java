@@ -17,8 +17,8 @@ import uy.com.r2.core.api.SvcResponse;
 import uy.com.r2.core.api.AsyncService;
 import uy.com.r2.core.api.ConfigItemDescriptor;
 import uy.com.r2.core.api.Configuration;
+import uy.com.r2.core.api.Dispatcher;
 import uy.com.r2.core.api.SvcMessage;
-import uy.com.r2.svc.tools.SvcDeployer;
 
 
 /** JDBC service module.
@@ -199,7 +199,7 @@ public class JdbcService implements AsyncService {
      */
     @Override
     public SvcResponse onResponse( SvcResponse resp, Configuration cfg) throws Exception {
-        if( resp.getRequest().getServiceName().equals( SvcDeployer.SVC_GETSERVICESLIST)) {
+        if( resp.getRequest().getServiceName().equals( Dispatcher.SVC_GETSERVICESLIST)) {
             for( String k: svcs.keySet()) {
                 resp.add( "Services", k);
             }

@@ -2,6 +2,7 @@
 package uy.com.r2.core;
 
 import org.apache.log4j.Logger;
+import uy.com.r2.core.api.Dispatcher;
 import uy.com.r2.core.api.SvcMessage;
 import uy.com.r2.core.api.SvcRequest;
 import uy.com.r2.core.api.SvcResponse;
@@ -46,7 +47,13 @@ public class RunningPipeline {
         String moduleName = null;
         try {
             if( index >= moduleNames.length || moduleNames[ index] == null) {
-                throw new Exception( "Exausted pipeline");
+                String s = req0.getServiceName();
+                if( s.equals( Dispatcher.SVC_GETSERVICESLIST)) {
+                    msg = new SvcResponse( "", 0, req0);
+                   --index;
+                   return;
+                }
+                throw new Exception( "Service " + s + " not implemented in pipeline");
             }
             moduleName = moduleNames[ index];
             LOG.trace( "run index=" + index + " " + moduleName + " " + msg);

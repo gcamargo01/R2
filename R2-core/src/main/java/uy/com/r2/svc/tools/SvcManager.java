@@ -18,6 +18,7 @@ import uy.com.r2.core.api.SvcResponse;
 import uy.com.r2.core.api.AsyncService;
 import uy.com.r2.core.api.ConfigItemDescriptor;
 import uy.com.r2.core.api.Configuration;
+import uy.com.r2.core.api.Dispatcher;
 import uy.com.r2.core.api.SvcMessage;
 import uy.com.r2.svc.conn.HttpClient;
 
@@ -54,7 +55,6 @@ public class SvcManager implements AsyncService, CoreModule {
     public static final String SVC_ADDSERVER       = "AddServer";
     public static final String SVC_GETMASTER       = "GetMasterServer";
     public static final String SVC_GETSERVERSLIST  = "GetServersList";
-    public static final String SVC_GETSERVICESLIST = "GetServicesList";
     public static final String SVC_KEEPALIVE       = "KeepAlive";
     public static final String SVC_REMOVESERVER    = "RemoveServer";
     public static final String SVC_SETMASTER       = "SetMasterServer";
@@ -65,7 +65,6 @@ public class SvcManager implements AsyncService, CoreModule {
         SVC_ADDSERVER, 
         SVC_GETMASTER, 
         SVC_GETSERVERSLIST,
-        SVC_GETSERVICESLIST,
         SVC_KEEPALIVE, 
         SVC_REMOVESERVER, 
         SVC_SETMASTER, 
@@ -184,7 +183,7 @@ public class SvcManager implements AsyncService, CoreModule {
     @Override
     public SvcResponse onResponse( SvcResponse resp, Configuration cfg) throws Exception {
         SvcRequest req = resp.getRequest();
-        if( req.getServiceName().equals( SVC_GETSERVICESLIST)) {
+        if( req.getServiceName().equals( Dispatcher.SVC_GETSERVICESLIST)) {
             for( String s: SERVICES) {
                 resp.add( "Services", s);
             }
@@ -312,17 +311,10 @@ public class SvcManager implements AsyncService, CoreModule {
                 // The master may KEEP_ALIIVE w/o know the real localname & localurl
                 SvcMessage.addToMap( mmap, "Name", localName);
                 SvcMessage.addToMap( mmap, "Url", "" + localUrl);
-          break;
+                break;
             case SVC_SHUTDOWN:
                 stop = true;
                 catalog.shutdown();
-                break;
-            case SVC_GETSERVICESLIST:
-                Set<String> s = new TreeSet();
-                int i = 0;
-                for( String k: SERVICES) {
-                    SvcMessage.addToMap( mmap, "Services", k);
-                }
                 break;
             default:
                 SvcMessage.addToMap( mmap, "Error", "Invalid command: " + cmd);

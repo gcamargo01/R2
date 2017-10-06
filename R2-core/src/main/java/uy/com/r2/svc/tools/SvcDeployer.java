@@ -20,6 +20,7 @@ import uy.com.r2.core.api.SvcResponse;
 import uy.com.r2.core.api.AsyncService;
 import uy.com.r2.core.api.ConfigItemDescriptor;
 import uy.com.r2.core.api.Configuration;
+import uy.com.r2.core.api.Dispatcher;
 import uy.com.r2.core.api.SvcMessage;
 import uy.com.r2.svc.conn.HttpClient;
 import uy.com.r2.svc.conn.JdbcService;
@@ -39,7 +40,6 @@ public class SvcDeployer implements AsyncService {
     public static final String SVC_GETMODULECONFIG = "GetModuleConfig";
     public static final String SVC_GETMODULELIST   = "GetModulesList";
     public static final String SVC_GETMODULESTATUS = "GetModuleStatus";
-    public static final String SVC_GETSERVICESLIST = "GetServicesList";
     public static final String SVC_SETMODULECONFIG = "SetModuleConfig";
     public static final String SVC_PERSISTCONFIG   = "PersistConfig";
     public static final String SVC_RESTARTMODULE   = "RetartModule";
@@ -143,7 +143,7 @@ public class SvcDeployer implements AsyncService {
     public SvcResponse onResponse( SvcResponse resp, Configuration cfg) throws Exception {
         updateCfg( cfg);
         SvcRequest req = resp.getRequest();
-        if( req.getServiceName().equals( SVC_GETSERVICESLIST)) {
+        if( req.getServiceName().equals( Dispatcher.SVC_GETSERVICESLIST)) {
             for( String s: SERVICES) {
                 resp.add( "Services", s);
             }
