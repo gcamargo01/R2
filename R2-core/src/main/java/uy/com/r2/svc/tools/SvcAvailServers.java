@@ -328,8 +328,8 @@ public class SvcAvailServers implements AsyncService, CoreModule, Runnable {
                         if( !map.containsKey( s)) {
                             SvcRequest rq = new SvcRequest( localName, 0, nodeTxNr++, 
                                     SVC_ADDSERVER, null, 1000);
-                            rq.put( "Name", localName);
-                            rq.put( "Url", localUrl);
+                            rq.put( "Name", s);
+                            rq.put( "Url", knownServers.get( s));
                             SvcCatalog.getDispatcher().callPipeline( masterName, rq);
                         }
                     }
@@ -341,7 +341,7 @@ public class SvcAvailServers implements AsyncService, CoreModule, Runnable {
                         knownServers.put( "" + s, "" + map.get( s));
                     }
                 }
-                // The master may KEEP_ALIIVE w/o know the localname 0& localurl, tell him
+                // The master may KEEP_ALIIVE w/o know the localname & localurl, tell him
                 SvcMessage.addToMap( mmap, "Name", localName);
                 SvcMessage.addToMap( mmap, "Url", "" + localUrl);
                 break;
