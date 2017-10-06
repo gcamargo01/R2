@@ -335,7 +335,7 @@ public class SvcDeployer implements AsyncService {
         DEFAULT_PIPE.put( "0.Port", "8015");
         DEFAULT_PIPE.put( "Module.1", SvcAvailServers.class.getSimpleName());
         DEFAULT_PIPE.put( "1.class", SvcAvailServers.class.getName());
-        // Default add 1.LocalServier
+        // Default add 1.LocalName
         // Default add 1.LocalUrl
         // Default add 1.RemotelUrl
         DEFAULT_PIPE.put( "Module.2", SvcCatalog.DISPATCHER_NAME);
