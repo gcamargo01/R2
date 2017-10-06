@@ -42,7 +42,6 @@ import uy.com.r2.svc.conn.HttpClient;
 public class SvcAvailServers implements AsyncService, CoreModule, Runnable {
     public static final String SVC_ADDSERVER       = "AddServer";
     public static final String SVC_GETMASTER       = "GetMasterServer";
-    public static final String SVC_GETLOCAL        = "GetLocalServer";
     public static final String SVC_GETSERVERSLIST  = "GetServersList";
     public static final String SVC_KEEPALIVE       = "KeepAlive";
     public static final String SVC_REMOVESERVER    = "RemoveServer";
@@ -51,7 +50,6 @@ public class SvcAvailServers implements AsyncService, CoreModule, Runnable {
     private static final String[] SERVICES = {
         SVC_ADDSERVER, 
         SVC_GETMASTER, 
-        SVC_GETLOCAL,
         SVC_GETSERVERSLIST,
         SVC_KEEPALIVE, 
         SVC_REMOVESERVER, 
@@ -65,8 +63,8 @@ public class SvcAvailServers implements AsyncService, CoreModule, Runnable {
     private long masterTimeStamp = System.currentTimeMillis();
     private int nodeTxNr = 0;
     private boolean stop = false;
+    private String localName = new SvcRequest( null, 0, 0, null, null, 0).getClientNode();
     // Cfg
-    private String localName = "localhost";
     private URL localUrl = null;
     private URL remoteUrl = null;
     private String masterName = null;
@@ -85,8 +83,6 @@ public class SvcAvailServers implements AsyncService, CoreModule, Runnable {
     @Override
     public List<ConfigItemDescriptor> getConfigDescriptors() {
         LinkedList<ConfigItemDescriptor> l = new LinkedList();
-        l.add( new ConfigItemDescriptor( "LocalName", ConfigItemDescriptor.STRING,
-                "Local node name", localName));
         l.add( new ConfigItemDescriptor( "LocalUrl", ConfigItemDescriptor.URL,
                 "local URL of this  server", null));
         l.add( new ConfigItemDescriptor( "RemoteUrl", ConfigItemDescriptor.URL,
@@ -106,7 +102,6 @@ public class SvcAvailServers implements AsyncService, CoreModule, Runnable {
     
     @Override
     public void startup( Configuration cfg) throws Exception {
-        localName = cfg.getString( "LocalName");
         localUrl = cfg.getUrl( "LocalUrl");
         remoteUrl = cfg.getUrl( "RemoteUrl");
         masterName = cfg.getString( "MasterServer", localName);
@@ -295,9 +290,6 @@ public class SvcAvailServers implements AsyncService, CoreModule, Runnable {
                 for( String k: knownServers.keySet()) {
                     SvcMessage.addToMap( mmap, k, knownServers.get(  k));
                 }
-                break;
-            case SVC_GETLOCAL:
-                SvcMessage.addToMap( mmap, "LocalName", localName);
                 break;
             case SVC_REMOVESERVER:
                 knownServers.remove(name);

@@ -314,10 +314,11 @@ public class SvcDeployer implements AsyncService {
             String hostName = InetAddress.getLocalHost().getHostName();
             String localUrl = "http://" + hostName + ":" + localPort;
             String localName = hostName + localPort;
+            // Set default cliendNode
+            new SvcRequest( localName, 0, 0, null, null, 0).getClientNode();
             // configure
             pr.putAll( DEFAULT_PIPE);
             pr.put( "0.Port", "" + localPort);
-            pr.put( "1.LocalName", localName);
             pr.put( "1.LocalUrl", localUrl);
             if( rmtUrl != null && !rmtUrl.isEmpty()) {
                 pr.put( "1.RemoteUrl", rmtUrl);
