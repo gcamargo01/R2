@@ -34,14 +34,14 @@ public interface Dispatcher extends Module {
      */
     public SvcResponse callPipeline( String pipe, SvcRequest req) throws Exception;
 
-    /** Dispatch the execution of a specified service.
+    /** Dispatch the execution of a specified module.
      * This method is one that explicit set the next Service to run.
-     * @param serviceName Service module name
+     * @param moduleName Service module name
      * @param req Request to dispatch
      * @return SvcResponse or error packed as a response 
      * @deprecated Use callPipeline
      */
-    public SvcResponse callService( String serviceName, SvcRequest req);   
+    public SvcResponse callService( String moduleName, SvcRequest req);   
    
     /** Process a message from an asynchronous service implementation.
      * After a service returned NULL because there wasn't a message yet,
