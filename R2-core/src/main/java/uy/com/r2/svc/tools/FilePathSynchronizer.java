@@ -18,6 +18,7 @@ import uy.com.r2.core.api.SvcResponse;
  */
 public class FilePathSynchronizer implements CoreModule {
     private final static int TIME_OUT = 10000;
+    private final static String PIPE = "FileIO";
     private final static Logger log = Logger.getLogger( FilePathSynchronizer.class);
     private static int txNr = 0;
     private boolean stop = false;
@@ -58,14 +59,17 @@ public class FilePathSynchronizer implements CoreModule {
      */
     @Override
     public Map<String, Object> getStatusVars() {
-        Map<String,Object> m = new HashMap();
-        m.put( "Version", "$Revision: 1.1 $");
+        Map<String,Object> map = new HashMap();
+        Package pak = getClass().getPackage();
+        if( pak != null) {
+            map.put( "Version", "" + pak.getImplementationVersion());
+        } 
         if( wrk != null) {
-            m.putAll( wrk.getStatusVars());
+            map.putAll( wrk.getStatusVars());
         } else {
-            m.put( "Running", false);
+            map.put( "Running", false);
         }    
-        return m;
+        return map;
     }
 
     /** Release all the allocated resources. */
@@ -90,17 +94,13 @@ public class FilePathSynchronizer implements CoreModule {
                     try {
                         path = pathMap.get( k);
                         // List Local directory reQuest/resPonse
-                        SvcRequest llq = new SvcRequest( 
-                                FilePathSynchronizer.class.getSimpleName(), 
-                                ++txNr, 0, "FileList", null, TIME_OUT);
+                        SvcRequest llq = new SvcRequest( null, ++txNr, 0, "FileList", null, TIME_OUT);
                         llq.add( "Path", path);
-                        SvcResponse llp = SvcCatalog.getDispatcher().callNext( llq);
+                        SvcResponse llp = SvcCatalog.getDispatcher().call( llq);
                         // Remote List directory reQuest/resPonse
-                        SvcRequest rlq = new SvcRequest( 
-                                FilePathSynchronizer.class.getSimpleName(), 
-                                ++txNr, 0, remote + "/FileList", null, TIME_OUT);
+                        SvcRequest rlq = new SvcRequest( null, ++txNr, 0, remote + "/FileList", null, TIME_OUT);
                         rlq.add( "Path", path);
-                        SvcResponse lrp = SvcCatalog.getDispatcher().callNext( rlq);
+                        SvcResponse lrp = SvcCatalog.getDispatcher().call( rlq);
                         // Compare 
                         log.trace( "to compare l " + llq + " r " + rlq);
                         for( String fn: lrp.getPayload().keySet()) {
@@ -128,21 +128,17 @@ public class FilePathSynchronizer implements CoreModule {
                         log.trace( "to copy " + namesAndLen);
                         for( String name: namesAndLen.keySet()) {
                             // Read Remote reQest/resPponse
-                            SvcRequest rrq = new SvcRequest( 
-                                    FilePathSynchronizer.class.getSimpleName(), 
-                                    ++txNr, 0, remote + "/FileRead", null, TIME_OUT);
+                            SvcRequest rrq = new SvcRequest( null, ++txNr, 0, remote + "/FileRead", null, TIME_OUT);
                             rrq.put( "Path", path);
                             rrq.put( "Name", name);
                             rrq.put( "Length", "" + namesAndLen.get(name));
-                            SvcResponse rdp = SvcCatalog.getDispatcher().callNext( rrq);
+                            SvcResponse rdp = SvcCatalog.getDispatcher().call( rrq);
                             // Write Local reQest/resPponse
-                            SvcRequest wlq = new SvcRequest( 
-                                    FilePathSynchronizer.class.getSimpleName(), 
-                                    ++txNr, 0, "FileWrite", null, TIME_OUT);
+                            SvcRequest wlq = new SvcRequest( null, ++txNr, 0, "FileWrite", null, TIME_OUT);
                             wlq.put( "Path", path);
                             wlq.put( "Name", name);
                             wlq.put( "Block", rdp.get( "Block"));
-                            SvcResponse rwp = SvcCatalog.getDispatcher().callNext( wlq);
+                            SvcResponse rwp = SvcCatalog.getDispatcher().call( wlq);
                             log.trace("copied " + name + " " + rwp.getResultCode());
                         }
                         namesAndLen.clear();
