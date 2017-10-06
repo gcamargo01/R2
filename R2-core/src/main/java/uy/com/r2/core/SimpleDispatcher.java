@@ -127,31 +127,31 @@ public class SimpleDispatcher implements Dispatcher, CoreModule {
     
     /** Dispatch the execution of a specified service.
      * This method is used by modules that explicit set the next Service to run.
-     * @param serviceName Service module name
+     * @param moduleName Service module name
      * @param req Request to dispatch
      * @return SvcResponse or error packed as a response 
      */
     @Override
-    public SvcResponse callService( String serviceName, SvcRequest req) {
+    public SvcResponse callService( String moduleName, SvcRequest req) {
         /**/
         if( LOG.isDebugEnabled()) {
-            LOG.debug( "callService( " + serviceName + " req. " + req + " )");
+            LOG.debug("callService( " + moduleName + " req. " + req + " )");
         }
         /**/
         // Verify RunningPipeline
         RunningPipeline rp = runningPipelines.get( req.getRequestId());
         if( rp == null) {
-            LOG.debug( "Pipeline not found, create one for " + serviceName);
+            LOG.debug("Pipeline not found, create one for " + moduleName);
             rp = new RunningPipeline( new String[ 0], req);
-            //return newExceptionResponse("Failed callService( " + serviceName 
+            //return newExceptionResponse("Failed callService( " + moduleName 
             //        + "), RunningPipeline not found from " + req, req);
         }
-        rp.add( serviceName);
+        rp.add( moduleName);
         // Run 
         SvcResponse resp = rp.getResponse();
         /**/
         if( LOG.isDebugEnabled()) {
-            LOG.debug("callService( " + serviceName + ") resp. =  " + resp);
+            LOG.debug("callService( " + moduleName + ") resp. =  " + resp);
         }
         /**/
         return resp;
