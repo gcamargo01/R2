@@ -9,6 +9,8 @@ import java.util.LinkedList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
+import java.security.MessageDigest;
+import org.apache.commons.codec.binary.Hex;
 import org.apache.log4j.Logger;
 import uy.com.r2.core.api.AsyncService;
 import uy.com.r2.core.api.SvcRequest;
@@ -25,6 +27,7 @@ import uy.com.r2.core.api.SvcMessage;
 public class FileServices implements AsyncService {
     private final static Logger log = Logger.getLogger( FileServices.class);
     private final static String SVC_LIST  = "FileList";
+    private final static String SVC_SUM   = "GetChkSum";
     private final static String SVC_READ  = "FileRead";
     private final static String SVC_REN   = "FileRename";
     private final static String SVC_WRITE = "FileWrite";
@@ -95,14 +98,38 @@ public class FileServices implements AsyncService {
                 try {
                     if( !write) {  // read
                         buff = read( path, name, pos, len);
-                        resp.put( "Block", buff);
+                        resp.put( "Block", toStr( buff));
                     } else {  // write
-                        buff = ( "" + req.get( "Block")).getBytes();
+                        buff = toBin( "" + req.get( "Block"));
                         len = buff.length;
                         write( path, name, buff, pos, len); 
                     }
                 } catch( Exception xx) {
-                    return new SvcResponse( "Failed " + req.getServiceName(), 1, null, req);
+                    return new SvcResponse( "Failed " + req.getServiceName(), 1, xx, req);
+                }
+                return resp;
+            case SVC_SUM:
+                oPath = req.get( "Path");
+                path = ( oPath == null)? defaultPath: "" + oPath;
+                name = "" + req.get( "Name");
+                pos = 0;
+                len = 10240;
+                resp = new SvcResponse( 0, req);
+                MessageDigest md = MessageDigest.getInstance("MD5");
+                md.reset();
+                try {
+                    for( ; ;) {
+                       buff = read( path, name, pos, len);
+                       if( buff.length == 0) {
+                           break;
+                       }
+                       md.update( buff);
+                       pos += 10240;
+                    };
+                    resp.put( "ChkSum", new String( Hex.encodeHex( md.digest())));
+                } catch( Exception xx) {
+                    log.debug( "" + xx, xx);
+                    return new SvcResponse( "Failed " + req.getServiceName(), 1, xx, req);
                 }
                 return resp;
             case SVC_REN:
@@ -113,7 +140,7 @@ public class FileServices implements AsyncService {
                 try {
                     rename( path, name, newName);                    
                 } catch( Exception xx) {
-                    return new SvcResponse( "Failed " + req.getServiceName(), 1, null, req);
+                    return new SvcResponse( "Failed " + req.getServiceName(), 1, xx, req);
                 }
                 return new SvcResponse( 0, req);
             case SVC_LIST:
@@ -127,7 +154,7 @@ public class FileServices implements AsyncService {
                     }    
                     return r;
                 } catch( Exception xx) {
-                    return new SvcResponse( "Failed " + req.getServiceName(), -1, null, req);
+                    return new SvcResponse( "Failed " + req.getServiceName(), -1, xx, req);
                 }  
             default:    
                 return req;
@@ -174,7 +201,7 @@ public class FileServices implements AsyncService {
 
     private byte[] read( String path, String name, long pos, int len) 
             throws Exception {
-        log.debug( "read " + path + "," + name + "," + pos + "," + len);
+        log.trace( "read " + path + "," + name + "," + pos + "," + len);
         File dir = new File( path);
         RandomAccessFile f = null;
         try {
@@ -252,6 +279,22 @@ public class FileServices implements AsyncService {
         File f = new File( dir, name);
         f.renameTo( new File( dir, newName));
     }    
+
+    private String toStr( byte[] buff) {
+        StringBuilder sb = new StringBuilder();
+        for( int i = 0; i < buff.length; ++i) {
+            sb.append( String.format("%02X", buff[ i])); 
+        }
+        return sb.toString();
+    }
+
+    private byte[] toBin( String str) {
+        byte[] b = new byte[ str.length() / 2];
+        for( int i = 0; i < b.length; ++i) {
+            b[ i] = ( byte)Integer.parseInt( str.substring( i * 2, ( i + 1) * 2), 16);
+        }
+        return b;
+    }
             
     /**
     public static void main( String args[]) throws Exception {
