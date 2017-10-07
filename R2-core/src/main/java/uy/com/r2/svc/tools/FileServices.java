@@ -26,13 +26,14 @@ import uy.com.r2.core.api.SvcMessage;
  */
 public class FileServices implements AsyncService {
     private final static Logger log = Logger.getLogger( FileServices.class);
-    private final static String SVC_LIST  = "FileList";
-    private final static String SVC_SUM   = "GetChkSum";
-    private final static String SVC_READ  = "FileRead";
-    private final static String SVC_REN   = "FileRename";
-    private final static String SVC_WRITE = "FileWrite";
+    private final static String SVC_LIST     = "ListFiles";
+    private final static String SVC_LISTDIRS = "ListDirs";
+    private final static String SVC_SUM      = "GetChkSum";
+    private final static String SVC_READ     = "ReadFile";
+    private final static String SVC_REN      = "RenameFile";
+    private final static String SVC_WRITE    = "WriteFile";
     private final static String[] SERVICES = {
-            SVC_LIST, SVC_READ, SVC_REN, SVC_WRITE
+            SVC_LIST, SVC_LISTDIRS, SVC_SUM, SVC_READ, SVC_REN, SVC_WRITE
     };
 
     private int bufferSize = 10240;
@@ -146,7 +147,20 @@ public class FileServices implements AsyncService {
             case SVC_LIST:
                 oPath = req.get( "Path");
                 path = ( oPath == null)? defaultPath: "" + oPath;
-                Map<String,Map<String,Object>> dir = list( path);
+                Map<String,Map<String,Object>> dir = listFiles( path);
+                try {
+                    SvcResponse r = new SvcResponse( 0, req);
+                    for( String f: dir.keySet()) {
+                       r.add( f, dir.get( f));
+                    }    
+                    return r;
+                } catch( Exception xx) {
+                    return new SvcResponse( "Failed " + req.getServiceName(), -1, xx, req);
+                }  
+            case SVC_LISTDIRS:
+                oPath = req.get( "Path");
+                path = ( oPath == null)? defaultPath: "" + oPath;
+                dir = listDirs( path);
                 try {
                     SvcResponse r = new SvcResponse( 0, req);
                     for( String f: dir.keySet()) {
@@ -249,7 +263,7 @@ public class FileServices implements AsyncService {
         }
     }
 
-    private Map<String,Map<String, Object>> list( String path) {
+    private Map<String,Map<String, Object>> listFiles( String path) {
         log.trace( "list " + path + " defaultPath=" + defaultPath);
         TreeMap<String,Map<String, Object>> mm = new TreeMap<>();
         File dir = new File( path);
@@ -266,6 +280,29 @@ public class FileServices implements AsyncService {
                 Map<String,Object> m = new TreeMap<>();
                 m.put( "Length", f.length());
                 m.put( "LastModified", f.lastModified());
+                m.put( "CanRead", f.canRead());
+                m.put( "CanWrite", f.canWrite());
+                mm.put( f.getName(), m);
+            }
+        }
+        return mm;
+    }
+    
+    private Map<String,Map<String, Object>> listDirs( String path) {
+        log.trace( "listDirs " + path + " defaultPath=" + defaultPath);
+        TreeMap<String,Map<String, Object>> mm = new TreeMap<>();
+        File dir = new File( path);
+        if( !dir.isAbsolute()) {
+            dir = new File( defaultPath, path);
+            log.trace( "list relative " + dir);
+        }
+        File[] filesList = dir.listFiles();
+        if( filesList == null) {
+            return mm;
+        }
+        for( File f : filesList) {
+            if( f.isDirectory()) {
+                Map<String,Object> m = new TreeMap<>();
                 m.put( "CanRead", f.canRead());
                 m.put( "CanWrite", f.canWrite());
                 mm.put( f.getName(), m);
