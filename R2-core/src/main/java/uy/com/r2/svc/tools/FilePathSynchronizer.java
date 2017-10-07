@@ -120,15 +120,15 @@ public class FilePathSynchronizer implements CoreModule {
                             SvcResponse lmq = SvcCatalog.getDispatcher().call( lmr);
                             // If cant read dest, or not equal, add to copy
                             Map<String,Object> m = ( Map)rlp.get( fn);
-                            //if( lmq.getResultCode() != 0 || !lmq.get( "ChkSum").equals( rmq.get(  "ChkSum"))) {
+                            if( lmq.getResultCode() != 0 || !lmq.get( "ChkSum").equals( rmq.get(  "ChkSum"))) {
                                 namesAndLen.put( fn, ( long)Double.parseDouble( "" + m.get( "Length")));
-                            //}
+                            }
                         }                   
                         // Copy each one
                         log.trace( "to copy " + namesAndLen);
                         for( String name: namesAndLen.keySet()) {
-                            for( int pos = 0; ; pos += bufferSize) {
-                                // Read Remote reQest/resPponse
+                            for( int pos = 0; ; pos += bufferSize) {  // Block by block
+                                // Read Remote reQest/resPonse
                                 SvcRequest rrq = new SvcRequest( null, ++txNr, 0, "FileRead", null, TIME_OUT);
                                 rrq.put( "Path", path);
                                 rrq.put( "Name", name);
@@ -136,18 +136,26 @@ public class FilePathSynchronizer implements CoreModule {
                                 rrq.put( "Lentgh", bufferSize);
                                 rrq.put( "Length", "" + namesAndLen.get(name));
                                 SvcResponse rdp = SvcCatalog.getDispatcher().callPipeline( RMT, rrq);
+                                if( rdp.getResultCode() != 0) {
+                                    log.warn( "Read failed " + path + " " + name + " " + rdp);
+                                    break;
+                                }
                                 long len = ( "" + rdp.get( "Block")).length() / 2;
                                 if( len == 0) {
                                     break;
                                 }
-                                // Write Local reQest/resPponse
-                                SvcRequest wlq = new SvcRequest( null, ++txNr, 0, "FileWrite", null, TIME_OUT);
-                                wlq.put( "Path", path);
-                                wlq.put( "Name", name + "_OUT");
-                                rrq.put( "Offset", pos);
-                                wlq.put( "Block", rdp.get( "Block"));
-                                SvcResponse rwp = SvcCatalog.getDispatcher().call( wlq);
-                                log.trace( "copied " + name + " pos = " + pos + " rc=" + rwp.getResultCode());
+                                // Local Write reQest/resPonse
+                                SvcRequest lwq = new SvcRequest( null, ++txNr, 0, "FileWrite", null, TIME_OUT);
+                                lwq.put( "Path", path);
+                                lwq.put( "Name", name + "_OUT");
+                                lwq.put( "Offset", pos);
+                                lwq.put( "Block", rdp.get( "Block"));
+                                SvcResponse lwp = SvcCatalog.getDispatcher().call(lwq);
+                                if( lwp.getResultCode() != 0 ) {
+                                    log.warn( "Write failed " + path + " " + name + " " + lwp);
+                                    break;
+                                }
+                                log.trace( "copied " + name + " pos = " + pos + " rc=" + lwp.getResultCode());
                             }
                         }
                         namesAndLen.clear();
