@@ -113,7 +113,7 @@ public class FileServices implements AsyncService {
                 path = ( oPath == null)? defaultPath: "" + oPath;
                 name = "" + req.get( "Name");
                 pos = 0;
-                len = 10240;
+                len = bufferSize;
                 resp = new SvcResponse( 0, req);
                 MessageDigest md = MessageDigest.getInstance("MD5");
                 md.reset();
@@ -124,7 +124,7 @@ public class FileServices implements AsyncService {
                            break;
                        }
                        md.update( buff);
-                       pos += 10240;
+                       pos += bufferSize;
                     };
                     resp.put( "ChkSum", new String( Hex.encodeHex( md.digest())));
                 } catch( Exception xx) {
