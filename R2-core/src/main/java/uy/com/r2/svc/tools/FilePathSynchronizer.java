@@ -112,17 +112,18 @@ public class FilePathSynchronizer implements CoreModule {
         private void syncPathRecursive( String path) {
             log.trace( "re-stary sync now ++++++++++ ");
             syncPath( path);
+            SvcResponse rlp = null;
             try {
                 // Remote List directory reQuest/resPonse
                 SvcRequest rlq = new SvcRequest( null, ++txNr, 0, "ListDirs", null, TIME_OUT);
                 rlq.add( "Path", path);
-                SvcResponse rlp = SvcCatalog.getDispatcher().callPipeline( RMT, rlq);
+                rlp = SvcCatalog.getDispatcher().callPipeline( RMT, rlq);
                 for( String d: rlp.getPayload().keySet()) {
                     syncPath( ( (Map<String,String>)rlp.get( d)).get( "Path") );
                 }
             } catch( Exception ex) {
                 ++errorCount;
-                log.warn( "Failed to synchronize path", ex);
+                log.warn( "Failed to synchronize path " + rlp, ex);
             }
             log.trace( "end by now --------------");
         }
