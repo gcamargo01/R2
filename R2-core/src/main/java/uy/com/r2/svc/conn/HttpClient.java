@@ -150,7 +150,7 @@ public class HttpClient implements AsyncService {
                 if( !strUrl.endsWith( "?" )) {
                     strUrl += "&";
                 }
-                strUrl += k + "=" + params.get( k);
+                strUrl += k + "=" + escaped( params.get( k));
             }
             log.debug( "***** strUrl2=" + strUrl); 
             URL url = new URL( strUrl);
@@ -193,7 +193,28 @@ public class HttpClient implements AsyncService {
     public SvcResponse onResponse( SvcResponse resp, Configuration cfg) throws Exception {
         throw new UnsupportedOperationException( "Not used."); 
     }
+
+    private String escaped( Object obj) {
+        StringBuilder s = new StringBuilder();
+        for( char ch : ( "" + obj).toCharArray()) {
+            if( isUnsafe( ch)) {
+                log.trace( "esc. ch= " + ch);
+                s.append( '%');
+                s.append( String.format( "%02X", ( int)ch));
+            } else {
+                s.append(ch);
+            }
+        }
+        return s.toString();
+    }        
     
+    private static boolean isUnsafe( char ch) {
+        if( ch > 128 || ch < 0) {
+            return true;
+        }
+        return " %$&+,/:;=?@<>#%{}[]\"".indexOf( ch) >= 0;
+    }
+        
 }
 
 
