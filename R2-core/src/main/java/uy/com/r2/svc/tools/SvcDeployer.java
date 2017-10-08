@@ -368,7 +368,7 @@ public class SvcDeployer implements AsyncService {
         DEFAULT_PIPE.put( "7.class", HttpClient.class.getName());
         DEFAULT_PIPE.put( "Module.8", FilePathSynchronizer.class.getSimpleName());
         DEFAULT_PIPE.put( "8.class", FilePathSynchronizer.class.getName());
-        DEFAULT_PIPE.put( "8.Path.lib", "./src/main/resources/lib");
+        DEFAULT_PIPE.put( "8.Path.lib", "lib");
         DEFAULT_PIPE.put( "8.RemoteServer", "_Undefined_");
         DEFAULT_PIPE.put( "Module.9", FileServices.class.getSimpleName());
         DEFAULT_PIPE.put( "9.class", FileServices.class.getName());
