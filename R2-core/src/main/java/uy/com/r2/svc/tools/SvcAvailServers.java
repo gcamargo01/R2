@@ -308,7 +308,7 @@ public class SvcAvailServers implements AsyncService, CoreModule, Runnable {
                 if( name != null) {
                     masterTimeStamp = System.currentTimeMillis();
                     masterName = name;
-                    knownServers.put( name, url);
+                    //knownServers.put( name, url);  // is the orig. url, not master url
                     updateDestinations();
                 }
                 break;
@@ -452,7 +452,7 @@ public class SvcAvailServers implements AsyncService, CoreModule, Runnable {
                 rq.put( "Name", name);
                 rq.put( "Url", localUrl);
                 rq.put( "Servers", knownServers);
-                SvcResponse rn = SvcCatalog.getDispatcher().callPipeline(sn, rq);
+                SvcResponse rn = SvcCatalog.getDispatcher().callPipeline( sn, rq);
                 // Check KEEP_ALIVE response
                 if( command.equals( SVC_KEEPALIVE)) {
                     if( rn.getResultCode() == 0) {
