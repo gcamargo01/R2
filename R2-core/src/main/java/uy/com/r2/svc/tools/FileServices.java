@@ -305,6 +305,7 @@ public class FileServices implements AsyncService {
                 Map<String,Object> m = new TreeMap<>();
                 m.put( "CanRead", f.canRead());
                 m.put( "CanWrite", f.canWrite());
+                m.put( "Path", f.getAbsolutePath());
                 mm.put( f.getName(), m);
             }
         }

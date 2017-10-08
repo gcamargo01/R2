@@ -92,79 +92,7 @@ public class FilePathSynchronizer implements CoreModule {
         public void run() {
             while( !stop) {
                 for( String k: pathMap.keySet()) {
-                    try {
-                        path = pathMap.get( k);
-                        // Remote List directory reQuest/resPonse
-                        SvcRequest rlq = new SvcRequest( null, ++txNr, 0, "FileList", null, TIME_OUT);
-                        rlq.add( "Path", path);
-                        SvcResponse rlp = SvcCatalog.getDispatcher().callPipeline( RMT, rlq);
-                        // List Local directory reQuest/resPonse
-                        SvcRequest llq = new SvcRequest( null, ++txNr, 0, "FileList", null, TIME_OUT);
-                        llq.add( "Path", path);
-                        SvcResponse llp = SvcCatalog.getDispatcher().call( llq);
-                        // Compare 
-                        log.trace( "to compare l " + llq + " r " + rlq);
-                        for( String fn: rlp.getPayload().keySet()) {
-                            // Get Remote MD5
-                            SvcRequest rmr = new SvcRequest( null, ++txNr, 0, "GetChkSum", null, TIME_OUT);
-                            rmr.add( "Path", path);
-                            rmr.put( "Name", fn);
-                            SvcResponse rmq = SvcCatalog.getDispatcher().call( rmr);
-                            if( rmq.getResultCode() != 0) {
-                                break;  // cant read file
-                            }
-                            // Get Local MD5
-                            SvcRequest lmr = new SvcRequest( null, ++txNr, 0, "GetChkSum", null, TIME_OUT);
-                            lmr.add( "Path", path);
-                            lmr.put( "Name", fn);
-                            SvcResponse lmq = SvcCatalog.getDispatcher().call( lmr);
-                            // If cant read dest, or not equal, add to copy
-                            Map<String,Object> m = ( Map)rlp.get( fn);
-                            if( lmq.getResultCode() != 0 || !lmq.get( "ChkSum").equals( rmq.get(  "ChkSum"))) {
-                                namesAndLen.put( fn, ( long)Double.parseDouble( "" + m.get( "Length")));
-                            }
-                        }                   
-                        // Copy each one
-                        log.trace( "to copy " + namesAndLen);
-                        for( String name: namesAndLen.keySet()) {
-                            for( int pos = 0; ; pos += bufferSize) {  // Block by block
-                                // Read Remote reQest/resPonse
-                                SvcRequest rrq = new SvcRequest( null, ++txNr, 0, "FileRead", null, TIME_OUT);
-                                rrq.put( "Path", path);
-                                rrq.put( "Name", name);
-                                rrq.put( "Offset", pos);
-                                rrq.put( "Lentgh", bufferSize);
-                                rrq.put( "Length", "" + namesAndLen.get(name));
-                                SvcResponse rdp = SvcCatalog.getDispatcher().callPipeline( RMT, rrq);
-                                if( rdp.getResultCode() != 0) {
-                                    log.warn( "Read failed " + path + " " + name + " " + rdp);
-                                    break;
-                                }
-                                long len = ( "" + rdp.get( "Block")).length() / 2;
-                                if( len == 0) {
-                                    break;
-                                }
-                                // Local Write reQest/resPonse
-                                SvcRequest lwq = new SvcRequest( null, ++txNr, 0, "FileWrite", null, TIME_OUT);
-                                lwq.put( "Path", path);
-                                lwq.put( "Name", name + "_OUT");
-                                lwq.put( "Offset", pos);
-                                lwq.put( "Block", rdp.get( "Block"));
-                                SvcResponse lwp = SvcCatalog.getDispatcher().call(lwq);
-                                if( lwp.getResultCode() != 0 ) {
-                                    log.warn( "Write failed " + path + " " + name + " " + lwp);
-                                    break;
-                                }
-                                log.trace( "copied " + name + " pos = " + pos + " rc=" + lwp.getResultCode());
-                            }
-                        }
-                        namesAndLen.clear();
-                        path = null;
-                        log.trace( "end by now");
-                    } catch( Exception ex) {
-                        ++errorCount;
-                        log.warn( "Failed to synchronize", ex);
-                    }
+                    syncPathRecursive( pathMap.get( k));
                 }    
                 try {
                     sleep( interval);
@@ -181,6 +109,99 @@ public class FilePathSynchronizer implements CoreModule {
             return m;
         }
         
+        private void syncPathRecursive( String path) {
+            log.trace( "re-stary sync now ++++++++++ ");
+            syncPath( path);
+            try {
+                // Remote List directory reQuest/resPonse
+                SvcRequest rlq = new SvcRequest( null, ++txNr, 0, "ListDirs", null, TIME_OUT);
+                rlq.add( "Path", path);
+                SvcResponse rlp = SvcCatalog.getDispatcher().callPipeline( RMT, rlq);
+                for( String d: rlp.getPayload().keySet()) {
+                    syncPath( ( (Map<String,String>)rlp.get( d)).get( "Path") );
+                }
+            } catch( Exception ex) {
+                ++errorCount;
+                log.warn( "Failed to synchronize path", ex);
+            }
+            log.trace( "end by now --------------");
+        }
+        
+        private void syncPath( String path) {
+            try {
+                // Remote List directory reQuest/resPonse
+                SvcRequest rlq = new SvcRequest( null, ++txNr, 0, "ListFiles", null, TIME_OUT);
+                rlq.add( "Path", path);
+                SvcResponse rlp = SvcCatalog.getDispatcher().callPipeline( RMT, rlq);
+                // List Local directory reQuest/resPonse
+                SvcRequest llq = new SvcRequest( null, ++txNr, 0, "ListFiles", null, TIME_OUT);
+                llq.add( "Path", path);
+                SvcResponse llp = SvcCatalog.getDispatcher().call( llq);
+                // Compare 
+                log.trace( "to compare l " + llq + " r " + rlq);
+                for( String fn: rlp.getPayload().keySet()) {
+                    // Get Remote MD5
+                    SvcRequest rmr = new SvcRequest( null, ++txNr, 0, "GetChkSum", null, TIME_OUT);
+                    rmr.add( "Path", path);
+                    rmr.put( "Name", fn);
+                    SvcResponse rmq = SvcCatalog.getDispatcher().call( rmr);
+                    if( rmq.getResultCode() != 0) {
+                        break;  // cant read file
+                    }
+                    // Get Local MD5
+                    SvcRequest lmr = new SvcRequest( null, ++txNr, 0, "GetChkSum", null, TIME_OUT);
+                    lmr.add( "Path", path);
+                    lmr.put( "Name", fn);
+                    SvcResponse lmq = SvcCatalog.getDispatcher().call( lmr);
+                    // If cant read dest, or not equal, add to copy
+                    Map<String,Object> m = ( Map)rlp.get( fn);
+                    if( lmq.getResultCode() != 0 || !lmq.get( "ChkSum").equals( rmq.get(  "ChkSum"))) {
+                        namesAndLen.put( fn, ( long)Double.parseDouble( "" + m.get( "Length")));
+                    }
+                }                   
+                // Copy each one
+                log.trace( "to copy " + namesAndLen);
+                for( String name: namesAndLen.keySet()) {
+                    for( int pos = 0; ; pos += bufferSize) {  // Block by block
+                        // Read Remote reQest/resPonse
+                        SvcRequest rrq = new SvcRequest( null, ++txNr, 0, "ReadFile", null, TIME_OUT);
+                        rrq.put( "Path", path);
+                        rrq.put( "Name", name);
+                        rrq.put( "Offset", pos);
+                        rrq.put( "Lentgh", bufferSize);
+                        rrq.put( "Length", "" + namesAndLen.get(name));
+                        SvcResponse rdp = SvcCatalog.getDispatcher().callPipeline( RMT, rrq);
+                        if( rdp.getResultCode() != 0) {
+                            log.warn( "Read failed " + path + " " + name + " " + rdp);
+                            break;
+                        }
+                        long len = ( "" + rdp.get( "Block")).length() / 2;
+                        if( len == 0) {
+                            break;
+                        }
+                        // Local Write reQest/resPonse
+                        SvcRequest lwq = new SvcRequest( null, ++txNr, 0, "WriteFile", null, TIME_OUT);
+                        lwq.put( "Path", path);
+                        lwq.put( "Name", name + "_OUT");
+                        lwq.put( "Offset", pos);
+                        lwq.put( "Block", rdp.get( "Block"));
+                        SvcResponse lwp = SvcCatalog.getDispatcher().call(lwq);
+                        if( lwp.getResultCode() != 0 ) {
+                            log.warn( "Write failed " + path + " " + name + " " + lwp);
+                            break;
+                        }
+                        log.trace( "copied " + name + " pos = " + pos + " rc=" + lwp.getResultCode());
+                    }
+                }
+                namesAndLen.clear();
+                path = null;
+            } catch( Exception ex) {
+                ++errorCount;
+                log.warn( "Failed to synchronize", ex);
+            }
+        }
+
+
     }
 
 }
