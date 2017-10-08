@@ -6,7 +6,6 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.TreeMap;
 import java.net.URL;
-import java.util.Set;
 import java.util.TreeSet;
 import org.apache.log4j.Logger;
 import uy.com.r2.core.CoreModule;
@@ -48,7 +47,7 @@ import uy.com.r2.svc.conn.HttpClient;
  * - All service requests must be signed with de DomainKey (R2 request) or AdminKey (human user) <br>
  * - The administrator user must log-in and its session is keep and tracked by the servers <br>
  * <p>
- * WORK IN PROGRESS: BREAKING DOWN IN SvcAvailServers AND SvcCfgRelay !!!!
+ * @deprecated Replaced by SvcAvailServers and SvcCfgRelay
  * @author G.Camargo
  */
 public class SvcManager implements AsyncService, CoreModule {
@@ -87,7 +86,7 @@ public class SvcManager implements AsyncService, CoreModule {
     private Map<String,String> knownServers = new TreeMap();
     private int keepAliveTimeout = 10000;
     private int keepAliveDelay = 5000;
-    private String outPipeline = "FromJson,HttpClient_";
+    private String outPipeline = "ClntJson,HttpClient_";
     
     public SvcManager() {
         LOG.trace( "new");
