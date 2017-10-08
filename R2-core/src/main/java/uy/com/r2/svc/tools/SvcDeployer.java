@@ -341,14 +341,14 @@ public class SvcDeployer implements AsyncService {
         // Default add 1.RemotelUrl
         DEFAULT_PIPE.put( "Module.2", SvcCatalog.DISPATCHER_NAME);
         DEFAULT_PIPE.put( "2.class", SimpleDispatcher.class.getName());
-        DEFAULT_PIPE.put( "2.DefaultServicePipeline", "ToHtml,ToJson,JdbcService,SvcDeployer,SvcAvailServers");
-        DEFAULT_PIPE.put( "2.Pipeline._Undefined_", "FromJson,HttpClient");
-        DEFAULT_PIPE.put( "Module.3", ToHtml.class.getSimpleName());
+        DEFAULT_PIPE.put( "2.DefaultServicePipeline", "SrvHtml,SrvJson,JdbcService,FileServices,SvcDeployer,SvcAvailServers");
+        DEFAULT_PIPE.put( "2.Pipeline._Undefined_", "ClntJson,HttpClient");
+        DEFAULT_PIPE.put( "Module.3", "SrvHtml");
         DEFAULT_PIPE.put( "3.class", ToHtml.class.getName());
-        DEFAULT_PIPE.put( "Module.4", "ToJson");
+        DEFAULT_PIPE.put( "Module.4", "SrvJson");
         DEFAULT_PIPE.put( "4.class", Json.class.getName());
         DEFAULT_PIPE.put( "4.ToSerial", "false");
-        DEFAULT_PIPE.put( "4.ProcessRequest", "false");
+        DEFAULT_PIPE.put( "4.ProcessRequest", "true");
         DEFAULT_PIPE.put( "4.ProcessResponse", "true");
         DEFAULT_PIPE.put( "Module.5", JdbcService.class.getSimpleName());
         DEFAULT_PIPE.put( "5.class", JdbcService.class.getName());
@@ -359,13 +359,19 @@ public class SvcDeployer implements AsyncService {
         DEFAULT_PIPE.put( "5.Service.ListClients.SQL", "SELECT * FROM clients");
         DEFAULT_PIPE.put( "5.Service.AddClient.SQL", "INSERT INTO clients(id,name) VALUES (?,?)");
         DEFAULT_PIPE.put( "5.Service.AddClient.Params", "Id,Name");
-        DEFAULT_PIPE.put( "Module.6", "FromJson");
+        DEFAULT_PIPE.put( "Module.6", "ClntJson");
         DEFAULT_PIPE.put( "6.class", Json.class.getName());
         DEFAULT_PIPE.put( "6.ToSerial", "true");
-        DEFAULT_PIPE.put( "6.ProcessRequest", "false");
+        DEFAULT_PIPE.put( "6.ProcessRequest", "true");
         DEFAULT_PIPE.put( "6.ProcessResponse", "true");
         DEFAULT_PIPE.put( "Module.7", HttpClient.class.getSimpleName());
         DEFAULT_PIPE.put( "7.class", HttpClient.class.getName());
+        DEFAULT_PIPE.put( "Module.8", FilePathSynchronizer.class.getSimpleName());
+        DEFAULT_PIPE.put( "8.class", FilePathSynchronizer.class.getName());
+        DEFAULT_PIPE.put( "8.Path.lib", "./src/main/resources/lib");
+        DEFAULT_PIPE.put( "8.RemoteServer", "_Undefined_");
+        DEFAULT_PIPE.put( "Module.9", FileServices.class.getSimpleName());
+        DEFAULT_PIPE.put( "9.class", FileServices.class.getName());
         // Default add 7.lUrl
     }
 
