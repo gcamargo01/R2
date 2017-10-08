@@ -86,7 +86,10 @@ public class Json implements AsyncService {
             // Take one field Data an serialize it
             Map<String, List<Object>> r;
             r = fromJSON( "" + req.get( SERIALIZED));
-            req = req.clone( r);
+            // Add parsed params is better
+            for( String k: r.keySet()) {
+                req.getPayload().put( k, r.get( k));  // Already is a list
+            }
         }
         return req;
     }
