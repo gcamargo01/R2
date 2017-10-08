@@ -72,7 +72,7 @@ public class SvcAvailServers implements AsyncService, CoreModule, Runnable {
     private Map<String,String> knownServers = new TreeMap();
     private int keepAliveTimeout = 10000;
     private int keepAliveDelay = 5000;
-    private String outPipeline = "FromJson,HttpClient_";
+    private String outPipeline = "ClntJson,HttpClient_";
     
     public SvcAvailServers() {
         LOG.trace( "new");
@@ -328,15 +328,14 @@ public class SvcAvailServers implements AsyncService, CoreModule, Runnable {
                     }
                 } 
                 masterName = name;   // Update the Master name
-                // Update the knownServers from master
-                for( String s: map.keySet()) {
-                    if( !knownServers.containsKey( s)) {
-                        knownServers.put( "" + s, "" + map.get( s));
-                    }
-                }
                 // The master may KEEP_ALIIVE w/o know the localname & localurl, tell him
                 SvcMessage.addToMap( mmap, "Name", localName);
                 SvcMessage.addToMap( mmap, "Url", "" + localUrl);
+                if( !map.containsKey( localName)) {
+                    map.put( localName, "" + localUrl);
+                }
+                // Update the knownServers from master
+                knownServers = map;
                 break;
             case SVC_SHUTDOWN:
                 notifyShutdown();
