@@ -18,6 +18,7 @@ import uy.com.r2.core.api.ConfigItemDescriptor;
 import uy.com.r2.core.api.Configuration;
 import uy.com.r2.core.api.Dispatcher;
 import uy.com.r2.core.api.SvcMessage;
+import uy.com.r2.core.SvcDeployer;
 
 /** System configuration rely module. 
  * This core service module manage the configuration replication all over the servers.
