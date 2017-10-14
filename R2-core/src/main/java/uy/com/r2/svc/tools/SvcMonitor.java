@@ -20,6 +20,7 @@ import uy.com.r2.core.api.SimpleService;
 
 /** Internal service to monitor any other service.
  * It keeps track of service usage and store statistics information.
+ * !!!! It should not modify module behavior, eg: in Exceptions, just trace
  * @author G.Camargo
  */
 public class SvcMonitor implements AsyncService, SimpleService {
