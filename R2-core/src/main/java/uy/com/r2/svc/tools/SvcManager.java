@@ -47,7 +47,7 @@ import uy.com.r2.svc.conn.HttpClient;
  * - All service requests must be signed with de DomainKey (R2 request) or AdminKey (human user) <br>
  * - The administrator user must log-in and its session is keep and tracked by the servers <br>
  * <p>
- * @deprecated Replaced by SvcAvailServers and SvcCfgRelay
+ * @deprecated Replaced by SvcAvailServers and SvcCfgRelay !!!!
  * @author G.Camargo
  */
 public class SvcManager implements AsyncService, CoreModule {
