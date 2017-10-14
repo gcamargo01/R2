@@ -14,7 +14,7 @@ import uy.com.r2.core.api.Configuration;
 import uy.com.r2.core.api.SimpleService;
 
 
-/** Empty synchronous service, prototype to create one.
+/** Empty synchronous service module. Template to create one.
  * @author G.Camargo
  */
 public class NullService implements SimpleService {
@@ -56,7 +56,7 @@ public class NullService implements SimpleService {
      */
     @Override
     public Map<String, Object> getStatusVars() {
-        Map<String,Object> map = new HashMap<String,Object>();
+        Map<String,Object> map = new HashMap();
         Package pak = getClass().getPackage();
         if( pak != null) {
             map.put( "Version", "" + pak.getImplementationVersion());

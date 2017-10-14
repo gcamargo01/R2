@@ -13,7 +13,7 @@ import uy.com.r2.core.api.ConfigItemDescriptor;
 import uy.com.r2.core.api.Configuration;
 import uy.com.r2.core.api.SvcMessage;
 
-/** Empty asynchronous service, prototype to create one.
+/** Empty asynchronous service module. Template to create one.
  * A service that doesn't do any thing.
  * @author G.Camargo
  */
@@ -26,10 +26,12 @@ public class NullAsyncService implements AsyncService {
     @Override
     public List<ConfigItemDescriptor> getConfigDescriptors() {
         LinkedList<ConfigItemDescriptor> l = new LinkedList();
+        /*
         l.add( new ConfigItemDescriptor( "TimeRq", ConfigItemDescriptor.INTEGER, 
                 "Request time delay in mS", "0"));
         l.add( new ConfigItemDescriptor( "TimeRp", ConfigItemDescriptor.INTEGER, 
                 "Response time delay in mS", "0"));
+        */
         return l;
     }
     
@@ -97,7 +99,7 @@ public class NullAsyncService implements AsyncService {
      */
     @Override
     public Map<String, Object> getStatusVars() {
-        Map<String,Object> map = new HashMap<String,Object>();
+        Map<String,Object> map = new HashMap();
         Package pak = getClass().getPackage();
         if( pak != null) {
             map.put( "Version", "" + pak.getImplementationVersion());
