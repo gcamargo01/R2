@@ -109,13 +109,14 @@ public class SvcCatalog implements CoreModule {
         installModule( moduleName, moduleImpl, cfg);
     } 
           
-    /** Instance a module with a given module implementations and configure it.
+    /** Instance a internal module with a given implementations and configure it.
+     * Ii is not public. 
      * @param moduleName Module name may be different to class name
      * @param moduleImpl Module implementation
      * @param cfg Configuration
      * @throws Exception Unexpected error, can't install
      */
-    public void installModule( String moduleName, Module moduleImpl, Configuration cfg) 
+    void installModule( String moduleName, Module moduleImpl, Configuration cfg) 
             throws Exception {
         if( cfg == null) {
             cfg = new Configuration();
