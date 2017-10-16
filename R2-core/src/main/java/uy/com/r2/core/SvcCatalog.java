@@ -60,13 +60,16 @@ public class SvcCatalog implements CoreModule {
      */
     public static Dispatcher getDispatcher() {
         if( dispatcher == null) {
-            dispatcher = ( Dispatcher)getCatalog().getModuleInfo( DISPATCHER_NAME).getImplementation();
+            ModuleInfo dmi = getCatalog().getModuleInfo( DISPATCHER_NAME);
+            if( dmi != null) {
+                dispatcher = ( Dispatcher)dmi.getImplementation();
+            }    
             if( dispatcher != null) {
-                return dispatcher;  // Just loaded
+                return dispatcher;  // Already loaded
             }
             try {
-                dispatcher = new SimpleDispatcher();
                 LOG.info( "Auto-install dispatcher");
+                dispatcher = new SimpleDispatcher();
                 catalog.installModule( DISPATCHER_NAME, dispatcher, null);
             } catch( Exception x) {
                 LOG.error( "Failed to auto-install dispatcher", x);
