@@ -64,15 +64,16 @@ public class SvcCatalog implements CoreModule {
             if( dmi != null) {
                 dispatcher = ( Dispatcher)dmi.getImplementation();
             }    
-            if( dispatcher != null) {
-                return dispatcher;  // Already loaded
-            }
-            try {
-                LOG.info( "Auto-install dispatcher");
-                dispatcher = new SimpleDispatcher();
-                catalog.installModule( DISPATCHER_NAME, dispatcher, null);
-            } catch( Exception x) {
-                LOG.error( "Failed to auto-install dispatcher", x);
+            synchronized( LOCK) {
+                if( dispatcher == null) {
+                    try {
+                        LOG.info( "Auto-install dispatcher");
+                        dispatcher = new SimpleDispatcher();
+                        catalog.installModule( DISPATCHER_NAME, dispatcher, null);
+                    } catch( Exception x) {
+                        LOG.error( "Failed to auto-install dispatcher", x);
+                    }
+                }
             }
         }
         return dispatcher;
@@ -255,7 +256,6 @@ public class SvcCatalog implements CoreModule {
                 uninstallModule( n);
             } catch( Exception ex) { }
         }
-        dispatcher.shutdown();
     }    
 
 }
