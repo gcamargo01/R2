@@ -67,10 +67,6 @@ public class SvcDeployer implements AsyncService {
      */
     SvcDeployer() throws Exception {
         LOG.info( "Deployer started");
-        if( catalog.getModuleInfo( DEPLOYER_NAME) == null) {
-            // Register itself in the system catalog
-            catalog.installModule( DEPLOYER_NAME, this, null);
-        }
     }
     
     /** Get the configuration descriptors of this module.
