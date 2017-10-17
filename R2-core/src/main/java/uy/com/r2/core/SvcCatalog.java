@@ -26,7 +26,7 @@ public class SvcCatalog implements CoreModule {
     public static final String CATALOG_NAME = SvcCatalog.class.getSimpleName();
     public static final String DISPATCHER_NAME = "SvcDispatcher";
     
-    private static final Logger LOG = Logger.getLogger(SvcCatalog.class);
+    private static final Logger LOG = Logger.getLogger( SvcCatalog.class);
     private static final Object LOCK = new Object();
     private static SvcCatalog catalog = null;
     private static Dispatcher dispatcher = null;
@@ -256,6 +256,8 @@ public class SvcCatalog implements CoreModule {
                 uninstallModule( n);
             } catch( Exception ex) { }
         }
+        modules.clear();
+        LOG.debug( "Catalog shutdown ended");
     }    
 
 }
