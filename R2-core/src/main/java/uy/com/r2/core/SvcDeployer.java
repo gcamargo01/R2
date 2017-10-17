@@ -1,17 +1,10 @@
 /* SvcDeployer.java */
 package uy.com.r2.core;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.net.InetAddress;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.TreeMap;
-import java.util.TreeSet;
 import org.apache.log4j.Logger;
 import uy.com.r2.core.api.SvcRequest;
 import uy.com.r2.core.api.SvcResponse;
@@ -20,14 +13,6 @@ import uy.com.r2.core.api.ConfigItemDescriptor;
 import uy.com.r2.core.api.Configuration;
 import uy.com.r2.core.api.Dispatcher;
 import uy.com.r2.core.api.SvcMessage;
-import uy.com.r2.svc.conn.HttpClient;
-import uy.com.r2.svc.conn.JdbcService;
-import uy.com.r2.svc.tools.FilePathSynchronizer;
-import uy.com.r2.svc.tools.FileServices;
-import uy.com.r2.svc.tools.Json;
-import uy.com.r2.svc.tools.MiniHttpServer;
-import uy.com.r2.svc.tools.SvcAvailServers;
-import uy.com.r2.svc.tools.ToHtml;
 
 /** Command interpreter service that deploy and un-deploy modules.
  * This is a in-memory Deployer, that allows system remote control,
@@ -52,8 +37,8 @@ public class SvcDeployer implements AsyncService {
     static final String DEPLOYER_NAME = SvcDeployer.class.getSimpleName();
     private static final String[] SERVICES = {
             SVC_DEPLOYMODULE,    SVC_GETMODULECONFIG, SVC_GETMODULELIST,   
-            SVC_GETMODULESTATUS, SVC_SETMODULECONFIG, SVC_PERSISTCONFIG,   
-            SVC_RESTARTMODULE,   SVC_UNDEPLOYMODULE
+            SVC_GETMODULESTATUS, SVC_SETMODULECONFIG, SVC_RESTARTMODULE,   
+            SVC_UNDEPLOYMODULE
     };
     private static final List<String> COMMANDS = Arrays.asList( SERVICES);
     private static final Logger LOG = Logger.getLogger( SvcDeployer.class);
@@ -210,9 +195,6 @@ public class SvcDeployer implements AsyncService {
                     SvcMessage.addToMap( mmap, k, mo.get( k));
                 }
                 break;
-            case SVC_PERSISTCONFIG:
-                persistConfig();
-                break;
             case SVC_RESTARTMODULE:
                 catalog.getModuleInfo( mn).setConfiguration( cfg);
                 break;
@@ -232,148 +214,6 @@ public class SvcDeployer implements AsyncService {
     /** Stop and release all the allocated resources. */
     @Override
     public void shutdown() {
-    }
-
-    /** Entry point as a main Deployer.
-     * @param args Standard arguments: Local_Port Remote_Url
-     */
-    public static void main( String args[]) {
-        try {
-            SvcDeployer m = new SvcDeployer();
-            String rmtUrl = "http://localhost:8016";
-            int localPort = 8015;
-            switch( args.length) {
-            case 2:
-               rmtUrl = args[ 1];
-            case 1:
-               localPort = Integer.parseInt( args[ 0]);
-            }
-            LOG.trace( "start " + localPort + " " + rmtUrl);
-            // Read previous configuration o basic config
-            Properties pr = readConfig( localPort, rmtUrl);
-            // Deploy initial pipe
-            for( int i = 0; pr.getProperty( "Module." + i) != null; ++i) {
-                String mod = pr.getProperty( "Module." + i);
-                String ki = "" + i + ".";
-                Configuration c = new Configuration();
-                for( String k: pr.stringPropertyNames()) {
-                    if( k.startsWith( ki)) {
-                        c.put( k.substring( ki.length()), pr.get( k));
-                    }    
-                }
-                //m.command( SVC_DEPLOYMODULE, mod, c);
-                SvcCatalog.getCatalog().installModule( mod, c);
-            }
-            // Wait till stop
-            while( !(Boolean)SvcCatalog.getDispatcher().getStatusVars().get( "Stopped")) {
-                Thread.sleep( 1000);
-            }
-            LOG.info( "Stopped");
-        } catch ( Exception ex ) {
-            System.err.println( "Error " + ex);
-            ex.printStackTrace( System.err);
-        }
-    }
-
-    private void persistConfig() throws Exception {
-        Properties pr = new Properties();
-        int n = 0;
-        TreeSet<String> ts = new TreeSet( catalog.getModuleNames());
-        ts.remove( DEPLOYER_NAME);  // Auto-started itself
-        for( String m: ts) {
-            pr.put( "Module." + n, m);
-            Configuration c = catalog.getModuleInfo( m).getConfiguration();
-            for( String k: c.getStringMap( "*").keySet()) {
-                pr.put( "" + n + "." + k, c.getStringMap( "*").get(  k));                        
-            }
-            ++n;
-        }
-        String r2Path = System.getProperty( "R2_PATH", "");
-        if( r2Path.length() > 0 && !r2Path.endsWith( File.separator)) {
-            r2Path += File.separator;
-        }
-        FileOutputStream fos = new FileOutputStream( r2Path + "R2.properties");
-        pr.store( fos, null);
-        fos.close();
-    }
-    
-    private static Properties readConfig( int localPort, String rmtUrl) throws Exception {
-        String r2Path = System.getProperty( "R2_PATH", "");
-        if( r2Path.length() > 0 && !r2Path.endsWith( File.separator)) {
-            r2Path += File.separator;
-        }
-        Properties pr = new Properties();
-        try {
-            FileInputStream fi = new FileInputStream( r2Path + "R2.properties");
-            pr.load( fi);
-            fi.close();
-        } catch( Exception x) {
-            LOG.info( "Can't load R2.properties: " + x);
-        }    
-        if( pr.isEmpty()) {
-            // calculate default server name
-            String hostName = InetAddress.getLocalHost().getHostName();
-            String localUrl = "http://" + hostName + ":" + localPort;
-            String localName = hostName + localPort;
-            // Set default cliendNode
-            new SvcRequest( localName, 0, 0, null, null, 0).getClientNode();
-            // configure
-            pr.putAll( DEFAULT_PIPE);
-            pr.put( "0.Port", "" + localPort);
-            pr.put( "1.LocalUrl", localUrl);
-            if( rmtUrl != null && !rmtUrl.isEmpty()) {
-                pr.put( "1.RemoteUrl", rmtUrl);
-                pr.put( "7.Url", rmtUrl);
-            }
-        }
-        LOG.trace( "Init Pipe =" + pr);
-        return pr;
-    }
-
-    static final Map<String,String> DEFAULT_PIPE = new HashMap();
-    static {
-        DEFAULT_PIPE.put( "Module.0", MiniHttpServer.class.getSimpleName());
-        DEFAULT_PIPE.put( "0.class", MiniHttpServer.class.getName());
-        DEFAULT_PIPE.put( "0.Port", "8015");
-        DEFAULT_PIPE.put( "Module.1", SvcAvailServers.class.getSimpleName());
-        DEFAULT_PIPE.put( "1.class", SvcAvailServers.class.getName());
-        // Default add 1.LocalName
-        // Default add 1.LocalUrl
-        // Default add 1.RemotelUrl
-        DEFAULT_PIPE.put( "Module.2", SvcCatalog.DISPATCHER_NAME);
-        DEFAULT_PIPE.put( "2.class", SimpleDispatcher.class.getName());
-        DEFAULT_PIPE.put( "2.DefaultServicePipeline", "SrvHtml,SrvJson,JdbcService,FileServices,SvcDeployer,SvcAvailServers");
-        DEFAULT_PIPE.put( "2.Pipeline._Undefined_", "ClntJson,HttpClient");
-        DEFAULT_PIPE.put( "Module.3", "SrvHtml");
-        DEFAULT_PIPE.put( "3.class", ToHtml.class.getName());
-        DEFAULT_PIPE.put( "Module.4", "SrvJson");
-        DEFAULT_PIPE.put( "4.class", Json.class.getName());
-        DEFAULT_PIPE.put( "4.ToSerial", "false");
-        DEFAULT_PIPE.put( "4.ProcessRequest", "true");
-        DEFAULT_PIPE.put( "4.ProcessResponse", "true");
-        DEFAULT_PIPE.put( "Module.5", JdbcService.class.getSimpleName());
-        DEFAULT_PIPE.put( "5.class", JdbcService.class.getName());
-        DEFAULT_PIPE.put( "5.Driver", "org.apache.derby.jdbc.ClientDriver");
-        DEFAULT_PIPE.put( "5.URL", "jdbc:derby://localhost:1527/Test");
-        DEFAULT_PIPE.put( "5.User", "root");
-        DEFAULT_PIPE.put( "5.Password", "XXXX");
-        DEFAULT_PIPE.put( "5.Service.ListClients.SQL", "SELECT * FROM clients");
-        DEFAULT_PIPE.put( "5.Service.AddClient.SQL", "INSERT INTO clients(id,name) VALUES (?,?)");
-        DEFAULT_PIPE.put( "5.Service.AddClient.Params", "Id,Name");
-        DEFAULT_PIPE.put( "Module.6", "ClntJson");
-        DEFAULT_PIPE.put( "6.class", Json.class.getName());
-        DEFAULT_PIPE.put( "6.ToSerial", "true");
-        DEFAULT_PIPE.put( "6.ProcessRequest", "true");
-        DEFAULT_PIPE.put( "6.ProcessResponse", "true");
-        DEFAULT_PIPE.put( "Module.7", HttpClient.class.getSimpleName());
-        DEFAULT_PIPE.put( "7.class", HttpClient.class.getName());
-        DEFAULT_PIPE.put( "Module.8", FilePathSynchronizer.class.getSimpleName());
-        DEFAULT_PIPE.put( "8.class", FilePathSynchronizer.class.getName());
-        DEFAULT_PIPE.put( "8.Path.lib", "lib");
-        DEFAULT_PIPE.put( "8.RemoteServer", "_Undefined_");
-        DEFAULT_PIPE.put( "Module.9", FileServices.class.getSimpleName());
-        DEFAULT_PIPE.put( "9.class", FileServices.class.getName());
-        // Default add 7.lUrl
     }
 
 }
