@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>uy.com.r2</groupId>
+    <artifactId>R2</artifactId>
+    <version>1.0-SNAPSHOT</version>
+  </parent>
+
+  <groupId>uy.com.r2</groupId>
+  <artifactId>R2-android</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  <packaging>apk</packaging>
+
+  <properties>
+     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+  </properties>
+
+  <dependencies>
+    <dependency>
+       <groupId>com.google.android</groupId>
+       <artifactId>android</artifactId>
+       <version>4.1.1.4</version>
+       <scope>provided</scope>
+     </dependency>
+     <dependency>
+       <groupId>log4j</groupId>
+       <artifactId>log4j</artifactId>
+       <version>1.2.17</version>
+     </dependency>
+     <dependency>
+       <groupId>${project.groupId}</groupId>
+       <artifactId>R2-core</artifactId>
+       <version>${project.version}</version>
+     </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>1.7.20</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>com.simpligility.maven.plugins</groupId>
+	<artifactId>android-maven-plugin</artifactId>
+	<version>4.5.0</version> <!-- use latest release -->
+	<extensions>true</extensions>
+        <configuration>
+          <sdk>
+            <platform>22</platform>
+            <path>/opt/sdk</path>
+          </sdk>
+        </configuration>
+      </plugin>
+<!--
+      <plugin>
+        <groupId>com.jayway.maven.plugins.android.generation2</groupId>
+        <artifactId>android-maven-plugin</artifactId>
+        <version>3.9.0-rc.1</version>
+        <configuration>
+           <sdk>
+              <platform>19</platform>
+           </sdk>
+           <deleteConflictingFiles>true</deleteConflictingFiles>
+           <undeployBeforeDeploy>true</undeployBeforeDeploy>
+         </configuration>
+         <extensions>true</extensions>
+      </plugin>
+-->
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.7.0</version>
+        <configuration>
+          <source>1.6</source>
+          <target>1.6</target>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>
+
