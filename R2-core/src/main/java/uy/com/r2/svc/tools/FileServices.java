@@ -10,7 +10,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 import java.security.MessageDigest;
-import org.apache.commons.codec.binary.Hex;
 import org.apache.log4j.Logger;
 import uy.com.r2.core.api.AsyncService;
 import uy.com.r2.core.api.SvcRequest;
@@ -127,7 +126,7 @@ public class FileServices implements AsyncService {
                        md.update( buff);
                        pos += bufferSize;
                     };
-                    resp.put( "ChkSum", new String( Hex.encodeHex( md.digest())));
+                    resp.put( "ChkSum", toHex( md.digest()));
                 } catch( Exception xx) {
                     log.debug( "" + xx, xx);
                     return new SvcResponse( "Failed " + req.getServiceName(), 1, xx, req);
@@ -312,13 +311,13 @@ public class FileServices implements AsyncService {
         return mm;
     }
     
-    private void rename( String path, String name, String newName) throws Exception {
+    private static void rename( String path, String name, String newName) throws Exception {
         File dir = new File( path);
         File f = new File( dir, name);
         f.renameTo( new File( dir, newName));
     }    
 
-    private String toStr( byte[] buff) {
+    private static String toStr( byte[] buff) {
         StringBuilder sb = new StringBuilder();
         for( int i = 0; i < buff.length; ++i) {
             sb.append( String.format("%02X", buff[ i])); 
@@ -326,12 +325,20 @@ public class FileServices implements AsyncService {
         return sb.toString();
     }
 
-    private byte[] toBin( String str) {
+    private static byte[] toBin( String str) {
         byte[] b = new byte[ str.length() / 2];
         for( int i = 0; i < b.length; ++i) {
             b[ i] = ( byte)Integer.parseInt( str.substring( i * 2, ( i + 1) * 2), 16);
         }
         return b;
+    }
+    
+    private static String toHex( byte in[]) {
+        final StringBuilder builder = new StringBuilder();
+        for( byte b : in) {
+            builder.append(String.format("%02x", b));
+        }
+        return builder.toString();
     }
             
     /**
