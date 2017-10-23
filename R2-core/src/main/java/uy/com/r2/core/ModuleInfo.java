@@ -156,7 +156,8 @@ public class ModuleInfo implements Module {
             if( LOG.isDebugEnabled()) {
                 for( String k: unknowCfg.keySet()) {
                    try {
-                       throw new Exception( "Undefined configuration!: " + k + "=" + unknowCfg.get( k));                       
+                       throw new Exception( "Undefined configuration: " + k + "=" + unknowCfg.get( k)
+                               + " on module " + moduleName);                       
                    } catch( Exception x) {
                        LOG.debug( "" + x, x);
                    }
@@ -319,7 +320,8 @@ public class ModuleInfo implements Module {
         }
         try {
             int t = cfg.getInt( "TimeOut", DEFAULT_TIME_OUT);
-            to = Integer.min( to, t);
+            //to = Integer.min( to, t);  // Android doesn't have min
+            to = ( to > t)? t: to;
         } catch( Exception x) { }
         return to;
     }
