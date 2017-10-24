@@ -198,7 +198,6 @@ public class HttpClient implements AsyncService {
         StringBuilder s = new StringBuilder();
         for( char ch : ( "" + obj).toCharArray()) {
             if( isUnsafe( ch)) {
-                log.trace( "esc. ch= " + ch);
                 s.append( '%');
                 s.append( String.format( "%02X", ( int)ch));
             } else {
