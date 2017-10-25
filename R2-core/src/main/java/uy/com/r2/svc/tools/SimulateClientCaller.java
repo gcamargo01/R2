@@ -61,7 +61,7 @@ public class SimulateClientCaller implements CoreModule {
         l.add( new ConfigItemDescriptor( "Node", ConfigItemDescriptor.STRING,
                 "Client node name used in the test", "SIMULATOR"));
         l.add( new ConfigItemDescriptor( "InvocationTimeout", ConfigItemDescriptor.INTEGER,
-                "time-out in mS", null));
+                "time-out in mS", "1000"));
         l.add( new ConfigItemDescriptor( "Pipeline", ConfigItemDescriptor.STRING,
                 "Service pipeline to use", null));
         l.add( new ConfigItemDescriptor( "DumpStatus", ConfigItemDescriptor.BOOLEAN,
@@ -71,20 +71,20 @@ public class SimulateClientCaller implements CoreModule {
 
     @Override
     public void startup( Configuration cfg) throws Exception { 
-        testTime = cfg.getInt( "TestTime", 0);
-        testThreads = cfg.getInt( "TestThreads", 1);
-        testIterations = cfg.getInt( "TestIterations", 1);
-        sleepTime = cfg.getInt( "SleepTime", 0);
+        testTime = cfg.getInt( "TestTime");
+        testThreads = cfg.getInt( "TestThreads");
+        testIterations = cfg.getInt( "TestIterations");
+        sleepTime = cfg.getInt( "SleepTime");
         if( cfg.containsKey( "Messages")) {
             msgs = cfg.getString( "Messages").split( ",");
             for( String m: msgs) {
                 LOG.trace( "msgs='" + m + "'");
             }
         }
-        pipe = cfg.getString( "Pipeline", null);
+        pipe = cfg.getString( "Pipeline");
         service = cfg.getString( "Service");
         node = cfg.getString( "Node");
-        invocationTimeout = cfg.getInt( "InvocationTimeout", 1000);
+        invocationTimeout = cfg.getInt( "InvocationTimeout");
         // reset statistics
         iterations = 0;
         responseTimeSum = 0;
@@ -191,7 +191,7 @@ public class SimulateClientCaller implements CoreModule {
                         //long t0 = System.currentTimeMillis();
                         long t0 = System.nanoTime();
                         SvcResponse rp;
-                        if( pipe == null) {
+                        if( pipe == null || pipe.isEmpty()) {
                             rp = SvcCatalog.getDispatcher().call( rq);
                         } else {
                             rp = SvcCatalog.getDispatcher().callPipeline( pipe, rq);

@@ -46,7 +46,7 @@ public class AuditLog implements AsyncService {
     
     private void setConfiguration( Configuration cfg) throws Exception {
         if( cfg.isChanged()) {
-            fileName = cfg.getString( "FileName", "Audit_YYYY-MM-DD.log");
+            fileName = cfg.getString( "FileName");
             // restart logging
             try {
                 logWr.close();

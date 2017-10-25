@@ -105,7 +105,7 @@ public class SvcAvailServers implements AsyncService, CoreModule, Runnable {
     public void startup( Configuration cfg) throws Exception {
         localUrl = cfg.getUrl( "LocalUrl");
         remoteUrl = cfg.getUrl( "RemoteUrl");
-        masterName = cfg.getString( "MasterServer", localName);
+        masterName = cfg.getString( "MasterServer");
         knownServers = cfg.getStringMap( "Server.*");
         outPipeline = cfg.getString( "OuterPipeline");
         keepAliveTimeout = cfg.getInt( "KeepAliveTimeout");

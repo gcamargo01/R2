@@ -33,7 +33,7 @@ public class Echo implements AsyncService {
     }
     
     private void setConfiguration( Configuration cfg) throws Exception {
-        time = cfg.getInt( "Time", 0);
+        time = cfg.getInt( "Time");
     }
 
     /** Invocation dispatch phase.

@@ -46,7 +46,7 @@ public class FilePathSynchronizer implements CoreModule {
     
     @Override
     public void startup( Configuration cfg) throws Exception {
-        interval = cfg.getInt( "Interval", 5000);
+        interval = cfg.getInt( "Interval");
         remote = cfg.getString( "RemoteServer");
         pathMap = cfg.getStringMap( "Path.*");
         // resest statistics

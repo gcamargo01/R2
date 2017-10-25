@@ -43,9 +43,9 @@ public class FileServices implements AsyncService {
      */
     @Override
     public List<ConfigItemDescriptor> getConfigDescriptors() {
-        LinkedList<ConfigItemDescriptor> l = new LinkedList<ConfigItemDescriptor>();
+        LinkedList<ConfigItemDescriptor> l = new LinkedList();
         l.add( new ConfigItemDescriptor( "DefaultPath", ConfigItemDescriptor.STRING, 
-                "Default path to read/write", null));
+                "Default path to read/write", System.getProperty( "user.dir")));
         l.add( new ConfigItemDescriptor( "BufferSize", ConfigItemDescriptor.INTEGER, 
                 "Default size in bytes to read in a block", "10240"));
         return l;
@@ -56,8 +56,8 @@ public class FileServices implements AsyncService {
      * @throws Exception Unexpected error
      */
     private void setConfiguration( Configuration cfg) throws Exception {
-        defaultPath = cfg.getString( "DefaultPath", System.getProperty( "user.dir"));
-        bufferSize = cfg.getInt( "BufferSize", 10240);
+        defaultPath = cfg.getString( "DefaultPath");
+        bufferSize = cfg.getInt( "BufferSize");
     }
 
     /** Invocation dispatch phase.

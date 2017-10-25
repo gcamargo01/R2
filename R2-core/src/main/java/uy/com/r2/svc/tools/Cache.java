@@ -48,7 +48,7 @@ public class Cache implements AsyncService {
         if( !cfg.isChanged()) {
             return;
         }
-        ttd = cfg.getInt( "TimeToDiscard", ttd);
+        ttd = cfg.getInt( "TimeToDiscard");
         if( cfg.getBoolean( "Reset")) {
             String sa[] = cfg.getString( "CacheablesServices").split( ",");
             cacheableServices = new HashSet( Arrays.asList( sa));

@@ -38,8 +38,8 @@ public class SignAndValidate implements AsyncService {
         if( !cfg.isChanged()) {
             return;
         }
-        signatureAlgorithm = cfg.getString( "ValidateReq", signatureAlgorithm);
-        keystoreType = cfg.getString( "ValidateResp", keystoreType);
+        signatureAlgorithm = cfg.getString( "SignatureAlgorithm");
+        keystoreType = cfg.getString( "KeystoreType");
         validateReq = cfg.getBoolean( "ValidateReq");
         validateResp = cfg.getBoolean( "ValidateResp");
         String certName = cfg.getString( "CertificateName");
@@ -134,6 +134,10 @@ public class SignAndValidate implements AsyncService {
                 "Path to the Key Store including Path", "keystore.pfx"));
         l.add( new ConfigItemDescriptor( "ExcludeFields", ConfigItemDescriptor.STRING, 
                 "Data fields to exclude from signature", ""));
+        l.add( new ConfigItemDescriptor( "SignatureAlgorithm", ConfigItemDescriptor.STRING, 
+                "Signature Algorithm", signatureAlgorithm));
+        l.add( new ConfigItemDescriptor( "KeystoreType", ConfigItemDescriptor.STRING, 
+                "Keystore Type", keystoreType));
         return l;
     }
 
