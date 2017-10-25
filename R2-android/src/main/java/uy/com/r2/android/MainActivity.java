@@ -2,7 +2,6 @@ package uy.com.r2.android;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -48,13 +47,12 @@ public class MainActivity extends Activity {
         startButton.setOnClickListener( clickListener);
         stopButton.setOnClickListener( clickListener);
         // configure Log4j appender
-        TextViewAppender ap = new TextViewAppender( textView);
+        TextViewAppender ap = new TextViewAppender( this, textView);
         ap.setLayout( new PatternLayout( "%d{HH:mm:ss} [%t] %-5p %c - %m%n"));
         ap.setThreshold( Level.TRACE);
         Logger root = Logger.getRootLogger();
         root.setLevel( Level.TRACE);
         root.addAppender( ap);
     }
-   
 
 }
