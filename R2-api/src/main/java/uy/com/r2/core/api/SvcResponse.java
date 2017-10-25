@@ -58,7 +58,6 @@ public class SvcResponse extends SvcMessage implements Serializable {
     
     /** Build a simple response without any data.
      * Should be instanced right in the event of the response.
-     * Used by SvcErrorResponse, it may have negative resultCode.
      * @param resultCode Error code, 0 is ok, 
      * @param request Invocation request
      */
