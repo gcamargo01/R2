@@ -64,7 +64,7 @@ public class MiniHttpServer implements CoreModule {
         if( !cfg.isChanged()) {
             return;
         }
-        int port = cfg.getInt( "Port", 8012);
+        int port = cfg.getInt( "Port");
         encoding = cfg.getString( "Encoding");
         pipe = cfg.getString( "Pipeline");
         LOG.debug( "port=" + port);
