@@ -54,25 +54,16 @@ public class Configuration implements Serializable {
 
     /** String getter.
      * @param key Configuration key
-     * @param defValue Default value
      * @return Not null value as string
      */
-    public String getString( String key, String defValue) {
+    public String getString( String key) {
         Object v = cfg.get( key);
         if( v == null) {
-            return defValue;
+            return "";
         }
         return v.toString();
     }
 
-    /** String getter.
-     * @param key Configuration key
-     * @return Not null value as string
-     */
-    public String getString( String key) {
-        return getString( key, "");
-    }
-    
     /** Multivalued String getter.
      * The key has values like "Sever.*.Name", while de configuration
      * has "Server.zeus.Name", "Z01"), must build a Map with ( "zeus", "Z01")
@@ -100,22 +91,15 @@ public class Configuration implements Serializable {
 
     /** Integer getter.
      * @param key Configuration key
-     * @param defValue Default value
-     * @return Not null value as string
-     * @throws Exception Parsing error
-     */
-    public int getInt( String key, int defValue) throws Exception {
-        String s = getString( key, Integer.toString( defValue ));
-        return (int)Double.parseDouble( s);
-    }
-
-    /** Integer getter.
-     * @param key Configuration key
      * @return Not null value as string
      * @throws Exception Parsing error
      */
     public int getInt( String key) throws Exception {
-        return getInt( key, 0);
+        String s = getString( key);
+        if( s == null || s.isEmpty()) {
+            return 0;
+        }
+        return (int)Double.parseDouble( s);
     }
 
     /** Multivalued String getter.
@@ -136,68 +120,39 @@ public class Configuration implements Serializable {
 
     /** Long getter.
      * @param key Configuration key
-     * @param defValue Default value
-     * @return Not null value as long
+      * @return Not null value as long
      * @throws Exception Parsing error
+     * @deprecated Default values are always set
      */
-    public long getLong( String key, long defValue) throws Exception {
+    public long getLong( String key) throws Exception {
         if( !cfg.containsKey( key)) {
-            return defValue;
+            return 0L;
         }
         return (long)Double.parseDouble( getString( key));
     }
 
-    /** Long getter.
-     * @param key Configuration key
-     * @return Not null value as long
-     * @throws Exception Parsing error
-     */
-    public long getLong( String key) throws Exception {
-        return getLong( key, 0L);
-    }
-
     /** Double getter.
      * @param key Configuration key
-     * @param defValue Default value
      * @return Not null value as double
      * @throws Exception Parsing error
      */
-    public double getDouble( String key, double defValue) throws Exception {
+    public double getDouble( String key) throws Exception {
         if( !cfg.containsKey( key)) {
-            return defValue;
+            return 0D;
         }
         return Double.parseDouble( getString( key));
     }
 
-    /** Long getter.
-     * @param key Configuration key
-     * @return Not null value as string
-     * @throws Exception Parsing error
-     */
-    public double getDouble( String key) throws Exception {
-        return getDouble( key, 0L);
-    }
-
     /** URL getter.
      * @param key Configuration key
-     * @param defValue Default value
      * @return URL 
      * @throws Exception Parsing error
      */
-    public URL getUrl( String key, URL defValue) throws Exception {
+    public URL getUrl( String key) throws Exception {
         if( !cfg.containsKey( key)) {
-            return defValue;
+            return null;
         }
         return new URL( getString( key));
-    }
-
-    /** Long getter.
-     * @param key Configuration key
-     * @return URL or null 
-     * @throws Exception Parsing error
-     */
-    public URL getUrl( String key) throws Exception {
-        return getUrl( key, null);
     }
 
     /** Test a configuration boolean value.
