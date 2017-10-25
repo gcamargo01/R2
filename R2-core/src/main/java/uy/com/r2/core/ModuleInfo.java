@@ -319,7 +319,10 @@ public class ModuleInfo implements Module {
             to = DEFAULT_TIME_OUT;
         }
         try {
-            int t = cfg.getInt( "TimeOut", DEFAULT_TIME_OUT);
+            int t = cfg.getInt( "TimeOut");
+            if( t == 0) {
+                t = DEFAULT_TIME_OUT;
+            }
             //to = Integer.min( to, t);  // Android doesn't have min
             to = ( to > t)? t: to;
         } catch( Exception x) { }
