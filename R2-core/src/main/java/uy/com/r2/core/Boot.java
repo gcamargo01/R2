@@ -17,8 +17,6 @@ import uy.com.r2.core.api.Module;
 import uy.com.r2.svc.conn.HttpClient;
 import uy.com.r2.svc.conn.JdbcService;
 import uy.com.r2.svc.conn.MicroHttpServer;
-import uy.com.r2.svc.conn.UdpClient;
-import uy.com.r2.svc.conn.UdpServer;
 import uy.com.r2.svc.tools.FilePathSynchronizer;
 import uy.com.r2.svc.tools.FileServices;
 import uy.com.r2.svc.tools.Json;
@@ -164,10 +162,10 @@ public class Boot implements Module {
             new SvcRequest( localName, 0, 0, null, null, 0).getClientNode();
             // configure
             pr.putAll( DEFAULT_PIPE);
-            pr.put( "0.Port", "" + localPort);
-            pr.put( "1.LocalUrl", localUrl);
+            pr.put( "1.Port", "" + localPort);
+            pr.put( "2.LocalUrl", localUrl);
             if( rmtUrl != null && !rmtUrl.isEmpty()) {
-                pr.put( "1.RemoteUrl", rmtUrl);
+                pr.put( "2.RemoteUrl", rmtUrl);
                 pr.put( "7.Url", rmtUrl);
             }
         }
@@ -177,19 +175,19 @@ public class Boot implements Module {
 
     static final Map<String,String> DEFAULT_PIPE = new HashMap();
     static {
-        DEFAULT_PIPE.put( "Module.0", MicroHttpServer.class.getSimpleName());
-        DEFAULT_PIPE.put( "0.class", MicroHttpServer.class.getName());
-        DEFAULT_PIPE.put( "0.Port", "8015");
-        DEFAULT_PIPE.put( "Module.1", SvcAvailServers.class.getSimpleName());
-        DEFAULT_PIPE.put( "1.class", SvcAvailServers.class.getName());
-        // Default add 1.LocalName
-        // Default add 1.LocalUrl
-        // Default add 1.RemotelUrl
-        DEFAULT_PIPE.put( "Module.2", SvcCatalog.DISPATCHER_NAME);
-        DEFAULT_PIPE.put( "2.class", SimpleDispatcher.class.getName());
-        DEFAULT_PIPE.put( "2.DefaultServicePipeline", "SrvHtml,SrvJson,JdbcService,FileServices,SvcDeployer,SvcAvailServers");
-        DEFAULT_PIPE.put( "2.Pipeline._Undefined_", "ClntJson,HttpClient");
-        DEFAULT_PIPE.put( "2.Pipeline.Udp", "ClntJson,UdpClient");
+        DEFAULT_PIPE.put( "Module.0", SvcCatalog.DISPATCHER_NAME);
+        DEFAULT_PIPE.put( "0.class", SimpleDispatcher.class.getName());
+        DEFAULT_PIPE.put( "0.DefaultServicePipeline", "SrvHtml,SrvJson,JdbcService,FileServices,SvcDeployer,SvcAvailServers");
+        DEFAULT_PIPE.put( "0.Pipeline._Undefined_", "ClntJson,HttpClient");
+        DEFAULT_PIPE.put( "0.Pipeline.Udp", "ClntJson,UdpClient");
+        DEFAULT_PIPE.put( "Module.1", MicroHttpServer.class.getSimpleName());
+        DEFAULT_PIPE.put( "1.class", MicroHttpServer.class.getName());
+        DEFAULT_PIPE.put( "1.Port", "8015");
+        DEFAULT_PIPE.put( "Module.2", SvcAvailServers.class.getSimpleName());
+        DEFAULT_PIPE.put( "2.class", SvcAvailServers.class.getName());
+        // Default add 2.LocalName
+        // Default add 2.LocalUrl
+        // Default add 2.RemotelUrl
         DEFAULT_PIPE.put( "Module.3", "SrvHtml");
         DEFAULT_PIPE.put( "3.class", ToHtml.class.getName());
         DEFAULT_PIPE.put( "Module.4", "SrvJson");
