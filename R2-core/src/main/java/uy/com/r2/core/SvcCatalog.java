@@ -22,7 +22,7 @@ import uy.com.r2.core.api.Module;
  * By a convention it must be called "SvcDispatcher" or it si auto installed.
  * @author G.Camargo
  */
-public class SvcCatalog implements CoreModule {
+public class SvcCatalog implements Module {
     public static final String CATALOG_NAME = SvcCatalog.class.getSimpleName();
     public static final String DISPATCHER_NAME = "SvcDispatcher";
     
@@ -56,6 +56,7 @@ public class SvcCatalog implements CoreModule {
     }
 
     /** Get a Dispatcher instance.
+     * Its possible to instance another Dispatcher class, but only on start up.
      * @return Dispatcher instance
      */
     public static Dispatcher getDispatcher() {
@@ -213,14 +214,6 @@ public class SvcCatalog implements CoreModule {
         return null;
     }
 
-    /** Startup.
-     * @param cfg Module configuration
-     * @throws Exception Unexpected error that must be warned
-     */
-    @Override
-    public void startup( Configuration cfg) throws Exception {
-    }
-    
     /** Get the status report.
      * @return Map of status variables
      */
