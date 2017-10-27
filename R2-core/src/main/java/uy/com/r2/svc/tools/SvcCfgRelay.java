@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import org.apache.log4j.Logger;
-import uy.com.r2.core.CoreModule;
 import uy.com.r2.core.SvcCatalog;
 import uy.com.r2.core.api.SvcRequest;
 import uy.com.r2.core.api.SvcResponse;
@@ -19,6 +18,7 @@ import uy.com.r2.core.api.Configuration;
 import uy.com.r2.core.api.Dispatcher;
 import uy.com.r2.core.api.SvcMessage;
 import uy.com.r2.core.SvcDeployer;
+import uy.com.r2.core.StartUpRequired;
 
 /** System configuration rely module. 
  * This core service module manage the configuration replication all over the servers.
@@ -38,7 +38,7 @@ import uy.com.r2.core.SvcDeployer;
  <p>
  * @author G.Camargo
  */
-public class SvcCfgRelay implements AsyncService, CoreModule {
+public class SvcCfgRelay implements AsyncService, StartUpRequired {
     public static final String SVC_STARTCHANGES    = "StartChanges";
     public static final String SVC_ROLLBACKCHANGES = "RollbackChanges";
     public static final String SVC_COMMITCHANGES   = "CommitChanges";
@@ -64,12 +64,12 @@ public class SvcCfgRelay implements AsyncService, CoreModule {
         return l;
     }
     
-    /** Startup.
+    /** Start up.
      * @param cfg Module configuration
      * @throws Exception Unexpected error that must be warned
      */
     @Override
-    public void startup( Configuration cfg) throws Exception {
+    public void startUp( Configuration cfg) throws Exception {
     }
 
     /** Invocation dispatch phase.
