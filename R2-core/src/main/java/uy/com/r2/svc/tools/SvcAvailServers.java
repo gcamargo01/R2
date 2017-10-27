@@ -9,7 +9,6 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.TreeSet;
 import org.apache.log4j.Logger;
-import uy.com.r2.core.CoreModule;
 import uy.com.r2.core.SvcCatalog;
 import uy.com.r2.core.ModuleInfo;
 import uy.com.r2.core.api.SvcRequest;
@@ -20,6 +19,7 @@ import uy.com.r2.core.api.Configuration;
 import uy.com.r2.core.api.Dispatcher;
 import uy.com.r2.core.api.SvcMessage;
 import uy.com.r2.svc.conn.HttpClient;
+import uy.com.r2.core.StartUpRequired;
 
 
 /** Keep alive based available servers and master selection module.
@@ -40,7 +40,7 @@ import uy.com.r2.svc.conn.HttpClient;
  * <p>
  * @author G.Camargo
  */
-public class SvcAvailServers implements AsyncService, CoreModule, Runnable {
+public class SvcAvailServers implements AsyncService, StartUpRequired, Runnable {
     public static final String SVC_ADDSERVER       = "AddServer";
     public static final String SVC_GETMASTER       = "GetMasterServer";
     public static final String SVC_GETSERVERSLIST  = "GetServersList";
@@ -101,8 +101,9 @@ public class SvcAvailServers implements AsyncService, CoreModule, Runnable {
         return l;
     }
     
+    /** Configure and start keep alive thread. */
     @Override
-    public void startup( Configuration cfg) throws Exception {
+    public void startUp( Configuration cfg) throws Exception {
         localUrl = cfg.getUrl( "LocalUrl");
         remoteUrl = cfg.getUrl( "RemoteUrl");
         masterName = cfg.getString( "MasterServer");
@@ -205,13 +206,13 @@ public class SvcAvailServers implements AsyncService, CoreModule, Runnable {
     public void run( ) {
         while( !stop) {
             try {
+                Thread.sleep( keepAliveDelay);  
+            } catch( Exception ex) { }
+            try {
                 keepAlive();
             } catch( Exception ex) {
                 LOG.warn( "Error on keepAlive", ex);
             }
-            try {
-                Thread.sleep( keepAliveDelay);  
-            } catch( Exception ex) { }
         }
     }
 
@@ -265,6 +266,7 @@ public class SvcAvailServers implements AsyncService, CoreModule, Runnable {
                 }
             }
         }
+        notifyXUdpMaster();
     }
 
     /** Execute command.
@@ -477,6 +479,19 @@ public class SvcAvailServers implements AsyncService, CoreModule, Runnable {
         }
     }
   
+    private void notifyXUdpMaster() {
+        LOG.trace( "notifyXUdpMaster " + masterName);
+        try {
+            SvcRequest rq = new SvcRequest( localName, 0, nodeTxNr++, SVC_SETMASTER, null, 
+                    1000);
+            rq.put( "Name", masterName);
+            rq.put( "Url", knownServers.get( masterName));
+            rq.put( "Servers", knownServers);
+            SvcCatalog.getDispatcher().callPipeline( "Udp", rq);
+        } catch( Exception ex) {
+            LOG.debug( "Failed to notifyXUdpMaster " + ex, ex);
+        }
+    }
 }
 
 
