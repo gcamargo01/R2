@@ -6,17 +6,17 @@ import java.util.LinkedList;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.log4j.Logger;
-import uy.com.r2.core.CoreModule;
 import uy.com.r2.core.SvcCatalog;
 import uy.com.r2.core.api.ConfigItemDescriptor;
 import uy.com.r2.core.api.Configuration;
 import uy.com.r2.core.api.SvcRequest;
 import uy.com.r2.core.api.SvcResponse;
+import uy.com.r2.core.StartUpRequired;
 
 /** Synchronize a Path in local file system from remote file system.
  * @author G.Camargo
  */
-public class FilePathSynchronizer implements CoreModule {
+public class FilePathSynchronizer implements StartUpRequired {
     private final static int TIME_OUT = 10000;
     private final static Logger log = Logger.getLogger( FilePathSynchronizer.class);
     private final static String RMT = "_Undefined_";
@@ -44,8 +44,9 @@ public class FilePathSynchronizer implements CoreModule {
         return l;
     }
     
+    /** Configure. */
     @Override
-    public void startup( Configuration cfg) throws Exception {
+    public void startUp( Configuration cfg) throws Exception {
         interval = cfg.getInt( "Interval");
         remote = cfg.getString( "RemoteServer");
         pathMap = cfg.getStringMap( "Path.*");
