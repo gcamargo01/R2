@@ -6,20 +6,20 @@ import java.util.LinkedList;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.log4j.Logger;
-import uy.com.r2.core.CoreModule;
 import uy.com.r2.core.SvcCatalog;
 import uy.com.r2.core.api.SvcRequest;
 import uy.com.r2.core.api.SvcResponse;
 import uy.com.r2.core.api.ConfigItemDescriptor;
 import uy.com.r2.core.api.Configuration;
 import uy.com.r2.core.api.SvcMessage;
+import uy.com.r2.core.StartUpRequired;
 
 
 /** Module to simulate client invocations, like automated stress-test.
- * This module is not a real service. It implements CoreModule to be loaded.
+ * This module is not a real service. It implements StartUpRequired to be loaded.
  * @author G.Camargo
  */
-public class SimulateClientCaller implements CoreModule {
+public class SimulateClientCaller implements StartUpRequired {
     private static final Logger LOG = Logger.getLogger( SimulateClientCaller.class);
     private int testTime = 0; 
     private int testThreads = 1;
@@ -69,8 +69,9 @@ public class SimulateClientCaller implements CoreModule {
         return l;
     }
 
+    /** Configure an perform tests */
     @Override
-    public void startup( Configuration cfg) throws Exception { 
+    public void startUp( Configuration cfg) throws Exception { 
         testTime = cfg.getInt( "TestTime");
         testThreads = cfg.getInt( "TestThreads");
         testIterations = cfg.getInt( "TestIterations");
