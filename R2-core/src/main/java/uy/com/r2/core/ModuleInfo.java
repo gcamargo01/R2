@@ -50,7 +50,7 @@ public class ModuleInfo implements Module {
             this.asyncImpl = (AsyncService)impl;
         } else if( impl instanceof SimpleService) {
             this.asyncImpl = new WrapAsAsyncService( (SimpleService)impl); 
-        } else {  // CoreModule, cant be monitored
+        } else {  // StartUpRequired, cant be monitored
             this.asyncImpl = null;
         }
     }    
@@ -180,8 +180,8 @@ public class ModuleInfo implements Module {
         }
         // Update config
         this.cfg = cfg.clone();
-        if( moduleImpl instanceof CoreModule) {  
-            ( (CoreModule)moduleImpl).startup( this.cfg);
+        if( moduleImpl instanceof StartUpRequired) {  
+            ( (StartUpRequired)moduleImpl).startUp( this.cfg);
         }
     }
     
