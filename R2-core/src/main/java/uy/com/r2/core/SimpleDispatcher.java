@@ -23,11 +23,11 @@ import uy.com.r2.core.api.SvcResponse;
  * Catalog has a Configuration item to set the Dispatcher class.
  * @author G.Camargo
  */
-public class SimpleDispatcher implements Dispatcher, CoreModule {
+public class SimpleDispatcher implements Dispatcher, StartUpRequired {
     private static final Logger LOG = Logger.getLogger( SimpleDispatcher.class);
     
     // Current running pipeline
-    private static boolean instanced = false;
+    private static Exception instanced = null;
     private final Map<String,RunningPipeline> runningPipelines = new ConcurrentHashMap();
     private Map<String,String[]> defPipes = new ConcurrentHashMap();
     private Map<String,String> nodePipes = new ConcurrentHashMap();
@@ -35,10 +35,12 @@ public class SimpleDispatcher implements Dispatcher, CoreModule {
     private boolean stopped = false;
       
     SimpleDispatcher( ) {
-        if( instanced) {
-            LOG.debug( "Warning, Dispatcher re-instaced", new Exception());
+        if( instanced != null) {
+            LOG.warn( "Dispatcher re-instaced", new Exception());
+            LOG.info( "And first time instaced was", instanced);
+        } else {
+            instanced = new Exception();
         }
-        instanced = true;
     }
     
     /** Start running a service call.
@@ -158,19 +160,19 @@ public class SimpleDispatcher implements Dispatcher, CoreModule {
         }
     }
     
-    /** Startup.
+    /** Start up.
      * @param cfg Module configuration
      * @throws Exception Unexpected error that must be warned
      */
     @Override
-    public void startup( Configuration cfg ) throws Exception {
+    public void startUp( Configuration cfg ) throws Exception {
         defaultServicePipeline = cfg.getString( "DefaultServicePipeline").split( ",");
         LOG.debug( "DefaultServicePipeline " + cfg.getString( "DefaultServicePipeline"));
         defPipes = new ConcurrentHashMap();
         Map<String,String> rps = cfg.getStringMap( "Pipeline.*");
         for( String n: rps.keySet()) {
             defPipes.put(  n, rps.get( n).split( ","));
-            LOG.debug( "Pipeline." + n + "" + rps.get( n));
+            LOG.debug( "Pipeline " + n + "=" + rps.get( n));
         }
         nodePipes = cfg.getStringMap( "Node.*");
     }
