@@ -92,12 +92,12 @@ public class FilePathSynchronizer implements StartUpRequired {
         @Override
         public void run() {
             while( !stop) {
-                for( String k: pathMap.keySet()) {
-                    syncPathRecursive( pathMap.get( k));
-                }    
                 try {
                     sleep( interval);
                 } catch( InterruptedException ex) { }
+                for( String k: pathMap.keySet()) {
+                    syncPathRecursive( pathMap.get( k));
+                }    
             }
         }
 
