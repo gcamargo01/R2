@@ -10,6 +10,7 @@ import org.apache.log4j.spi.LoggingEvent;
 /** Log4Java Text View Appender.
  */
 public class TextViewAppender extends AppenderSkeleton {
+    private static final int SIZE = 20480;
     private final Activity act;
     private final TextView tv;
     private StringBuilder sb = new StringBuilder();
@@ -24,8 +25,8 @@ public class TextViewAppender extends AppenderSkeleton {
         String m = layout.format( event);
         Log.d( event.getThreadName(), m);
         sb.append( m);
-        if( sb.length() > 5000) {
-            sb = sb.replace( 0, sb.length() - 5000, "...\n");
+        if( sb.length() > SIZE) {
+            sb = sb.replace( 0, sb.length() - SIZE, "...\n");
         }
         act.runOnUiThread( new Runnable() {
             @Override
