@@ -9,7 +9,6 @@ import java.util.List;
 import java.io.OutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.PrintStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -17,20 +16,20 @@ import java.net.URI;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import org.apache.log4j.Logger;
-import uy.com.r2.core.CoreModule;
 import uy.com.r2.core.SvcCatalog;
 import uy.com.r2.core.api.ConfigItemDescriptor;
 import uy.com.r2.core.api.Configuration;
 import uy.com.r2.core.api.SvcRequest;
 import uy.com.r2.core.api.SvcResponse;
 import static uy.com.r2.svc.conn.MicroHttpServer.encoding;
+import uy.com.r2.core.StartUpRequired;
 
 /**
  * Micro HTTP server, to process remote commands.
  *
  * @author G.Camargo
  */
-public class MicroHttpServer implements CoreModule {
+public class MicroHttpServer implements StartUpRequired {
 
     public static String encoding = System.getProperty( "file.encoding");
     private static final Logger LOG = Logger.getLogger( MicroHttpServer.class);
@@ -56,11 +55,11 @@ public class MicroHttpServer implements CoreModule {
         return l;
     }
 
-    /** Configure server.
+    /** Configure and start the server.
      * @throws java.lang.Exception 
      */
     @Override
-    public void startup( Configuration cfg) throws Exception {
+    public void startUp( Configuration cfg) throws Exception {
         LOG.trace( "startup " + cfg + " " + cfg.isChanged());
         if( !cfg.isChanged()) {
             return;
@@ -105,21 +104,21 @@ public class MicroHttpServer implements CoreModule {
         }
     }
 
-    private void handle( Request request) throws Exception {
+    private void handle( WorkerThread reqResp) throws Exception {
         try {
             String thr = Thread.currentThread().getName();
-            LOG.trace( thr + " *** handler " + request.getRequestURI());
-            // Process de HTTP request
+            LOG.trace(thr + " *** handler " + reqResp.getRequestURI());
+            // Process de HTTP reqResp
             String svc = "none";
             try {
-                svc = request.getRequestURI().getPath().substring( 1);
+                svc = reqResp.getRequestURI().getPath().substring( 1);
             } catch( Exception xx) { }
             if( svc.equals( "favicon.ico")) {
-                request.sendResponseHeaders( 404, 0);
+                reqResp.sendResponseHeaders( 404, 0);
                 return;
             }
-            String node = request.getRemoteAddress().getHostName();
-            Map<String,String> rqh = request.getRequestHeaders();
+            String node = reqResp.getRemoteAddress().getHostName();
+            Map<String,String> rqh = reqResp.getRequestHeaders();
             if( rqh.containsKey( "Node")) {
                 node = rqh.get( "Node");
             }
@@ -128,7 +127,7 @@ public class MicroHttpServer implements CoreModule {
                 userAgent = null;
             }
             // Parse HTTP parameters
-            String query = request.getRequestURI().getRawQuery();
+            String query = reqResp.getRequestURI().getRawQuery();
             Map<String, List<Object>> params = null;
             try {
                 params = parseQueryString( query);
@@ -157,21 +156,21 @@ public class MicroHttpServer implements CoreModule {
             StringBuilder sr = new StringBuilder();
             if( userAgent != null && resp.get( "SerializedHtml") != null) {
                 LOG.trace( "**** HTML response");
-                request.getResponseHeaders().put( "Content-Type", "text/html");
+                reqResp.getResponseHeaders().put( "Content-Type", "text/html");
                 sr.append( "" + resp.get( "SerializedHtml"));
             } else if( resp.get( "SerializedJson") != null) {
                 LOG.trace( "**** JSON response");
-                request.getResponseHeaders().put( "Content-Typee", "application/json");
+                reqResp.getResponseHeaders().put( "Content-Typee", "application/json");
                 sr.append( "" + resp.get( "SerializedJson"));
             } else {
                 LOG.trace( "**** TXT response");
                 sr.append( "" + resp.getPayload());
             }
             sr.append( "\n");
-            request.getResponseHeaders().put( "ResultCode", "" + resp.getResultCode());
-            request.sendResponseHeaders( 200, sr.length());
+            reqResp.getResponseHeaders().put( "ResultCode", "" + resp.getResultCode());
+            reqResp.sendResponseHeaders( 200, sr.length());
             LOG.trace( thr + " *** sr = " + sr);
-            OutputStream os = request.getResponseBody();
+            OutputStream os = reqResp.getResponseBody();
             os.write( sr.toString().getBytes());
             os.flush();
             os.close();
@@ -209,62 +208,15 @@ public class MicroHttpServer implements CoreModule {
         return parameters;
     }
     
-    private class Request {
-        private final InetAddress addrs;
-        private final URI uri;
-        private final Map<String, String> reqHeaders;
-        private final OutputStream outStream;
-        private final Map<String, String> respHeaders = new HashMap<>();
-
-        Request( InetAddress addrs, URI uri, Map<String,String> reqHeaders, OutputStream outStream) 
-                throws Exception {
-            this.addrs = addrs;
-            this.uri = uri;
-            this.reqHeaders = reqHeaders;
-            this.outStream = outStream;
-        }
-
-        URI getRequestURI() {
-            return uri;
-        }
-
-        Map<String, String> getRequestHeaders() {
-            return reqHeaders;
-        }
-
-        InetAddress getRemoteAddress() {
-            return addrs;
-        }
-
-        void sendResponseHeaders( int httpRetCode, int len) throws Exception {
-            if( !respHeaders.containsKey( "Content-Length")) {
-                respHeaders.put( "Content-Length", "" + len);
-            }
-            String line;
-            line = "HTTP/1.0 " + httpRetCode + " " + ( ( httpRetCode == 200)? "OK": "Error") + "\r\n";
-            outStream.write( line.getBytes( encoding));
-            for( String h: respHeaders.keySet()) {
-                String v = respHeaders.get( h);
-                line = h + ": " + v + "\r\n";
-                outStream.write( line.getBytes( encoding));
-            }
-            outStream.write( '\r');
-            outStream.write( '\n');
-        }
-
-        Map<String,String> getResponseHeaders() {
-            return respHeaders;
-        }
-
-        OutputStream getResponseBody() {
-            return outStream;
-        }
-    }
-    
     private class WorkerThread extends Thread {
         private final Socket soc;
         private final ListenerThread listener;
         private final MicroHttpServer handler;
+        private InetAddress addrs;
+        private URI uri;
+        private Map<String, String> reqHeaders = new HashMap();
+        private OutputStream outStream = null;
+        private Map<String, String> respHeaders = new HashMap();
         
         private WorkerThread( int port, Socket soc, ListenerThread listener, MicroHttpServer handler) {
             this.soc = soc;
@@ -277,14 +229,12 @@ public class MicroHttpServer implements CoreModule {
         @Override
         public void run() {
             BufferedReader reader = null;
-            OutputStream output = null;
             try {
                 reader = new BufferedReader( new InputStreamReader( soc.getInputStream()));
-                output = soc.getOutputStream();
+                outStream = soc.getOutputStream();
                 
                 // Read HTTP headers and parse out the route.
                 String route = "";
-                Map<String, String> reqHeaders = new HashMap();
                 String line;
                 while( ( line = reader.readLine()) != null && !line.isEmpty()) {
                     //LOG.trace( "parsing line " + line);
@@ -300,26 +250,63 @@ public class MicroHttpServer implements CoreModule {
                 LOG.trace( "route " + route + " headers " + reqHeaders);
  
                 // Process request.
-                URI uri = URI.create(  "http://localhost" + route); 
+                uri = URI.create(  "http://localhost" + route); 
 
                 // Send out the content.
-                Request req = new Request( soc.getInetAddress(), uri, reqHeaders, output);
-                handler.handle( req);
-                output.flush();
+                addrs = soc.getInetAddress();
+                handler.handle( this);
+                outStream.flush();
                 listener.releaseInfo( this, false);
             } catch( Exception x) {
                 try {
-                    output.write( "HTTP/1.0 500 Internal Server Error".getBytes());
-                    output.flush();
+                    outStream.write( "HTTP/1.0 500 Internal Server Error".getBytes());
+                    outStream.flush();
                 } catch( Exception xx) { }    
                 listener.releaseInfo( this, true);
             } finally {
                 try {
-                    output.close();
+                    outStream.close();
                     reader.close();
                 } catch( Exception x ) { }
             }                
         }
+        
+        private URI getRequestURI() {
+            return uri;
+        }
+
+        private Map<String, String> getRequestHeaders() {
+            return reqHeaders;
+        }
+
+        private InetAddress getRemoteAddress() {
+            return addrs;
+        }
+
+        private Map<String, String> getResponseHeaders() {
+            return respHeaders;
+        }
+
+        private OutputStream getResponseBody() {
+            return outStream;
+        }
+
+        private void sendResponseHeaders( int httpRetCode, int len) throws Exception {
+            if( !respHeaders.containsKey( "Content-Length")) {
+                respHeaders.put( "Content-Length", "" + len);
+            }
+            String line;
+            line = "HTTP/1.0 " + httpRetCode + " " + ( ( httpRetCode == 200)? "OK": "Error") + "\r\n";
+            outStream.write( line.getBytes( encoding));
+            for( String h: respHeaders.keySet()) {
+                String v = respHeaders.get( h);
+                line = h + ": " + v + "\r\n";
+                outStream.write( line.getBytes( encoding));
+            }
+            outStream.write( '\r');
+            outStream.write( '\n');
+        }
+
     }
 
     class ListenerThread extends Thread {
