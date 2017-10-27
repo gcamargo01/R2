@@ -17,6 +17,8 @@ import uy.com.r2.core.api.Module;
 import uy.com.r2.svc.conn.HttpClient;
 import uy.com.r2.svc.conn.JdbcService;
 import uy.com.r2.svc.conn.MicroHttpServer;
+import uy.com.r2.svc.conn.UdpClient;
+import uy.com.r2.svc.conn.UdpServer;
 import uy.com.r2.svc.tools.FilePathSynchronizer;
 import uy.com.r2.svc.tools.FileServices;
 import uy.com.r2.svc.tools.Json;
@@ -187,6 +189,7 @@ public class Boot implements Module {
         DEFAULT_PIPE.put( "2.class", SimpleDispatcher.class.getName());
         DEFAULT_PIPE.put( "2.DefaultServicePipeline", "SrvHtml,SrvJson,JdbcService,FileServices,SvcDeployer,SvcAvailServers");
         DEFAULT_PIPE.put( "2.Pipeline._Undefined_", "ClntJson,HttpClient");
+        DEFAULT_PIPE.put( "2.Pipeline.Udp", "ClntJson,UdpClient");
         DEFAULT_PIPE.put( "Module.3", "SrvHtml");
         DEFAULT_PIPE.put( "3.class", ToHtml.class.getName());
         DEFAULT_PIPE.put( "Module.4", "SrvJson");
@@ -214,10 +217,15 @@ public class Boot implements Module {
         DEFAULT_PIPE.put( "8.class", FileServices.class.getName());
         DEFAULT_PIPE.put( "Module.9", SvcDeployer.class.getSimpleName());
         DEFAULT_PIPE.put( "9.class", SvcDeployer.class.getName());
+        
+        DEFAULT_PIPE.put( "Module.10", "UdpServer");
+        DEFAULT_PIPE.put( "10.class", uy.com.r2.svc.conn.UdpServer.class.getName());
+        DEFAULT_PIPE.put( "Module.11", "UdpClient");
+        DEFAULT_PIPE.put( "11.class", uy.com.r2.svc.conn.UdpClient.class.getName());
         //DEFAULT_PIPE.put( "Module.10", FilePathSynchronizer.class.getSimpleName());
-        DEFAULT_PIPE.put( "10.class", FilePathSynchronizer.class.getName());
-        DEFAULT_PIPE.put( "10.Path.lib", "lib");
-        DEFAULT_PIPE.put( "10.RemoteServer", "_Undefined_");
+        //DEFAULT_PIPE.put( "10.class", FilePathSynchronizer.class.getName());
+        //DEFAULT_PIPE.put( "10.Path.lib", "lib");
+        //DEFAULT_PIPE.put( "10.RemoteServer", "_Undefined_");
     }
 
 }
