@@ -3,6 +3,10 @@ package uy.com.r2.svc.conn;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.util.Collections;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.HashMap;
@@ -11,6 +15,8 @@ import org.apache.log4j.Logger;
 import uy.com.r2.core.api.ConfigItemDescriptor;
 import uy.com.r2.core.api.Configuration;
 import uy.com.r2.core.StartUpRequired;
+import uy.com.r2.core.SvcCatalog;
+import uy.com.r2.core.api.SvcRequest;
 
 /** UDP client and server connector.
  * @author G.Camargo
@@ -20,6 +26,7 @@ public class UdpServer implements StartUpRequired {
     private int port = 0;
     private DatagramSocket soc = null;
     private boolean stop = false;
+    private int receivedCount = 0;
      
     /** Get the configuration descriptors of this module.
      * @return ConfigItemDescriptor List
@@ -39,6 +46,7 @@ public class UdpServer implements StartUpRequired {
     public void startUp( Configuration cfg) throws Exception {
         port = cfg.getInt( "Port");
         new UdpListener().start();
+        receivedCount = 0;
     }
     
     /** Get the status report.
@@ -51,7 +59,13 @@ public class UdpServer implements StartUpRequired {
         if( pak != null) {
             map.put( "Version", "" + pak.getImplementationVersion());
         } 
-        //map.put( "Adapters", sb.toString());
+        StringBuilder sb = new StringBuilder();
+        for( InetAddress a: getLocalAddressList()) {
+            sb.append( a.toString());
+            sb.append( " ");
+        }
+        map.put( "LocalAddress", sb.toString());
+        map.put( "Received", "" + receivedCount);
         return map;
     }
 
@@ -79,9 +93,17 @@ public class UdpServer implements StartUpRequired {
                 try {
                     soc = new DatagramSocket( port);
                     DatagramPacket dp = new DatagramPacket( buff, buff.length);
-                    soc.receive( dp);           
-                    LOG.trace( "" + getName() + " receive: " + new String( buff));
-                    LOG.trace( " from " + dp.getAddress() + " ************************************");           
+                    soc.receive( dp);
+                    InetAddress a = dp.getAddress();
+                    if( getLocalAddressList().contains( a)) {
+                        LOG.trace( "************************************************* " + a);
+                        LOG.trace( "Packet(" + receivedCount + "): " + new String( buff));
+                        ++receivedCount;
+                        SvcRequest rq = new SvcRequest( a.getHostName(), 0, 0, "SetMasterServer", null, 10000);
+                        SvcCatalog.getDispatcher().call( rq);
+                    } else {
+                        LOG.trace( "Packet ignored from " + a + " " + new String( buff));
+                    }
                 } catch( Exception ex) {
                     if( !stop) {
                         LOG.warn( "Error on " + getName() + " " + ex, ex);
@@ -95,6 +117,16 @@ public class UdpServer implements StartUpRequired {
             LOG.trace( "Stopped " + getName());
         }
         
+    }
+    
+    private List<InetAddress> getLocalAddressList() {
+        List<InetAddress> l = new LinkedList();
+        try {
+            for( NetworkInterface nif: Collections.list( NetworkInterface.getNetworkInterfaces())) {
+                l.addAll( Collections.list( nif.getInetAddresses()));
+            }
+        } catch( Exception x) { }
+        return l;
     }
     
     /**/
