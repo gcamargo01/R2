@@ -5,6 +5,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InterfaceAddress;
+import java.net.MulticastSocket;
 import java.net.NetworkInterface;
 import java.util.Collections;
 import java.util.List;
@@ -18,6 +19,7 @@ import uy.com.r2.core.api.AsyncService;
 import uy.com.r2.core.api.ConfigItemDescriptor;
 import uy.com.r2.core.api.Configuration;
 import uy.com.r2.core.api.SvcMessage;
+import uy.com.r2.svc.tools.Json;
 
 /** UDP client and server connector.
  * @author G.Camargo
@@ -53,35 +55,25 @@ public class UdpClient implements AsyncService {
     public SvcMessage onRequest( SvcRequest req, Configuration cfg) throws Exception {
         port = cfg.getInt( "Port");
         // Get serialized request
-        Object s = req.get( "Serialized");
+        Object s = req.get( Json.SERIALIZED_JSON);
         if( s == null) {
-            s = req.toString();
+            s = req.get( "Serialized");
         }
         byte buff[] = ( "" + s).getBytes();
         LOG.trace( "Content to send: '" + s + "' to port=" + port);
-        // Send all over adapters
-        for( NetworkInterface nif: getAdapters()) {
-            LOG.trace( " to send to " + nif.getDisplayName());
-            List<InterfaceAddress> addrs = nif.getInterfaceAddresses();
-            if( !addrs.isEmpty()) {
-                DatagramSocket soc = new DatagramSocket( );
-                try {
-                    InterfaceAddress aa = addrs.get( 0);
-                    InetAddress ia = aa.getBroadcast();
-                    LOG.trace( "   getBroadcast  " + ia);
-                    if( ia == null) {
-                        ia = aa.getAddress();
-                    }
-                    soc.setBroadcast( true);
-                    LOG.trace( " to send to addrs  " + ia);
-                    DatagramPacket dp = new DatagramPacket( buff, buff.length, ia, port);
-                    soc.send( dp);
-                } catch( Exception x) {
-                    LOG.warn( "Can,t send to " + nif.getDisplayName() + " " + x, x);
-                } finally {
-                    soc.close();
-                }
+        MulticastSocket socket = null;
+        try {
+            socket = new MulticastSocket();
+            socket.setBroadcast( true);
+            for( InetAddress ia: getAdaptersAddress()) {
+                LOG.trace( "   to send to: " + ia);
+                DatagramPacket dp = new DatagramPacket( buff, buff.length, ia, port);
+                socket.send( dp);
             }
+        } catch( Exception x) {
+            LOG.warn( "Failed to send UDP " + x, x);
+        } finally {
+            socket.close();
         }
         return new SvcResponse( 0, req);
     }
@@ -110,11 +102,11 @@ public class UdpClient implements AsyncService {
             map.put( "Version", "" + pak.getImplementationVersion());
         } 
         StringBuilder sb = new StringBuilder();
-        for( NetworkInterface a: getAdapters()) {
-            sb.append( a.getDisplayName());
+        for( InetAddress a: getAdaptersAddress()) {
+            sb.append( a);
             sb.append( " ");
         }
-        map.put( "Adapters", sb.toString());
+        map.put( "BrodcastAddrss", sb.toString());
         return map;
     }
 
@@ -123,24 +115,44 @@ public class UdpClient implements AsyncService {
     public void shutdown() {
     }
 
-    private List<NetworkInterface> getAdapters() {
-        List<NetworkInterface> l = new LinkedList();
+    private List<InetAddress> getAdaptersAddress() {
+        List<NetworkInterface> al = new LinkedList();
+        List<InetAddress> il = new LinkedList();
         NetworkInterface loop = null;
         try {
             for( NetworkInterface nif: Collections.list( NetworkInterface.getNetworkInterfaces())) {
+                LOG.trace( " " + nif.getDisplayName());
                 if( nif.isUp()) {
                     if( !nif.isLoopback()) {
-                        l.add( nif);
+                        al.add( nif);
                     } else {
                         loop = nif;
                     }
                 }
             }
-        } catch( Exception x) { }
-        if( l.isEmpty() && loop != null) {  
-            l.add( loop);  // Add loopback if it was empty
+            if( al.isEmpty() && loop != null) {  
+                al.add( loop);  // Add loopback if it was empty
+            }
+            InetAddress anyIA = null;
+            for( NetworkInterface ni: al) {
+                for( InterfaceAddress a: ni.getInterfaceAddresses()) {
+                    LOG.trace( "  " + ni.getDisplayName() + " " + a);
+                    if( a.getBroadcast() != null) {
+                        il.add( a.getBroadcast());
+                        LOG.trace( "  added " + a.getBroadcast());
+                    } else {
+                        anyIA = a.getAddress();
+                    }
+                }
+            }
+            if( il.isEmpty() && anyIA != null) {
+                il.add( anyIA);
+            }
+        } catch( Exception x) {
+            LOG.warn( "Falied to get network adapters brodcast address " + x, x);
         }
-        return l;
+        LOG.trace( "Brodcast Adapter Address List = " + il);
+        return il;
     }
 
     /**/

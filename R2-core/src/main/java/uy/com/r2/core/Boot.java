@@ -3,6 +3,10 @@ package uy.com.r2.core;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.net.InetAddress;
+import java.net.InterfaceAddress;
+import java.net.NetworkInterface;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,7 +69,7 @@ public class Boot implements Module {
      * @param args Standard arguments: Local_Port Remote_Url
      */
     public static void main( String args[]) {
-        String rmtUrl = "http://localhost:8016";
+        String rmtUrl = "http://" + getLocalName() + ":8016";
         int localPort = 8015;
         switch( args.length) {
         case 2:
@@ -155,7 +159,7 @@ public class Boot implements Module {
         */
         if( pr.isEmpty()) {
             // calculate default server name
-            String hostName = "localhost"; //!!!! InetAddress.getLocalHost().getHostName();
+            String hostName = getLocalName(); //!!!! InetAddress.getLocalAddress().getHostName();
             String localUrl = "http://" + hostName + ":" + localPort;
             String localName = hostName + localPort;
             // Set default cliendNode
@@ -172,6 +176,51 @@ public class Boot implements Module {
         LOG.trace( "Startup cfg " + pr);
         return pr;
     }
+
+    /*    
+    public static String getLocalAddress() {
+        LOG.trace( "getlocalHost:");        
+        String la = "localhost";
+        try {
+            la = InetAddress.getLocalHost().getHostName();
+            for( NetworkInterface nif: Collections.list( NetworkInterface.getNetworkInterfaces())) {
+                LOG.trace( " nif= " + nif.getDisplayName());
+                if( nif.isUp() && !nif.isLoopback()) {
+                    for( InterfaceAddress a: nif.getInterfaceAddresses()) {
+                        la = a.getAddress().getHostName();
+                    }
+                }
+            }
+        } catch( Exception x) {
+            LOG.warn( "Falied to get local adapter address " + x, x);
+        }
+        LOG.trace( "getlocalHost= " + la);        
+        return la;
+    }
+    */    
+
+    public static String getLocalName() {
+        String ln = "localhost";
+        try {
+            ln = InetAddress.getLocalHost().getHostName();
+            for( NetworkInterface nif: Collections.list( NetworkInterface.getNetworkInterfaces())) {
+                LOG.trace( " nif= " + nif.getDisplayName() + " ln=" + ln);
+                if( nif.isUp() && !nif.isLoopback()) {
+                    for( InterfaceAddress a: nif.getInterfaceAddresses()) {
+                        LOG.trace( " a= " + a);
+                        if( !a.getAddress().getHostName().equals( a.getAddress().getHostAddress())) {
+                            ln = a.getAddress().getHostName();
+                        }
+                    }
+                }
+            }
+        } catch( Exception x) {
+            LOG.warn( "Falied to get local adapter address " + x, x);
+        }
+        LOG.trace( "getlocalName= " + ln);        
+        return ln;
+    }
+    
 
     static final Map<String,String> DEFAULT_PIPE = new HashMap();
     static {

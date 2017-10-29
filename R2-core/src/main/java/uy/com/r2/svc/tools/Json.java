@@ -21,7 +21,7 @@ import uy.com.r2.core.api.SvcResponse;
  * @author G.Camargo
  */
 public class Json implements AsyncService {
-    public static final String SERIALIZED = "SerializedJson";
+    public static final String SERIALIZED_JSON = "SerializedJson";
     public static final String RESULT_CODE = "ResultCode";
     private static final Logger log = Logger.getLogger( Json.class);
     private Gson mapper = new Gson();
@@ -81,11 +81,11 @@ public class Json implements AsyncService {
         }
         if( toSerial) {
             // Add or replace a "Data" field with JSON
-            req.put( SERIALIZED, toJSON( req.getPayload()));
+            req.put( SERIALIZED_JSON, toJSON( req.getPayload()));
         } else {
             // Take one field Data an serialize it
             Map<String, List<Object>> r;
-            r = fromJSON( "" + req.get( SERIALIZED));
+            r = fromJSON( "" + req.get( SERIALIZED_JSON));
             // Add parsed params is better
             for( String k: r.keySet()) {
                 req.getPayload().put( k, r.get( k));  // Already is a list
@@ -110,9 +110,9 @@ public class Json implements AsyncService {
         }
         if( toSerial) {
             // Take one field Data an serialize it
-            Map<String, List<Object>> r = fromJSON( "" + res.get( SERIALIZED));
+            Map<String, List<Object>> r = fromJSON("" + res.get( SERIALIZED_JSON));
             // Remove SerializedJson and try to parse ResultCode
-            r.remove( SERIALIZED);
+            r.remove( SERIALIZED_JSON);
             int rc = res.getResultCode();
             if( r.containsKey( RESULT_CODE) && rc == 0) {
                 rc = Integer.parseInt( "" + r.get( RESULT_CODE).toArray()[ 0]);
@@ -127,7 +127,7 @@ public class Json implements AsyncService {
             l.add( "" + res.getResultCode());
             m.put( RESULT_CODE, l);
             // Add or replace a "SerialisexJson" field with JSON
-            res.put( SERIALIZED, toJSON( m));
+            res.put( SERIALIZED_JSON, toJSON( m));
         }
         return res;
     }
@@ -150,26 +150,35 @@ public class Json implements AsyncService {
 
     private String toJSON( Map<String, List<Object>> data) throws Exception {
         log.trace( "process toJSON");
+        String js = "";
         if( data == null) {
-            return "";
+            return js;
         }
-        StringWriter sw = new StringWriter();
-        mapper.toJson( data, sw);
-        String js = sw.toString();
-        generatedCount += js.length();
+        try {
+            StringWriter sw = new StringWriter();
+            mapper.toJson( data, sw);
+            js = sw.toString();
+            generatedCount += js.length();
+        } catch( Exception x) {
+            throw new Exception( "Error generate JSON <<<<" + data + ">>>> " + x, x);
+        }
         return js;
     }
 
     private Map<String, List<Object>> fromJSON( String data) throws Exception {
         log.trace( "process fromJSON");
-        StringReader sr = new StringReader( data);
-        //Type t = new TypeToken<Map<String,String>>().getType();
-        Map<String,List<Object>> t = new HashMap<String,List<Object>>();
-        Map<String,List<Object>> r = (Map<String,List<Object>>)mapper.fromJson( sr, t.getClass());
-        if( r == null) {   // Avoid return null
-            r = t;
+        Map<String,List<Object>> r = new HashMap<String,List<Object>>();
+        try {
+            StringReader sr = new StringReader( data);
+            Map<String,List<Object>> t; 
+            t = (Map<String,List<Object>>)mapper.fromJson( sr, r.getClass());
+            if( t != null) {   // Avoid return null
+                r = t;
+            }
+            parsedCount += data.length();
+        } catch( Exception x) {
+            throw new Exception( "Error parsing JSON <<<<" + data + ">>>> " + x, x);
         }
-        parsedCount += data.length();
         return r;
     }
 

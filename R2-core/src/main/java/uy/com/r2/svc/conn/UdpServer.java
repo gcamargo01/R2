@@ -17,6 +17,7 @@ import uy.com.r2.core.api.Configuration;
 import uy.com.r2.core.StartUpRequired;
 import uy.com.r2.core.SvcCatalog;
 import uy.com.r2.core.api.SvcRequest;
+import uy.com.r2.svc.tools.Json;
 
 /** UDP client and server connector.
  * @author G.Camargo
@@ -60,11 +61,11 @@ public class UdpServer implements StartUpRequired {
             map.put( "Version", "" + pak.getImplementationVersion());
         } 
         StringBuilder sb = new StringBuilder();
-        for( InetAddress a: getLocalAddressList()) {
+        for( InetAddress a: getExternalAddressList()) {
             sb.append( a.toString());
             sb.append( " ");
         }
-        map.put( "LocalAddress", sb.toString());
+        map.put( "ExternalAddress", sb.toString());
         map.put( "Received", "" + receivedCount);
         return map;
     }
@@ -95,11 +96,12 @@ public class UdpServer implements StartUpRequired {
                     DatagramPacket dp = new DatagramPacket( buff, buff.length);
                     soc.receive( dp);
                     InetAddress a = dp.getAddress();
-                    if( !getLocalAddressList().contains( a)) {
+                    if( !getExternalAddressList().contains( a)) {
                         LOG.trace( "************************************************* " + a);
                         LOG.trace( "Packet(" + receivedCount + "): " + new String( buff));
                         ++receivedCount;
                         SvcRequest rq = new SvcRequest( a.getHostName(), 0, 0, "SetMasterServer", null, 10000);
+                        rq.add( Json.SERIALIZED_JSON, new String( buff));
                         SvcCatalog.getDispatcher().call( rq);
                     } else {
                         LOG.trace( "Packet ignored, " + a);
@@ -119,11 +121,13 @@ public class UdpServer implements StartUpRequired {
         
     }
     
-    private List<InetAddress> getLocalAddressList() {
+    private List<InetAddress> getExternalAddressList() {
         List<InetAddress> l = new LinkedList();
         try {
             for( NetworkInterface nif: Collections.list( NetworkInterface.getNetworkInterfaces())) {
-                l.addAll( Collections.list( nif.getInetAddresses()));
+                if( nif.isUp() && !nif.isLoopback()) {
+                    l.addAll( Collections.list( nif.getInetAddresses()));
+                }
             }
         } catch( Exception x) { }
         return l;
