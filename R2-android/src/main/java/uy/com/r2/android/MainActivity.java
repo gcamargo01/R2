@@ -13,6 +13,13 @@ import org.apache.log4j.PatternLayout;
 import uy.com.r2.core.Boot;
 import uy.com.r2.core.SvcCatalog;
 
+/** R2 Android Main Activity.
+ * It doesn't make any sense to implement a server on a mobile phone, 
+ * except as proof of concept. Although it must be recognized that as the world 
+ * is full of android devices, it is tempting to use them for integration 
+ * testing and distributed process. And just for that. 
+ * @author Gustavo Camargo
+ */
 public class MainActivity extends Activity {
     
     private TextView textView;
@@ -25,7 +32,11 @@ public class MainActivity extends Activity {
                 if( startButton == v) {
                     Log.v( "MainActivity", "start button");
                     try {
-                        Boot.start( 8015, "http://localhost:8016");
+                        new Thread(new Runnable() {
+                            public void run() {
+                                Boot.start( 8015, "http://" + Boot.getLocalName() + ":8016");
+                            }
+                        }).start();
                     } catch( Exception x) { 
                         Log.e( "MainActivity", "" + x, x);
                     }
