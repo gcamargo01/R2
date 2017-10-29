@@ -95,14 +95,14 @@ public class UdpServer implements StartUpRequired {
                     DatagramPacket dp = new DatagramPacket( buff, buff.length);
                     soc.receive( dp);
                     InetAddress a = dp.getAddress();
-                    if( getLocalAddressList().contains( a)) {
+                    if( !getLocalAddressList().contains( a)) {
                         LOG.trace( "************************************************* " + a);
                         LOG.trace( "Packet(" + receivedCount + "): " + new String( buff));
                         ++receivedCount;
                         SvcRequest rq = new SvcRequest( a.getHostName(), 0, 0, "SetMasterServer", null, 10000);
                         SvcCatalog.getDispatcher().call( rq);
                     } else {
-                        LOG.trace( "Packet ignored from " + a + " " + new String( buff));
+                        LOG.trace( "Packet ignored, " + a);
                     }
                 } catch( Exception ex) {
                     if( !stop) {

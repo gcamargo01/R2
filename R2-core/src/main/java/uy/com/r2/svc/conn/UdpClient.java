@@ -68,11 +68,12 @@ public class UdpClient implements AsyncService {
                 try {
                     InterfaceAddress aa = addrs.get( 0);
                     InetAddress ia = aa.getBroadcast();
+                    LOG.trace( "   getBroadcast  " + ia);
                     if( ia == null) {
                         ia = aa.getAddress();
                     }
                     soc.setBroadcast( true);
-                    LOG.trace( " to send to addrs  " + ia + " " + ia.getCanonicalHostName() + " " + ia.getHostAddress());
+                    LOG.trace( " to send to addrs  " + ia);
                     DatagramPacket dp = new DatagramPacket( buff, buff.length, ia, port);
                     soc.send( dp);
                 } catch( Exception x) {
@@ -135,10 +136,10 @@ public class UdpClient implements AsyncService {
                     }
                 }
             }
-            if( l.isEmpty() && loop != null) {  // At least loopback
-                l.add( loop);
-            }
         } catch( Exception x) { }
+        if( l.isEmpty() && loop != null) {  
+            l.add( loop);  // Add loopback if it was empty
+        }
         return l;
     }
 
