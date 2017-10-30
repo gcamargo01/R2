@@ -69,15 +69,19 @@ public class Boot implements Module {
      * @param args Standard arguments: Local_Port Remote_Url
      */
     public static void main( String args[]) {
-        String rmtUrl = "http://" + getLocalName() + ":8016";
+        // Default values
+        String hostName = getHostName();
+        String rmtUrl = "http://" + hostName + ":8016";  // Asume there is another in this machine
         int localPort = 8015;
+        // Parse args
         switch( args.length) {
         case 2:
            rmtUrl = args[ 1];
         case 1:
            localPort = Integer.parseInt( args[ 0]);
         }
-        start( localPort, rmtUrl);
+        //Start
+        start( hostName, localPort, rmtUrl);
         try {
             // Wait till stop
             while( !(Boolean)SvcCatalog.getDispatcher().getStatusVars().get( "Stopped")) {
@@ -92,14 +96,15 @@ public class Boot implements Module {
     }
     
     /** Start all modules.
+     * @param localHost local host name in the network
      * @param localPort local listening port
-     * @param rmtUrl remote url to contact
+     * @param rmtUrl remote url to contact (or null)
      */
-    public static void start( int localPort, String rmtUrl) {
+    public static void start( String localHost, int localPort, String rmtUrl) {
         try {
-            LOG.trace( "start " + localPort + " " + rmtUrl);
+            LOG.trace( "start " + localHost + " " + localPort + " " + rmtUrl);
             // Read previous configuration o basic config
-            Properties pr = readConfig( localPort, rmtUrl);
+            Properties pr = readConfig( localHost, localPort, rmtUrl);
             // Deploy initial pipe
             for( int i = 0; pr.getProperty( "Module." + i) != null; ++i) {
                 String mod = pr.getProperty( "Module." + i);
@@ -142,13 +147,13 @@ public class Boot implements Module {
         fos.close();
     }
     
-    private static Properties readConfig( int localPort, String rmtUrl) throws Exception {
+    private static Properties readConfig( String hostName, int localPort, String rmtUrl) throws Exception {
         String r2Path = System.getProperty( "R2_PATH", "");
         if( r2Path.length() > 0 && !r2Path.endsWith( File.separator)) {
             r2Path += File.separator;
         }
         Properties pr = new Properties();
-        /* !!!!
+        /* !!!! load its last confuration
         try {
             FileInputStream fi = new FileInputStream( r2Path + "R2.properties");
             pr.load( fi);
@@ -159,7 +164,6 @@ public class Boot implements Module {
         */
         if( pr.isEmpty()) {
             // calculate default server name
-            String hostName = getLocalName(); //!!!! InetAddress.getLocalAddress().getHostName();
             String localUrl = "http://" + hostName + ":" + localPort;
             String localName = hostName + localPort;
             // Set default cliendNode
@@ -177,39 +181,19 @@ public class Boot implements Module {
         return pr;
     }
 
-    /*    
-    public static String getLocalAddress() {
-        LOG.trace( "getlocalHost:");        
-        String la = "localhost";
-        try {
-            la = InetAddress.getLocalHost().getHostName();
-            for( NetworkInterface nif: Collections.list( NetworkInterface.getNetworkInterfaces())) {
-                LOG.trace( " nif= " + nif.getDisplayName());
-                if( nif.isUp() && !nif.isLoopback()) {
-                    for( InterfaceAddress a: nif.getInterfaceAddresses()) {
-                        la = a.getAddress().getHostName();
-                    }
-                }
-            }
-        } catch( Exception x) {
-            LOG.warn( "Falied to get local adapter address " + x, x);
-        }
-        LOG.trace( "getlocalHost= " + la);        
-        return la;
-    }
-    */    
-
-    public static String getLocalName() {
+    public static String getHostName() {
         String ln = "localhost";
+        String some = null;
         try {
             ln = InetAddress.getLocalHost().getHostName();
             for( NetworkInterface nif: Collections.list( NetworkInterface.getNetworkInterfaces())) {
                 LOG.trace( " nif= " + nif.getDisplayName() + " ln=" + ln);
                 if( nif.isUp() && !nif.isLoopback()) {
                     for( InterfaceAddress a: nif.getInterfaceAddresses()) {
+                        some = a.getAddress().getHostName();
                         LOG.trace( " a= " + a);
-                        if( !a.getAddress().getHostName().equals( a.getAddress().getHostAddress())) {
-                            ln = a.getAddress().getHostName();
+                        if( !some.equals( a.getAddress().getHostAddress())) {  // Isn't address
+                            ln = a.getAddress().getHostName();   
                         }
                     }
                 }
@@ -217,7 +201,8 @@ public class Boot implements Module {
         } catch( Exception x) {
             LOG.warn( "Falied to get local adapter address " + x, x);
         }
-        LOG.trace( "getlocalName= " + ln);        
+        ln = ( ln.equals( "localhost") && some != null)? some: ln;  // In the worst case, take de IP
+        LOG.trace( "getHostName= " + ln);        
         return ln;
     }
     

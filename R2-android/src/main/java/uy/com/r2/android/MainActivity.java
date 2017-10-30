@@ -34,7 +34,8 @@ public class MainActivity extends Activity {
                     try {
                         new Thread(new Runnable() {
                             public void run() {
-                                Boot.start( 8015, "http://" + Boot.getLocalName() + ":8016");
+                                String ln = Boot.getHostName();
+                                Boot.start( ln, 8015, "http://" + ln + ":8016");
                             }
                         }).start();
                     } catch( Exception x) { 
