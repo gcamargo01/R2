@@ -284,8 +284,8 @@ public class SvcAvailServers implements AsyncService, StartUpRequired, Runnable 
         try {
             switch( cmd) {
             case SVC_ADDSERVER:
-                if( url.equals( "" + remoteUrl)) {
-                    knownServers.remove( UNDEFINED);
+                if( url.equals( "" + remoteUrl)) {  // Is  the url defined on start-up?
+                    knownServers.remove( UNDEFINED);   // yes: remove _Undefined_
                 }
                 knownServers.put( name, url);
                 updateDestinations();
@@ -310,7 +310,9 @@ public class SvcAvailServers implements AsyncService, StartUpRequired, Runnable 
                 if( name != null) {
                     masterTimeStamp = System.currentTimeMillis();
                     masterName = name;
-                    //knownServers.put( name, url);  // is the orig. url, not master url
+                    if( !knownServers.containsKey( name)) {
+                        knownServers.put( name, map.get( name));
+                    }
                     updateDestinations();
                 }
                 break;
