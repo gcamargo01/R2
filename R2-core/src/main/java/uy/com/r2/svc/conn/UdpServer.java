@@ -133,7 +133,7 @@ public class UdpServer implements StartUpRequired {
         return l;
     }
     
-    /**/
+    /*
     public static void main( String args[]) {
         org.apache.log4j.BasicConfigurator.configure();
         LOG.trace( "Storting....");
@@ -152,7 +152,7 @@ public class UdpServer implements StartUpRequired {
             ex.printStackTrace();
         }
     }
-    /**/
+    */
 }
 
 

@@ -155,7 +155,7 @@ public class UdpClient implements AsyncService {
         return il;
     }
 
-    /**/
+    /*
     public static void main( String args[]) {
         org.apache.log4j.BasicConfigurator.configure();
         UdpClient u = new UdpClient();
@@ -168,7 +168,7 @@ public class UdpClient implements AsyncService {
             ex.printStackTrace();
         }
     }
-    /**/
+    */
 }
 
 
