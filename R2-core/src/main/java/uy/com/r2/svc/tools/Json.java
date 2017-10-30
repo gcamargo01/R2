@@ -185,12 +185,12 @@ public class Json implements AsyncService {
     /** Minimal Test *
     public static void main( String args[]) {
         try {
-            JSON jj = new JSON();
+            Json jj = new Json();
             SvcMessage m = new SvcRequest( "",  0, 0, "", null, 0);
             m.add( "data1", "one");
             m.add( "data2", "two");
             m.add( "data2", "two-2");
-            String j = jj.toJSON( m.getData());
+            String j = jj.toJSON( m.getPayload());
             System.out.println( "toJson:" + j);
             System.out.println( "fromJson: " + jj.fromJSON( j));
         } catch( Exception ex) { 
