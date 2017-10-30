@@ -98,10 +98,10 @@ public class UdpServer implements StartUpRequired {
                     InetAddress a = dp.getAddress();
                     if( !getExternalAddressList().contains( a)) {
                         LOG.trace( "************************************************* " + a);
-                        LOG.trace( "Packet(" + receivedCount + "): " + new String( buff));
+                        LOG.trace( "Packet(" + receivedCount + "): " + new String( dp.getData(), 0, dp.getLength()));
                         ++receivedCount;
                         SvcRequest rq = new SvcRequest( a.getHostName(), 0, 0, "SetMasterServer", null, 10000);
-                        rq.add( Json.SERIALIZED_JSON, new String( buff));
+                        rq.add( Json.SERIALIZED_JSON, new String( dp.getData(), 0, dp.getLength()));
                         SvcCatalog.getDispatcher().call( rq);
                     } else {
                         LOG.trace( "Packet ignored, " + a);
