@@ -17,19 +17,20 @@ import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import com.sun.net.httpserver.Headers;
 import org.apache.log4j.Logger;
-import uy.com.r2.core.CoreModule;
 import uy.com.r2.core.SvcCatalog;
 import uy.com.r2.core.api.ConfigItemDescriptor;
 import uy.com.r2.core.api.Configuration;
 import uy.com.r2.core.api.SvcRequest;
 import uy.com.r2.core.api.SvcResponse;
+import uy.com.r2.core.StartUpRequired;
 
 /**
  * Mini HTTP server, to process remote commands.
  *
+ * @deprecated Use MicroHttpServer 
  * @author G.Camargo
  */
-public class MiniHttpServer implements CoreModule {
+public class MiniHttpServer implements StartUpRequired {
 
     private static final Logger LOG = Logger.getLogger(MiniHttpServer.class);
     private int txNr = 0;
@@ -58,8 +59,9 @@ public class MiniHttpServer implements CoreModule {
         return l;
     }
 
+    /** Configure and start. */
     @Override
-    public void startup( Configuration cfg) throws Exception {
+    public void startUp( Configuration cfg) throws Exception {
         LOG.trace( "startup " + cfg + " " + cfg.isChanged());
         if( !cfg.isChanged()) {
             return;
