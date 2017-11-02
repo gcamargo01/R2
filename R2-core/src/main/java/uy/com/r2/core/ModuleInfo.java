@@ -234,15 +234,6 @@ public class ModuleInfo implements Module {
     }
     
     SvcMessage processMessage( SvcMessage msg) {
-        /*
-        if( LOG.isDebugEnabled() && msg != null) {
-            if( msg instanceof SvcRequest) {
-                LOG.debug( "processMessage >>> " + moduleName + " " + msg);
-            } else if( msg instanceof SvcResponse) {
-                LOG.debug( "processMessage <<< " + moduleName + " " + msg);
-            }        
-        }
-        */
         SvcRequest req = ( msg instanceof SvcRequest) ? 
                 (SvcRequest)msg:
                 ((SvcResponse)msg).getRequest();
