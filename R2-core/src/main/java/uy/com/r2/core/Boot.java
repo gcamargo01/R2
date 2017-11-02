@@ -27,7 +27,7 @@ import uy.com.r2.svc.tools.Json;
 import uy.com.r2.svc.tools.SvcAvailServers;
 import uy.com.r2.svc.tools.ToHtml;
 
-/** Startup module.
+/** Startup implementation.
  * Its: functions include: <br>
  * - Try to load last configuration <br>
  * - Else startup a minimal configuration <br>
@@ -35,37 +35,10 @@ import uy.com.r2.svc.tools.ToHtml;
  * - Support for special boot; Module Arg=Value <br>
  * @author G.Camargo
  */
-public class Boot implements Module {
+public class Boot {
     private static final Logger LOG = Logger.getLogger(Boot.class);
 
-    /** Get the configuration descriptors of this module.
-     * @return ConfigItemDescriptor List
-     */
-    @Override
-    public List<ConfigItemDescriptor> getConfigDescriptors() {
-        return null;
-    }
-    
-    /** Service call.
-    /** Get the status report.
-     * @return Variable and value map
-     */
-    @Override
-    public Map<String,Object> getStatusVars() {
-        Map<String,Object> map = new TreeMap();
-        Package pak = getClass().getPackage();
-        if( pak != null) {
-            map.put( "Version", "" + pak.getImplementationVersion());
-        } 
-        return map;
-    }
-
-    /** Stop and release all the allocated resources. */
-    @Override
-    public void shutdown() {
-    }
-
-    /** Entry point as java aplication.
+    /** Entry point as java application.
      * @param args Standard arguments: Local_Port Remote_Url
      */
     public static void main( String args[]) {
