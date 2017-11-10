@@ -14,11 +14,13 @@ Here are tree main components:
 it hast methods to install, remove and update modules. 
 <p>
 
-{@link uy.com.r2.core.ServiceInfo} The service module structure to hold information and status 
-of each module.
+{@link uy.com.r2.core.SimpleDispatcher} A simple implementation of the core module that dispatch and control execution.
 <p>
 
-{@link uy.com.r2.core.SimpleDispatcher} The module to dispatch and control execution.
+{@link uy.com.r2.core.SvcDeployer} The service core module to executes commands to install/remove and update system configuration.
+<p>
+
+{@link uy.com.r2.core.ServiceInfo} The structure to hold information and status of each module.
 <p>
 
 {@link uy.com.r2.core.RunningPipeline} The sequence of service modules to run and current status.
