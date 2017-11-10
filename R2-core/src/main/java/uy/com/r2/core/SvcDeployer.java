@@ -149,6 +149,10 @@ public class SvcDeployer implements AsyncService {
         } 
         map.put( "Commands", receivedCommands);
         map.put( "CommandErrors", errorsOnCommands);
+        map.put( "OS", System.getProperty( "os.name"));
+        map.put( "Java", System.getProperty( "java.version"));
+        map.put( "Classpath", System.getProperty( "java.class.path"));
+        map.put( "Lib", System.getProperty( "java.library.path"));
         return map;
     }
 
