@@ -63,7 +63,7 @@ public class SvcDeployer implements AsyncService {
     }
     
     private void updateCfg( Configuration cfg) throws Exception {
-        if( !cfg.isChanged()) {
+        if( !cfg.isUpdated()) {
             return;
         }
         receivedCommands = 0;
@@ -75,7 +75,7 @@ public class SvcDeployer implements AsyncService {
                 command( cmd, cfg.getString( "Commands." + k + ".Module"), cfg); 
             }
         }
-        cfg.resetChanged();
+        cfg.clearUpdated();
     }
 
     /** Invocation dispatch phase.

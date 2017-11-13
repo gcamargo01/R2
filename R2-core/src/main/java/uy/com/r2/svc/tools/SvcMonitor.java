@@ -82,7 +82,7 @@ public class SvcMonitor implements AsyncService, SimpleService {
     
     private void setConfiguration( Configuration cfg) throws Exception {
         // Resest statistics
-        if( cfg.isChanged()) {
+        if( cfg.isUpdated()) {
             LOG.info( name + " New Configuration " + cfg);
             setupTime = System.currentTimeMillis();
             invocationsCount = 0;
@@ -101,7 +101,7 @@ public class SvcMonitor implements AsyncService, SimpleService {
                 lastReqs = new SvcRequest[ keepLast];
                 lastResp = new SvcResponse[ keepLast];
             }
-            cfg.resetChanged();
+            cfg.clearUpdated();
         }    
     }
     

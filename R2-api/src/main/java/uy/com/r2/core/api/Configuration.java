@@ -22,33 +22,18 @@ public class Configuration implements Serializable {
     public Configuration( ) {
     }
 
-    /** Map Constructor.
-     * @param map Configuration items map
-     */
-    public Configuration( Map<String,Object> map) {
-        cfg = map;
-    }
-
-    /** Create a clone.
-     * @return A new configuration
-     */
-    @Override
-    public Configuration clone( ) {
-        return new Configuration( this.cfg);
-    }
-
     /** Determine if the configuration has changed.
      * To avoid unnecessary processing. Use with resetChaged();
      * @return Boolean
      */
-    public boolean isChanged( ) {
+    public boolean isUpdated( ) {
         return changed;
     }
 
     /** Clear changed flag.
      * To explicit set this status.
      */
-    public void resetChanged( ) {
+    public void clearUpdated( ) {
         changed = false;
     }
 
@@ -122,7 +107,6 @@ public class Configuration implements Serializable {
      * @param key Configuration key
       * @return Not null value as long
      * @throws Exception Parsing error
-     * @deprecated Default values are always set
      */
     public long getLong( String key) throws Exception {
         if( !cfg.containsKey( key)) {
@@ -186,6 +170,9 @@ public class Configuration implements Serializable {
      */
     public void put( String key, Object value) {
         changed = true;
+        if( key == null) {
+            return;
+        }
         cfg.put( key, value);
     }
     

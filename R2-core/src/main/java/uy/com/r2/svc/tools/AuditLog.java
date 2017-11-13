@@ -45,14 +45,14 @@ public class AuditLog implements AsyncService {
     }
     
     private void setConfiguration( Configuration cfg) throws Exception {
-        if( cfg.isChanged()) {
+        if( cfg.isUpdated()) {
             fileName = cfg.getString( "FileName");
             // restart logging
             try {
                 logWr.close();
             } catch( Exception x) { }
             logWr = null;
-            cfg.resetChanged();
+            cfg.clearUpdated();
         }
     }
 

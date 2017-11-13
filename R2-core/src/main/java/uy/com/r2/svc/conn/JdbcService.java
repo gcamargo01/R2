@@ -66,7 +66,7 @@ public class JdbcService implements AsyncService {
      * @throws Exception Unexpected error
      */
     private void setConfiguration( Configuration cfg) throws Exception {
-        if( !cfg.isChanged()) {
+        if( !cfg.isUpdated()) {
             return;
         }
         firstTime = false;
@@ -93,7 +93,7 @@ public class JdbcService implements AsyncService {
             svcs.put( k, si);
             log.debug( "Service " + k + " " + si.sqlSentence);
         }
-        cfg.resetChanged();
+        cfg.clearUpdated();
     }
 
     /** Service call.

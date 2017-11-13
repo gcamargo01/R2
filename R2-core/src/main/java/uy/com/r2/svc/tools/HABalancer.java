@@ -59,7 +59,7 @@ public class HABalancer implements AsyncService {
     }
     
     private void setConfiguration( Configuration cfg) throws Exception {
-        if( !cfg.isChanged()) {
+        if( !cfg.isUpdated()) {
             return;
         }
         String mn[] = cfg.getString( "Pipelines").split( ",");
@@ -72,7 +72,7 @@ public class HABalancer implements AsyncService {
         respTimeFactor = (float)cfg.getDouble( "RespTimeFactor");
         respTimeThresold = cfg.getInt( "RespTimeThresold");
         testMsg = cfg.getString( "TestMessage");
-        cfg.resetChanged();
+        cfg.clearUpdated();
     }
 
     /** Process a service call.

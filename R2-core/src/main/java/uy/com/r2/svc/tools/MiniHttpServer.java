@@ -62,8 +62,8 @@ public class MiniHttpServer implements StartUpRequired {
     /** Configure and start. */
     @Override
     public void startUp( Configuration cfg) throws Exception {
-        LOG.trace( "startup " + cfg + " " + cfg.isChanged());
-        if( !cfg.isChanged()) {
+        LOG.trace( "startup " + cfg);
+        if( !cfg.isUpdated()) {
             return;
         }
         int port = cfg.getInt( "Port");
@@ -84,7 +84,7 @@ public class MiniHttpServer implements StartUpRequired {
         server.createContext( "/", new MyHandler());
         server.setExecutor( pool); // creates a default executor
         server.start();
-        cfg.resetChanged();
+        cfg.clearUpdated();
         // reset statistics
         calledTimes = 0;
         callingErrors = 0;

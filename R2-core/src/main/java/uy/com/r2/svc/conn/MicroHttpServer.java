@@ -60,8 +60,8 @@ public class MicroHttpServer implements StartUpRequired {
      */
     @Override
     public void startUp( Configuration cfg) throws Exception {
-        LOG.trace( "startup " + cfg + " " + cfg.isChanged());
-        if( !cfg.isChanged()) {
+        LOG.trace( "startup " + cfg);
+        if( !cfg.isUpdated()) {
             return;
         }
         int port = cfg.getInt( "Port");
@@ -75,7 +75,7 @@ public class MicroHttpServer implements StartUpRequired {
         // Start the server to this port
         server = new ListenerThread( port, maxWorkersLimit, this);
         server.start();
-        cfg.resetChanged();
+        cfg.clearUpdated();
     }
 
     /** Get the status report.

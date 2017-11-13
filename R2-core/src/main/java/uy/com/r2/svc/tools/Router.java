@@ -37,7 +37,7 @@ public class Router implements AsyncService {
     }
     
     private void setConfiguration( Configuration cfg) throws Exception {
-        if( cfg.isChanged()) {
+        if( !cfg.isUpdated()) {
             return;
         }
         defRoutes = new HashMap();
@@ -53,7 +53,7 @@ public class Router implements AsyncService {
             //    log.warn( "Defined route not found " + pn + " for node " + sn);
             //}
         }
-        cfg.resetChanged();
+        cfg.clearUpdated();
     }
 
     /** Invocation dispatch phase.

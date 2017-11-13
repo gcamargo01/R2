@@ -35,7 +35,7 @@ public class SignAndValidate implements AsyncService {
     private PrivateKey prvKey;
      
     private void setConfiguration( Configuration cfg) throws Exception {
-        if( !cfg.isChanged()) {
+        if( !cfg.isUpdated()) {
             return;
         }
         signatureAlgorithm = cfg.getString( "SignatureAlgorithm");
@@ -50,7 +50,7 @@ public class SignAndValidate implements AsyncService {
         fsi.close();
         cert = ks.getCertificate( certName);
         prvKey = ( PrivateKey)ks.getKey( certName, passPhrase.toCharArray());        
-        cfg.resetChanged();
+        cfg.clearUpdated();
     }
 
     /** Process a service call.

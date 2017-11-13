@@ -179,7 +179,7 @@ public class ModuleInfo implements Module {
             monitorImpl = null;
         }
         // Update config
-        this.cfg = cfg.clone();
+        cfg.put( null, null);
         if( moduleImpl instanceof StartUpRequired) {  
             ( (StartUpRequired)moduleImpl).startUp( this.cfg);
         }

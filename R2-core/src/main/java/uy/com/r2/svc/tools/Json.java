@@ -51,7 +51,7 @@ public class Json implements AsyncService {
      * @throws Exception Unexpected error
      */
     private void setConfiguration( Configuration cfg) throws Exception {
-        if( !cfg.isChanged()) {
+        if( !cfg.isUpdated()) {
             return;
         }
         toSerial = cfg.getBoolean( "ToSerial");
@@ -62,7 +62,7 @@ public class Json implements AsyncService {
             parsedCount = 0;
             generatedCount = 0;
         }
-        cfg.resetChanged();
+        cfg.clearUpdated();
     }
 
     /** Process a service call.

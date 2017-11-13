@@ -45,7 +45,7 @@ public class Cache implements AsyncService {
     }
 
     private void setConfiguration( Configuration cfg) throws Exception {
-        if( !cfg.isChanged()) {
+        if( !cfg.isUpdated()) {
             return;
         }
         ttd = cfg.getInt( "TimeToDiscard");
@@ -54,7 +54,7 @@ public class Cache implements AsyncService {
             cacheableServices = new HashSet( Arrays.asList( sa));
             cache = new HashMap();
         }
-        cfg.resetChanged();
+        cfg.clearUpdated();
     }
 
     /**
