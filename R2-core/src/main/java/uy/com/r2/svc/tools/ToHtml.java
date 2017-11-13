@@ -209,7 +209,7 @@ public class ToHtml implements AsyncService {
                 sb.append( "</form><p>\n");  
                 sb.append( "<form action=\"/PersistConfig\"><input type=\"submit\" value=\"PersistConfig\"></form>\n");  
 
-            } else if( rq.getServiceName().equals( SvcManager.SVC_GETSERVERSLIST)) {
+            } else if( rq.getServiceName().equals( SvcAvailServers.SVC_GETSERVERSLIST)) {
 
                 sb.append( "<p/>\n"); 
                 sb.append( "<div class=\"divTable\">\n"); 
