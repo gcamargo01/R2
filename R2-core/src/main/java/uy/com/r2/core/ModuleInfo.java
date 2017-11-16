@@ -175,12 +175,13 @@ public class ModuleInfo implements Module {
         if( cfg.getBoolean( "Monitor") && asyncImpl != null) {
             LOG.trace( "Monitor instanced on " + moduleName);
             monitorImpl = new SvcMonitor( asyncImpl, moduleName);
+            this.cfg = new MonitoredConfig( moduleName, cfg);
         } else {
             monitorImpl = null;
+            this.cfg = cfg.clone();   // set as updated
         }
         // Update config
-        this.cfg = cfg.clone();
-        LOG.info( moduleName + ".setConfiguration " + cfg);
+        LOG.info( moduleName + ".setConfiguration ************************************** " + this.cfg);
         if( moduleImpl instanceof StartUpRequired) {  
             ( (StartUpRequired)moduleImpl).startUp( this.cfg);
         }
