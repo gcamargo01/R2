@@ -43,7 +43,7 @@ public class HttpClient implements AsyncService {
                 "Service names and URL to call", null));
         l.add( new ConfigItemDescriptor( "Url", ConfigItemDescriptor.URL,
                 "Default URL to call", null));
-        l.add( new ConfigItemDescriptor( "SleepWaitingTime", ConfigItemDescriptor.INTEGER,
+        l.add( new ConfigItemDescriptor( "SleepTimeWait", ConfigItemDescriptor.INTEGER,
                 "Sleep time waiting for a response, in mS", "10"));
         return l;
     }
