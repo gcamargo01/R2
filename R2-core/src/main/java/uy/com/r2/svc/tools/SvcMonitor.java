@@ -8,7 +8,9 @@ import java.util.List;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.logging.Level;
 import org.apache.log4j.Logger;
+import uy.com.r2.core.SvcCatalog;
 import uy.com.r2.core.api.AsyncService;
 import uy.com.r2.core.api.SvcRequest;
 import uy.com.r2.core.api.SvcResponse;
@@ -83,7 +85,7 @@ public class SvcMonitor implements AsyncService, SimpleService {
     private void setConfiguration( Configuration cfg) throws Exception {
         // Resest statistics
         if( cfg.isUpdated()) {
-            LOG.info( name + " New Configuration " + cfg);
+            LOG.info( name + " New Configuration " + cfg.hashCode() + " " + cfg);
             setupTime = System.currentTimeMillis();
             invocationsCount = 0;
             errorsCount = 0;
@@ -101,7 +103,9 @@ public class SvcMonitor implements AsyncService, SimpleService {
                 lastReqs = new SvcRequest[ keepLast];
                 lastResp = new SvcResponse[ keepLast];
             }
-        }    
+        } else {
+            LOG.info( name + " same Configuration " + cfg.hashCode());
+        }
     }
     
     /** Invocation dispatch phase.
