@@ -144,11 +144,11 @@ public class Configuration implements Serializable {
      * @return Boolean
      */
     public boolean getBoolean( String key) {
-        return Boolean.parseBoolean( "" + cfg.get( key));
+        return Boolean.parseBoolean( getString( key));
     }
 
     /** Test if has some configuration.
-     * @param key Configuration key. admits '*' as wildchar
+     * @param key Configuration key. admits '*' as wild char
      * @return Boolean
      */
     public boolean containsKey( String key) {
