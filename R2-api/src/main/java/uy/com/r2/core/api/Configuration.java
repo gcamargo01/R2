@@ -11,15 +11,30 @@ import java.io.Serializable;
  * {@link uy.com.r2.core.api.ConfigItemDescriptor} and actual value.
  * @author G.Camargo
  */
-public class Configuration implements Serializable {
+public class Configuration implements Serializable, Cloneable {
     private static final long serialVersionUID = 1L;
     
-    private Map<String,Object>cfg = new TreeMap<>();
+    private Map<String,Object> cfg = new TreeMap<>();
     private boolean changed = true;
     
     /** Empty constructor.
      */
     public Configuration( ) {
+    }
+
+    /** Create a new copy.
+     * @return A new and updated Configuration (isUpdated = true)
+     */
+    @Override
+    public Configuration clone( ) {
+        Configuration c;
+        try {
+            c = ( Configuration)super.clone();
+        } catch( CloneNotSupportedException xx) {
+            c = new Configuration();
+        }
+        c.cfg = this.cfg;
+        return c;
     }
 
     /** Determine if the configuration has changed.
