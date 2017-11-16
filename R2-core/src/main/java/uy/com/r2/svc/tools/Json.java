@@ -23,7 +23,7 @@ import uy.com.r2.core.api.SvcResponse;
 public class Json implements AsyncService {
     public static final String SERIALIZED_JSON = "SerializedJson";
     public static final String RESULT_CODE = "ResultCode";
-    private static final Logger log = Logger.getLogger( Json.class);
+    private static final Logger LOG = Logger.getLogger( Json.class);
     private Gson mapper = new Gson();
     private boolean toSerial = true;
     private boolean procRequest = true;
@@ -58,10 +58,8 @@ public class Json implements AsyncService {
         procRequest = cfg.getBoolean( "ProcessRequest");
         procResponse = cfg.getBoolean( "ProcessResponse");
         // reset statistics
-        if( cfg.getBoolean( "Reset")) {
-            parsedCount = 0;
-            generatedCount = 0;
-        }
+        parsedCount = 0;
+        generatedCount = 0;
         cfg.clearUpdated();
     }
 
@@ -149,7 +147,7 @@ public class Json implements AsyncService {
     }
 
     private String toJSON( Map<String, List<Object>> data) throws Exception {
-        log.trace( "process toJSON");
+        LOG.trace( "process toJSON");
         String js = "";
         if( data == null) {
             return js;
@@ -160,13 +158,13 @@ public class Json implements AsyncService {
             js = sw.toString();
             generatedCount += js.length();
         } catch( Exception x) {
-            throw new Exception( "Error generate JSON <<<<" + data + ">>>> " + x, x);
+            throw new Exception( "Error generate JSON " + data + " " + x, x);
         }
         return js;
     }
 
     private Map<String, List<Object>> fromJSON( String data) throws Exception {
-        log.trace( "process fromJSON");
+        LOG.trace( "process fromJSON");
         Map<String,List<Object>> r = new HashMap<String,List<Object>>();
         try {
             StringReader sr = new StringReader( data);
@@ -177,7 +175,7 @@ public class Json implements AsyncService {
             }
             parsedCount += data.length();
         } catch( Exception x) {
-            throw new Exception( "Error parsing JSON <<<<" + data + ">>>> " + x, x);
+            throw new Exception( "Error parsing JSON \"" + data + "\" " + x, x);
         }
         return r;
     }
