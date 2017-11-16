@@ -8,9 +8,7 @@ import java.util.List;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.logging.Level;
 import org.apache.log4j.Logger;
-import uy.com.r2.core.SvcCatalog;
 import uy.com.r2.core.api.AsyncService;
 import uy.com.r2.core.api.SvcRequest;
 import uy.com.r2.core.api.SvcResponse;
@@ -76,9 +74,9 @@ public class SvcMonitor implements AsyncService, SimpleService {
         if( l == null) {
             l = new LinkedList();
         }
+        l.add( new ConfigItemDescriptor( "MonitorLastNr", ConfigItemDescriptor.INTEGER, 
+                "Keep last messages to show it", "10"));
         LOG.info( name + " getConfigDescriptors: " + l);
-        l.add( new ConfigItemDescriptor( "MonitorLastNr", ConfigItemDescriptor.BOOLEAN, 
-                "Keep last messages to show it", "0"));
         return l;
     }
     
@@ -96,7 +94,7 @@ public class SvcMonitor implements AsyncService, SimpleService {
             maxResponseTime = 0;
             moduleProcessingTime = 0;
             // setConfiguration
-            if( cfg.containsKey( "MonitorLastNr")) {
+            if( cfg.getInt( "MonitorLastNr") > 0) {
                 keepLast = cfg.getInt( "MonitorLastNr");
             }
             if( keepLast > 0) {
