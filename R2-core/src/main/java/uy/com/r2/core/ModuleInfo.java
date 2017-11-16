@@ -181,7 +181,7 @@ public class ModuleInfo implements Module {
             this.cfg = cfg.clone();   // set as updated
         }
         // Update config
-        LOG.info( moduleName + ".setConfiguration ************************************** " + this.cfg);
+        LOG.info( moduleName + ".setConfiguration " + this.cfg);
         if( moduleImpl instanceof StartUpRequired) {  
             ( (StartUpRequired)moduleImpl).startUp( this.cfg);
         }
