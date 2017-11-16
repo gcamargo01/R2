@@ -58,6 +58,8 @@ public class JdbcService implements AsyncService {
                 "Service and SQL parameters separated by coma (,)", null));
         l.add( new ConfigItemDescriptor( "Service.*.RowName", ConfigItemDescriptor.STRING,
                 "Name of a tuple", "Row"));
+        l.add( new ConfigItemDescriptor( "SeptUpTest", ConfigItemDescriptor.BOOLEAN,
+                "Check to test JDBC on startup", "false"));
         return l;
     }
     
