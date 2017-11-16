@@ -6,6 +6,7 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.TreeMap;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import org.apache.log4j.Logger;
 import uy.com.r2.core.SvcCatalog;
@@ -426,7 +427,7 @@ public class SvcAvailServers implements AsyncService, StartUpRequired, Runnable 
     private void notifyAllServers( String command, String name) {
         boolean updateDest = false;
         LOG.trace( "notifyAllServers " + command + " " + name);
-        for(  String sn: knownServers.keySet()) {
+        for(  String sn: new ArrayList<String>( knownServers.keySet())) {
             if( sn.equals( localName)) {  // Do not notify it self!
                 continue;
             }
