@@ -138,6 +138,9 @@ public class ToHtml implements AsyncService {
         // Content
         sb.append( "<div class=\"divTable\">\n"); 
         for( String k: new TreeSet<String>( resp.getPayload().keySet())) {
+            if( k.equals( Json.SERIALIZED_JSON)) {
+                continue;
+            }
             sb.append( " <div class=\"divRow\">\n");
             sb.append( "  <div class=\"divHead\">\n");
             sb.append( k);
