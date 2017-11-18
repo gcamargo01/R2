@@ -53,7 +53,7 @@ public class RunningPipeline {
                    --index;
                    return;
                 }
-                throw new Exception( "Service " + s + " not implemented in pipeline");
+                throw new Exception( "Service '" + s + "' not implemented in pipeline");
             }
             moduleName = moduleNames[ index];
             LOG.trace( "run index=" + index + " " + moduleName + " " + msg);
