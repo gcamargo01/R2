@@ -74,9 +74,6 @@ public class SvcMonitor implements AsyncService, SimpleService {
         if( l == null) {
             l = new LinkedList();
         }
-        l.add( new ConfigItemDescriptor( "MonitorLastNr", ConfigItemDescriptor.INTEGER, 
-                "Keep last messages to show it", "10"));
-        LOG.info( name + " getConfigDescriptors: " + l);
         return l;
     }
     
@@ -100,7 +97,7 @@ public class SvcMonitor implements AsyncService, SimpleService {
             if( keepLast > 0) {
                 lastReqs = new SvcRequest[ keepLast];
                 lastResp = new SvcResponse[ keepLast];
-            }
+            } 
         } else {
             LOG.info( name + " same Configuration " + cfg.hashCode());
         }
@@ -231,6 +228,9 @@ public class SvcMonitor implements AsyncService, SimpleService {
         if( keepLast > 0) {
             for( int i = 0; i < keepLast; ++i) {
                 int iq = ( lastReqIndex + keepLast - i - 1) % keepLast;
+                if( lastReqs[ iq] == null) {
+                    break;
+                }
                 m.put( "Request_" + i, lastReqs[ iq]);
                 int ir = ( lastRespIndex + keepLast - i - 1) % keepLast;
                 m.put( "Response_" + i, lastResp[ ir]);
