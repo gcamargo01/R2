@@ -26,15 +26,12 @@ public class RunningPipeline {
      * @param modules Modules name array
      * @param req Request to process
      */
-    RunningPipeline( String modules[], SvcRequest req) {
+    RunningPipeline( String pipeName, String modules[], SvcRequest req) {
         this.moduleNames = modules;
         this.req0 = req;
         this.index = 0;
         this.msg = req;
-        StringBuilder sb = new StringBuilder();
-        sb.append( req0.getRequestId());
-        sb.append( ": ");
-        this.toStrPrefix = sb.toString();
+        this.toStrPrefix = pipeName + ": ";
         /*
         if( LOG.isTraceEnabled()) {
             LOG.trace( "new RunningPipeline( " + req.getRequestId() + " ) " + toString() + " " + modules[ 0]);
@@ -75,11 +72,10 @@ public class RunningPipeline {
                 throw new Exception( "Invalid response: " + msg);
             }
         } catch( Exception x) {
-            x = new Exception( "" + x + " on " + toString(), x);
-            LOG.warn( "" + x, x);
+            LOG.warn( "Exception running pipe " + toString(), x);
             SvcMessage r = ( msg instanceof SvcRequest)? msg: req0;
-            msg = new SvcResponse( "" + x, SvcResponse.RES_CODE_EXCEPTION, x, 
-                    (SvcRequest)r);
+            msg = new SvcResponse( "Exception running pipe " + toString(), 
+                    SvcResponse.RES_CODE_EXCEPTION, x, (SvcRequest)r);
             --index;
         }
     }

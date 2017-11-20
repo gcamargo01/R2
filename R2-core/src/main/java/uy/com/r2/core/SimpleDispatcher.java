@@ -61,7 +61,7 @@ public class SimpleDispatcher implements Dispatcher, StartUpRequired {
             }
         }
         // Build the Running pipe
-        RunningPipeline rp = new RunningPipeline( modsToRun, req);
+        RunningPipeline rp = new RunningPipeline( "(Default)", modsToRun, req);
         runningPipelines.put( req.getRequestId(), rp);
         // Run to the end
         SvcResponse resp = rp.getFinalResponse();
@@ -117,7 +117,7 @@ public class SimpleDispatcher implements Dispatcher, StartUpRequired {
             return newExceptionResponse( "Can't find pipeline name '" + pipe + "' to request " + req, req);
         }
         // Run 
-        RunningPipeline rp = new RunningPipeline( rpns, req);
+        RunningPipeline rp = new RunningPipeline( pipe, rpns, req);
         SvcResponse resp = rp.getResponse();
         /**/
         if( LOG.isDebugEnabled()) {
