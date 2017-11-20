@@ -121,52 +121,17 @@ public class ModuleInfo implements Module {
      * @throws Exception Unexpected error
      */
     public void setConfiguration( Configuration cfg) throws Exception {
-        // Get with generic config descriptors
-        List<ConfigItemDescriptor> cdl = getImplementation().getConfigDescriptors();
-        if( cdl == null) {
-            cdl = new LinkedList();
-        }
+        // Get config descriptors with generic config def
+        List<ConfigItemDescriptor> cdl = getConfigDescriptors();
         // Set default values 
         for( ConfigItemDescriptor cd: cdl) {
             if( cd.getDefaultValue() != null &&           // has a default value
                     ( !cd.getKey().contains( "*")) &&     // Simple cfg. 
                     ( !cfg.containsKey( cd.getKey()))) {  // w/o given value in cfg
-                //LOG.trace( moduleName + " set default " + cd.getKey() + "=" + cd.getDefaultValue());
                 cfg.put( cd.getKey(), cd.getDefaultValue());
+                LOG.trace( moduleName + " cfg " + cd.getKey() + " def.value= " + cd.getDefaultValue());
             }
         }    
-        // Log config status
-        if( LOG.isTraceEnabled()) {
-            Map<String,String> unknowCfg = cfg.getStringMap( "*");
-            unknowCfg.remove( "class");
-            unknowCfg.remove( "LimitActiveThreads");
-            unknowCfg.remove( "Monitor");
-            for( ConfigItemDescriptor cd: cdl) {
-                if( !cd.getKey().contains( "*")) {    // Simple cfg.
-                    if( cfg.containsKey( cd.getKey())) {
-                        unknowCfg.remove( cd.getKey());
-                    }
-                } else {
-                    for( String k: cfg.getStringMap( cd.getKey()).keySet()) {
-                        String kk = cd.getKey().replace( "*", k);
-                        unknowCfg.remove( kk);
-                    }
-                }
-            }
-            if( LOG.isDebugEnabled()) {
-                for( String k: unknowCfg.keySet()) {
-                   try {
-                       throw new Exception( "Undefined configuration: " + k + "=" + unknowCfg.get( k)
-                               + " on module " + moduleName);                       
-                   } catch( Exception x) {
-                       LOG.debug( "" + x, x);
-                   }
-                }
-            }
-        }
-        // Reset status
-        activeCount = 0;
-        topActiveCount = 0;
         // Apply generic configuration
         if( cfg.containsKey( "LimitActiveThreads")) {
             limitActiveCount = cfg.getInt( "LimitActiveThreads");
@@ -180,8 +145,10 @@ public class ModuleInfo implements Module {
             monitorImpl = null;
             this.cfg = cfg.clone();   // set as updated
         }
+        // Reset status
+        activeCount = 0;
+        topActiveCount = 0;
         // Update config
-        LOG.info( moduleName + ".setConfiguration " + this.cfg);
         if( moduleImpl instanceof StartUpRequired) {  
             ( (StartUpRequired)moduleImpl).startUp( this.cfg);
         }
@@ -222,10 +189,12 @@ public class ModuleInfo implements Module {
                "URL to load class of the service impelmentation (internal)", null));
         cdl.add( new ConfigItemDescriptor( "LimitActiveThreads", ConfigItemDescriptor.BOOLEAN,
                "Keep track and limit the concurrent threads ons this module (internal)", null));
-        cdl.add( new ConfigItemDescriptor( "Monitor", ConfigItemDescriptor.BOOLEAN,
-               "Wrap module with SvcMonitor to get statistics and acitvity (internal)", null));
         cdl.add( new ConfigItemDescriptor( "TimeOut", ConfigItemDescriptor.BOOLEAN,
                "Time out of this module (internal)", null));
+        cdl.add( new ConfigItemDescriptor( "Monitor", ConfigItemDescriptor.BOOLEAN,
+               "Wrap module with SvcMonitor to get statistics and acitvity (internal)", null));
+        cdl.add( new ConfigItemDescriptor( "MonitorLastNr", ConfigItemDescriptor.INTEGER, 
+                "Keep last messages to show it", "10"));
         return cdl;
     }
 
