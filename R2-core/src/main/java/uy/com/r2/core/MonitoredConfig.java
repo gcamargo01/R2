@@ -2,6 +2,7 @@
 package uy.com.r2.core;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.apache.log4j.Logger;
 import uy.com.r2.core.api.ConfigItemDescriptor;
@@ -13,13 +14,37 @@ import uy.com.r2.core.api.Configuration;
  */
 public class MonitoredConfig extends Configuration {
     private static final Logger LOG = Logger.getLogger( MonitoredConfig.class);
-    private String name;
+    private String moduleName;
     private final Map<String, ConfigItemDescriptor> cfgDesc;
 
     public MonitoredConfig( String name, Configuration cfg) {
-        this.name = name;
+        this.moduleName = name;
         this.cfgDesc = new HashMap();
         ModuleInfo mi = SvcCatalog.getCatalog().getModuleInfo( name);
+        // Get config descriptors with generic config def
+        List<ConfigItemDescriptor> cdl = mi.getConfigDescriptors();
+        // Log config status
+        try {
+            Map<String,String> unknowCfg = cfg.getStringMap( "*");
+            for( ConfigItemDescriptor cd: cdl) {
+                if( !cd.getKey().contains( "*")) {    // Simple cfg.
+                    if( cfg.containsKey( cd.getKey())) {
+                        unknowCfg.remove( cd.getKey());
+                    }
+                } else {
+                    for( String k: cfg.getStringMap( cd.getKey()).keySet()) {
+                        String kk = cd.getKey().replace( "*", k);
+                        unknowCfg.remove( kk);
+                    }
+                }
+            }
+            for( String k: unknowCfg.keySet()) {
+                LOG.warn( "Undefined configuration: " + k + "=" + unknowCfg.get( k)
+                        + " on module " + name, new Exception( "Stacktrace"));
+            }
+        } catch( Exception x) {
+             LOG.warn( "Unable to check cfg definition, " + x, x);
+        }
         for( ConfigItemDescriptor cid: mi.getConfigDescriptors()) {
             cfgDesc.put( cid.getKey(), cid);
         };
@@ -39,14 +64,14 @@ public class MonitoredConfig extends Configuration {
     @Override
     public String getString( String key) {
         if( !cfgDesc.containsKey( key)) {
-            LOG.warn( name + " uses undeclared config " + key, new Exception( "Stacktrace"));
+            LOG.warn( moduleName + " uses undeclared config " + key, new Exception( "Stacktrace"));
         }
         String type = "?";
         try {
             type = cfgDesc.get( key).getKlass().getName();
         } catch( Exception x) { }
         String v = super.getString( key);
-        LOG.info( "get( " + key +  "):" + type + " = " + v);
+        LOG.info( moduleName + " get( " + key +  "):" + type + " = " + v);
         return v;
     }
 
@@ -61,9 +86,9 @@ public class MonitoredConfig extends Configuration {
     public Map<String,String> getStringMap( String key) throws Exception {
         Map<String,String> m = super.getStringMap( key);
         if( !cfgDesc.containsKey( key)) {
-            LOG.warn( name + " uses undeclared config " + key, new Exception( "Stacktrace"));
+            LOG.warn( moduleName + " uses undeclared config " + key, new Exception( "Stacktrace"));
         }
-        LOG.info( "getMap( " + key +  "):" + " = " + m);
+        LOG.info( moduleName + " getMap( " + key +  "):" + " = " + m);
         return m;
     }
 
