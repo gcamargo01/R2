@@ -24,7 +24,7 @@ import uy.com.r2.svc.tools.SvcMonitor;
  */
 public class ModuleInfo implements Module {
     private final static Logger LOG = Logger.getLogger(ModuleInfo.class);
-    private final static int DEFAULT_TIME_OUT = Integer.MAX_VALUE;
+    private final static int NO_TIME_OUT = Integer.MAX_VALUE;
     private final String moduleName;
     private final Module moduleImpl;
     private final AsyncService asyncImpl;  // Module Wrapped as AsyncService
@@ -180,7 +180,7 @@ public class ModuleInfo implements Module {
                "URL to load class of the service impelmentation (internal)", null));
         cdl.add( new ConfigItemDescriptor( "LimitActiveThreads", ConfigItemDescriptor.BOOLEAN,
                "Keep track and limit the concurrent threads ons this module (internal)", null));
-        cdl.add( new ConfigItemDescriptor( "TimeOut", ConfigItemDescriptor.BOOLEAN,
+        cdl.add( new ConfigItemDescriptor( "TimeOut", ConfigItemDescriptor.INTEGER,
                "Time out of this module (internal)", null));
         cdl.add( new ConfigItemDescriptor( "Monitor", ConfigItemDescriptor.BOOLEAN,
                "Wrap module with SvcMonitor to get statistics and acitvity (internal)", null));
@@ -201,7 +201,7 @@ public class ModuleInfo implements Module {
                 ((SvcResponse)msg).getRequest();
         // Chech Timed out processing
         int to = getTimeOut( req);
-        if( to < Integer.MAX_VALUE) {
+        if( to != NO_TIME_OUT) {
             int t = ( int)( System.currentTimeMillis() - req.getAbsoluteTime());
             if( t > to) {
                 ++count;
@@ -269,12 +269,12 @@ public class ModuleInfo implements Module {
     private int getTimeOut( SvcRequest req) {
         int to = req.getTimeOut();
         if( to == 0) {
-            to = DEFAULT_TIME_OUT;
+            to = NO_TIME_OUT;
         }
         try {
             int t = cfg.getInt( "TimeOut");
             if( t == 0) {
-                t = DEFAULT_TIME_OUT;
+                t = NO_TIME_OUT;
             }
             //to = Integer.min( to, t);  // Android doesn't have min
             to = ( to > t)? t: to;
