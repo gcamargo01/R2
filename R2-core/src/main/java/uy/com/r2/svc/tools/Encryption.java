@@ -2,13 +2,11 @@
 package uy.com.r2.svc.tools;
 
 import java.math.BigInteger;
-import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.TreeSet;
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
