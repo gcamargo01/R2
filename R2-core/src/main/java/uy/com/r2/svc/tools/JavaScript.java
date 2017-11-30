@@ -3,7 +3,6 @@ package uy.com.r2.svc.tools;
 
 import java.io.BufferedReader;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.LinkedList;
