@@ -36,7 +36,6 @@ public class MicroHttpServer implements StartUpRequired {
     private int txNr = 0;
     private ListenerThread server = null;
     private String pipe = "";
-    private int maxWorkersLimit = 5;
 
     /** Get the configuration descriptors of this module.
      * @return ConfigItemDescriptor List
@@ -50,8 +49,10 @@ public class MicroHttpServer implements StartUpRequired {
                 "Encoding", System.getProperty( "file.encoding")));
         l.add( new ConfigItemDescriptor( "Pipeline", ConfigItemDescriptor.STRING,
                 "System Pipeline name to route requests", ""));
-        l.add( new ConfigItemDescriptor( "MaxWorkersLimit", ConfigItemDescriptor.INTEGER,
+        l.add( new ConfigItemDescriptor( "MaxThreads", ConfigItemDescriptor.INTEGER,
                 "Maximum number of Threads used to serve current requests", "5"));
+        l.add( new ConfigItemDescriptor( "TimeOut", ConfigItemDescriptor.INTEGER,
+                "Maximum time to dispatch a request", "5000"));
         return l;
     }
 
@@ -64,16 +65,15 @@ public class MicroHttpServer implements StartUpRequired {
         if( !cfg.isUpdated()) {
             return;
         }
-        int port = cfg.getInt( "Port");
         encoding = cfg.getString( "Encoding");
         pipe = cfg.getString( "Pipeline");
-        maxWorkersLimit = cfg.getInt( "MaxWorkersLimit");
         // Shutdown if it was up
         if( server != null) {
             server.shutdown();
         }
         // Start the server to this port
-        server = new ListenerThread( port, maxWorkersLimit, this);
+        server = new ListenerThread( cfg.getInt( "Port"), cfg.getInt( "MaxThreads"), 
+                this, cfg.getInt( "TimeOut"));
         server.start();
         cfg.clearUpdated();
     }
@@ -212,16 +212,19 @@ public class MicroHttpServer implements StartUpRequired {
         private final Socket soc;
         private final ListenerThread listener;
         private final MicroHttpServer handler;
+        private final int timeout;
         private InetAddress addrs;
         private URI uri;
         private Map<String, String> reqHeaders = new HashMap();
         private OutputStream outStream = null;
         private Map<String, String> respHeaders = new HashMap();
         
-        private WorkerThread( int port, Socket soc, ListenerThread listener, MicroHttpServer handler) {
+        private WorkerThread( int port, Socket soc, ListenerThread listener, 
+                MicroHttpServer handler, int timeout) {
             this.soc = soc;
             this.listener = listener;
             this.handler = handler;
+            this.timeout = timeout;
             setName( "HttpWorker_" + port + "_" + getId());
             LOG.trace( "worker " + getName() +" starting");
         }
@@ -229,6 +232,7 @@ public class MicroHttpServer implements StartUpRequired {
         @Override
         public void run() {
             BufferedReader reader = null;
+            long tmp = System.currentTimeMillis();
             try {
                 reader = new BufferedReader( new InputStreamReader( soc.getInputStream()));
                 outStream = soc.getOutputStream();
@@ -246,6 +250,9 @@ public class MicroHttpServer implements StartUpRequired {
                         int sov = line.indexOf( ": ") ;
                         reqHeaders.put( line.substring( 0, sov), line.substring( sov + 2));
                     }
+                    if( ( System.currentTimeMillis() - tmp) > timeout) {
+                        throw new Exception( "Timeout " + ( System.currentTimeMillis() - tmp) + "mS " + line);
+                    }
                 }
                 LOG.trace( "route " + route + " headers " + reqHeaders);
  
@@ -258,6 +265,7 @@ public class MicroHttpServer implements StartUpRequired {
                 outStream.flush();
                 listener.releaseInfo( this, false);
             } catch( Exception x) {
+                LOG.info( "" + x, x);
                 try {
                     outStream.write( "HTTP/1.0 500 Internal Server Error".getBytes());
                     outStream.flush();
@@ -312,7 +320,8 @@ public class MicroHttpServer implements StartUpRequired {
     class ListenerThread extends Thread {
         private final Object sync = new Object(); 
         private final int port;
-        private final int maxWorkersLimit;
+        private final int maxThreads;
+        private final int timeout;
         private final MicroHttpServer handler;
         private ServerSocket serSoc;
         private int workers = 0;
@@ -320,11 +329,13 @@ public class MicroHttpServer implements StartUpRequired {
         private int requests = 0;
         private int errors = 0;
 
-        private ListenerThread( int port, int maxWorkersLimit, MicroHttpServer handler) throws Exception {
+        private ListenerThread( int port, int maxThreads, MicroHttpServer handler, 
+                int timeout) throws Exception {
             this.port = port;
             this.serSoc = new ServerSocket( port);
-            this.maxWorkersLimit = maxWorkersLimit;
+            this.maxThreads = maxThreads;
             this.handler = handler;
+            this.timeout = timeout;
             setName( "HttpListener_" + port);
         }
 
@@ -361,7 +372,7 @@ public class MicroHttpServer implements StartUpRequired {
                     Socket s = serSoc.accept();
                     boolean overloaded;
                     synchronized( sync) {
-                        overloaded = ( workers >= maxWorkersLimit);
+                        overloaded = ( workers >= maxThreads);
                         ++requests;
                         if( !overloaded) {
                             ++workers;
@@ -371,9 +382,9 @@ public class MicroHttpServer implements StartUpRequired {
                     if( overloaded) {
                         s.close();
                         ++errors;
-                        throw new Exception( "Request overload " + maxWorkersLimit);
+                        throw new Exception( "Request overload " + maxThreads);
                     } else {
-                        new WorkerThread( port, s, this, handler).start();
+                        new WorkerThread( port, s, this, handler, timeout).start();
                     }
                 } catch( Exception ex) {
                     if( serSoc != null) {
