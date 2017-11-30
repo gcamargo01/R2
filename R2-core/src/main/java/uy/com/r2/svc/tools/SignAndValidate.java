@@ -22,7 +22,7 @@ import uy.com.r2.core.api.SvcRequest;
 import uy.com.r2.core.api.SvcResponse;
 
 /** Sign request and validate responses.
- * !!!! To do: It needs testing
+ * !!!! To do: Brand new, need basic testing
  * @author G.Camargo
  */
 public class SignAndValidate implements AsyncService {
@@ -34,6 +34,31 @@ public class SignAndValidate implements AsyncService {
     private Certificate cert;
     private PrivateKey prvKey;
      
+    /** Get the configuration descriptors of this module.
+     * @return ConfigItemDescriptor List
+     */
+    @Override
+    public List<ConfigItemDescriptor> getConfigDescriptors() {
+        LinkedList<ConfigItemDescriptor> l = new LinkedList<ConfigItemDescriptor>();
+        l.add( new ConfigItemDescriptor( "ValidateReq", ConfigItemDescriptor.BOOLEAN,
+                "Validate as a server (request)", "true"));
+        l.add( new ConfigItemDescriptor( "ValidateResp", ConfigItemDescriptor.BOOLEAN, 
+                "Validate as a client (response)", "false"));
+        l.add( new ConfigItemDescriptor( "CertificateName", ConfigItemDescriptor.STRING,
+                "Name of the certificate to use", "R2"));
+        l.add( new ConfigItemDescriptor( "KeystoreType", ConfigItemDescriptor.STRING, 
+                "Keystore Type (JKS,PKCS12,...)", System.getProperty( "javax.net.ssl.keyStoreType")));
+        l.add( new ConfigItemDescriptor( "KeyStoreFile", ConfigItemDescriptor.STRING, 
+                "Path to the Key Store including Path", System.getProperty( "javax.net.ssl.keyStore")));
+        l.add( new ConfigItemDescriptor( "PassPhrase", ConfigItemDescriptor.STRING, 
+                "Password to open the certificate", System.getProperty( "javax.net.ssl.keyStorePassword")));
+        l.add( new ConfigItemDescriptor( "ExcludeFields", ConfigItemDescriptor.STRING, 
+                "Data fields to exclude from signature", ""));
+        l.add( new ConfigItemDescriptor( "SignatureAlgorithm", ConfigItemDescriptor.STRING, 
+                "Signature Algorithm", "SHA256withRSA"));
+        return l;
+    }
+
     private void setConfiguration( Configuration cfg) throws Exception {
         if( !cfg.isUpdated()) {
             return;
@@ -44,10 +69,12 @@ public class SignAndValidate implements AsyncService {
         validateResp = cfg.getBoolean( "ValidateResp");
         String certName = cfg.getString( "CertificateName");
         String passPhrase = cfg.getString( "PassPhrase");
-        KeyStore ks = KeyStore.getInstance(keystoreType);
-        FileInputStream fsi = new FileInputStream( cfg.getString( "KeyStoreFile")); 
-        ks.load( fsi, passPhrase.toCharArray());
-        fsi.close();
+        KeyStore ks = KeyStore.getInstance( keystoreType);
+        if( !cfg.getString( "KeyStoreFile").isEmpty()) {
+            FileInputStream fsi = new FileInputStream( cfg.getString( "KeyStoreFile")); 
+            ks.load( fsi, passPhrase.toCharArray());
+            fsi.close();
+        }    
         cert = ks.getCertificate( certName);
         prvKey = ( PrivateKey)ks.getKey( certName, passPhrase.toCharArray());        
         cfg.clearUpdated();
@@ -106,39 +133,17 @@ public class SignAndValidate implements AsyncService {
      */
     @Override
     public Map<String, Object> getStatusVars() {
-        Map<String,Object> m = new HashMap<String,Object>();
-        m.put( "Version", "$Revision: 1.1 $");
-        return m;
+        Map<String,Object> map = new HashMap<>();
+        Package pak = getClass().getPackage();
+        if( pak != null) {
+            map.put( "Version", "" + pak.getImplementationVersion());
+        }
+        return map;
     }
 
     /** Release all the allocated resources. */
     @Override
     public void shutdown() {
-    }
-
-    /** Get the configuration descriptors of this module.
-     * @return ConfigItemDescriptor List
-     */
-    @Override
-    public List<ConfigItemDescriptor> getConfigDescriptors() {
-        LinkedList<ConfigItemDescriptor> l = new LinkedList<ConfigItemDescriptor>();
-        l.add( new ConfigItemDescriptor( "ValidateReq", ConfigItemDescriptor.BOOLEAN,
-                "Validate as if its a server", "true"));
-        l.add( new ConfigItemDescriptor( "ValidateResp", ConfigItemDescriptor.BOOLEAN, 
-                "Validate as if is a client", "false"));
-        l.add( new ConfigItemDescriptor( "CertificateName", ConfigItemDescriptor.STRING,
-                "Name of the certificate to use", "Cert"));
-        l.add( new ConfigItemDescriptor( "PassPhrase", ConfigItemDescriptor.STRING, 
-                "Password to open the certificate", "password"));
-        l.add( new ConfigItemDescriptor( "KeyStoreFile", ConfigItemDescriptor.STRING, 
-                "Path to the Key Store including Path", "keystore.pfx"));
-        l.add( new ConfigItemDescriptor( "ExcludeFields", ConfigItemDescriptor.STRING, 
-                "Data fields to exclude from signature", ""));
-        l.add( new ConfigItemDescriptor( "SignatureAlgorithm", ConfigItemDescriptor.STRING, 
-                "Signature Algorithm", signatureAlgorithm));
-        l.add( new ConfigItemDescriptor( "KeystoreType", ConfigItemDescriptor.STRING, 
-                "Keystore Type", keystoreType));
-        return l;
     }
 
     private String sortAndSerialize( Map<String, List<Object>> m) {
@@ -158,7 +163,7 @@ public class SignAndValidate implements AsyncService {
     }
 
     private String sign( String hash) throws Exception {
-        Signature s = Signature.getInstance(signatureAlgorithm);
+        Signature s = Signature.getInstance( signatureAlgorithm);
         s.initSign( prvKey);
         s.update( hash.getBytes());
         return DatatypeConverter.printBase64Binary( s.sign());
@@ -167,11 +172,30 @@ public class SignAndValidate implements AsyncService {
     private boolean validate( String hash, String signature) throws Exception {
         byte sb[] = DatatypeConverter.parseBase64Binary( signature);
         PublicKey puk = cert.getPublicKey();
-        Signature s = Signature.getInstance(signatureAlgorithm);
+        Signature s = Signature.getInstance( signatureAlgorithm);
         s.initVerify( puk);
         s.update( hash.getBytes());
         return s.verify( sb);
     }
+
+    /**/   
+    public static void main( String args[]) {
+        Configuration c = new Configuration();
+        SignAndValidate s = new SignAndValidate();
+        try {
+            uy.com.r2.core.ModuleInfo.setDefaultValues( s, c);
+            System.out.println( "cfg= " + c);
+            s.setConfiguration( c);
+            String prb = "Esto es una prueba";
+            String sign = s.sign( prb);
+            System.out.println( "prb= " + prb);
+            System.out.println( "sign= " + sign);
+            System.out.println( "" + s.validate( prb, sign));
+        } catch( Exception x) {
+            x.printStackTrace( System.err);
+        }    
+    }
+    /**/
 
 }
 
