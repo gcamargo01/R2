@@ -210,7 +210,8 @@ public class ToHtml implements AsyncService {
                 sb.append( "</textarea><br/><br/>"); 
                 sb.append( "<input type=\"submit\" value=\"SetModuleConfig\">\n"); 
                 sb.append( "</form><p>\n");  
-                sb.append( "<form action=\"/PersistConfig\"><input type=\"submit\" value=\"PersistConfig\"></form>\n");  
+                sb.append( "<form action=\"/GetModuleStatus\"><input type=\"submit\" value=\"GetModuleStatus\">" + 
+                        "<input type=\"hidden\" name=\"Module\" value=\"" + m + "\"></form>\n");  
 
             } else if( rq.getServiceName().equals( SvcAvailServers.SVC_GETSERVERSLIST)) {
 
