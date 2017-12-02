@@ -107,16 +107,14 @@ public class Boot {
 
     private void persistConfig() throws Exception {
         Properties pr = new Properties();
-        int n = 0;
         TreeSet<String> ts = new TreeSet( SvcCatalog.getCatalog().getModuleNames());
         ts.remove( SvcDeployer.DEPLOYER_NAME);  // Auto-started itself
         for( String m: ts) {
-            pr.put( "Module." + n, m);
+            pr.put( m, m);
             Configuration c = SvcCatalog.getCatalog().getModuleInfo( m).getConfiguration();
             for( String k: c.getStringMap( "*").keySet()) {
-                pr.put( "" + n + "." + k, c.getStringMap( "*").get(  k));                        
+                pr.put( m + "." + k, c.getStringMap( "*").get(  k));                        
             }
-            ++n;
         }
         String r2Path = System.getProperty( "R2_PATH", "");
         if( r2Path.length() > 0 && !r2Path.endsWith( File.separator)) {
