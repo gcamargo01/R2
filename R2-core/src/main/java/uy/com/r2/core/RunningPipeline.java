@@ -40,7 +40,7 @@ public class RunningPipeline {
     }
     
     /** Run one module a time */
-    private void runStep () {
+    private void runStep( ) {
         String moduleName = null;
         try {
             if( index >= moduleNames.length || moduleNames[ index] == null) {
