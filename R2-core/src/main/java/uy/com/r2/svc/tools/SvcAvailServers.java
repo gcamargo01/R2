@@ -394,9 +394,8 @@ public class SvcAvailServers implements AsyncService, StartUpRequired, Runnable 
     
     private ModuleInfo getModInfoEndsWith( String className) {
         LOG.trace( "getModInfoEndsWith " + className);
-        ModuleInfo mi = null;
         for( String n: catalog.getModuleNames()) {
-            mi = catalog.getModuleInfo( n);
+            ModuleInfo mi = catalog.getModuleInfo( n);
             Configuration c = mi.getConfiguration();
             if( c.getString( "class").endsWith( className)) {
                 return mi;
@@ -427,7 +426,7 @@ public class SvcAvailServers implements AsyncService, StartUpRequired, Runnable 
     private void notifyAllServers( String command, String name) {
         boolean updateDest = false;
         LOG.trace( "notifyAllServers " + command + " " + name);
-        for(  String sn: new ArrayList<String>( knownServers.keySet())) {
+        for(  String sn: new ArrayList<>( knownServers.keySet())) {
             if( sn.equals( localName)) {  // Do not notify it self!
                 continue;
             }
