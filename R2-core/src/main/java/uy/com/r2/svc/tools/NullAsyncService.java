@@ -14,7 +14,7 @@ import uy.com.r2.core.api.Configuration;
 import uy.com.r2.core.api.SvcMessage;
 
 /** Empty asynchronous service module. Template to create one.
- * A service that doesn't do any thing.
+ * A service that doesn't do anything.
  * @author G.Camargo
  */
 public class NullAsyncService implements AsyncService {
