@@ -19,14 +19,14 @@ import uy.com.r2.core.api.Configuration;
 import uy.com.r2.core.api.Dispatcher;
 import uy.com.r2.core.api.SvcMessage;
 
-/** File IO services: FileRead, FileWrite, FileList, FileRename.
+/** File IO services: ReadFile, WriteFile, ListFiles, ListDirs, RenameFile, GetChkSum.
  * Other parameters: Path, Name, Block, Offset, Length, NewName
  * @author G.Camargo
  */
 public class FileServices implements AsyncService {
     private final static Logger log = Logger.getLogger( FileServices.class);
-    private final static String SVC_LIST     = "ListFiles";
     private final static String SVC_LISTDIRS = "ListDirs";
+    private final static String SVC_LIST     = "ListFiles";
     private final static String SVC_SUM      = "GetChkSum";
     private final static String SVC_READ     = "ReadFile";
     private final static String SVC_REN      = "RenameFile";
