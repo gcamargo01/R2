@@ -16,8 +16,8 @@ import uy.com.r2.core.api.SvcMessage;
 
 
 /** A special service module to control which service is called next.
- * It is based on a service-module map. If no one is found, the default action
- * is run the next defined by the Dispatcher pipeline.
+ * It is based on a service-pipeline map. If no one is found, the default 
+ * action is to run the next one defined in the current running pipeline.
  * !!!! To do: GetServicesList should collect all services from each route
  * @author G.Camargo
  */
