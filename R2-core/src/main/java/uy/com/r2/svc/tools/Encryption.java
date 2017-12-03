@@ -52,7 +52,9 @@ public class Encryption implements AsyncService {
         l.add( new ConfigItemDescriptor( "Transformation", ConfigItemDescriptor.STRING,
                 "Algorithm / Blocking / Padding used", "AES/CBC/PKCS5Padding"));
         l.add( new ConfigItemDescriptor( "Password", ConfigItemDescriptor.STRING,
-                "Password used to encript/desencript key", "0123456789ABCDEF"));
+                "Password used to encript/desencript key; in Hexadecimal", null));
+        l.add( new ConfigItemDescriptor( "InitVector", ConfigItemDescriptor.STRING,
+                "InitVector to use to encript/desencript key; as 16 bytes Hex", null));
         return l;
     }
 
@@ -67,10 +69,9 @@ public class Encryption implements AsyncService {
         String password = cfg.getString( "Password");
         SecretKeySpec secKey = new SecretKeySpec( password.getBytes("UTF-8"), 
                 cfg.getString( "Algorithm"));
-        byte[] iv = new byte[16];
-        SecureRandom random = new SecureRandom();
-        random.nextBytes( iv);
-        IvParameterSpec ivPar = new IvParameterSpec(iv);        
+               
+        byte[] iv = toByte( cfg.getString( "InitVector"));
+        IvParameterSpec ivPar = new IvParameterSpec( iv);        
         encryptCipher = Cipher.getInstance( cfg.getString( "Transformation"));
         encryptCipher.init( Cipher.ENCRYPT_MODE, secKey, ivPar);
         decryptCipher = Cipher.getInstance( cfg.getString( "Transformation"));
@@ -179,13 +180,15 @@ public class Encryption implements AsyncService {
         return bigInt.toString( 16);
     }
     
-    /**/
+    /*
     public static void main( String args[]) {
         Configuration c = new Configuration();
         Encryption s = new Encryption();
         try {
             ModuleInfo.setDefaultValues( s, c);
             System.out.println( "cfg= " + c);
+            c.put( "Password", "0123456789ABCDEF"); 
+            c.put( "InitVector", "0123456789ABCDEF0123456789ABCDEF");  
             s.setConfiguration( c);
             String prb = "Esto es una prueba";
             Object enc = s.crypt( prb, true);
@@ -197,7 +200,7 @@ public class Encryption implements AsyncService {
             x.printStackTrace( System.err);
         }    
     }
-    /**/
+    */
 
 }
 
