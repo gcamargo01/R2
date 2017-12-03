@@ -15,6 +15,7 @@ import uy.com.r2.core.api.SimpleService;
 
 
 /** Empty synchronous service module. Template to create one.
+ * A service that doesn't do any thing.
  * @author G.Camargo
  */
 public class NullService implements SimpleService {
