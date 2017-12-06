@@ -97,7 +97,7 @@ public class UdpServer implements StartUpRequired {
                     soc.receive( dp);
                     InetAddress a = dp.getAddress();
                     if( !getExternalAddressList().contains( a)) {
-                        LOG.trace( "************************************************* " + a);
+                        //LOG.trace( "************************************************* " + a);
                         LOG.trace( "Packet(" + receivedCount + "): " + new String( dp.getData(), 0, dp.getLength()));
                         ++receivedCount;
                         SvcRequest rq = new SvcRequest( a.getHostName(), 0, 0, "SetMasterServer", null, 10000);
@@ -112,6 +112,7 @@ public class UdpServer implements StartUpRequired {
                     }
                 } finally {
                     try {
+                        Thread.sleep( 5000);  // Avoid closed loop when fail to bind socket
                         soc.close();
                     } catch( Exception xx) { }
                 }
