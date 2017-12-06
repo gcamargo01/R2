@@ -22,6 +22,7 @@ import uy.com.r2.core.api.Configuration;
 /** Audit module, it records in a file the activity: Request and Responses. 
  * This module use to be the first one in services pipeline.
  * !!!! To do: It needs testing
+ * !!!! In a distributed environment it will create a distributed log, it should be addressed 
  * @author G.Camargo
  */
 public class AuditLog implements AsyncService {
