@@ -18,8 +18,7 @@ import uy.com.r2.core.api.SvcMessage;
 import uy.com.r2.core.api.SvcRequest;
 import uy.com.r2.core.api.SvcResponse;
 
-/** Encrypt an Des-encrypt messages.
- * !!!! To do: It needs testing
+/** Encrypt an Decrypt messages.
  * @author G.Camargo
  */
 public class Encryption implements AsyncService {
@@ -42,7 +41,7 @@ public class Encryption implements AsyncService {
         l.add( new ConfigItemDescriptor( "ProcessResponse", ConfigItemDescriptor.BOOLEAN,
                 "Encrypt or desencrypt Response", "true"));
         l.add( new ConfigItemDescriptor( "ServerMode", ConfigItemDescriptor.BOOLEAN,
-                "Server mode: desenc.req., enc.resp., Client mode: enc.req., desenc.resp", "true"));
+                "Server mode: desenc.req., enc.resp., Client mode: enc.req., desenc.resp", "false"));
         l.add( new ConfigItemDescriptor( "DoNotEncrypt", ConfigItemDescriptor.BOOLEAN, 
                 "A comma separated field names to keep in clear", ""));
         l.add( new ConfigItemDescriptor( "Algorithm", ConfigItemDescriptor.STRING,
@@ -65,9 +64,8 @@ public class Encryption implements AsyncService {
         serverMode = cfg.getBoolean( "ServerMode");
         doNot = "," + cfg.getString( "DoNotEncrypt") + ",";
         String password = cfg.getString( "Password");
-        SecretKeySpec secKey = new SecretKeySpec( password.getBytes("UTF-8"), 
+        SecretKeySpec secKey = new SecretKeySpec( password.getBytes( "UTF-8"), 
                 cfg.getString( "Algorithm"));
-               
         byte[] iv = toByte( cfg.getString( "InitVector"));
         IvParameterSpec ivPar = new IvParameterSpec( iv);        
         encryptCipher = Cipher.getInstance( cfg.getString( "Transformation"));
@@ -91,8 +89,7 @@ public class Encryption implements AsyncService {
         if( !pRequest) {
             return req;
         }
-        crypt(req.getPayload(), !serverMode);
-        return req;
+        return req.clone( crypt( req.getPayload(), !serverMode));
     }
 
     /** Process a response.
@@ -109,8 +106,7 @@ public class Encryption implements AsyncService {
         if( !pResponse) {
             return res;
         }
-        crypt(res.getPayload(), serverMode);
-        return res;
+        return res.clone( crypt( res.getPayload(), serverMode));
     }
 
     /** Get the status report.
@@ -131,18 +127,23 @@ public class Encryption implements AsyncService {
     public void shutdown() {
     }
 
-    private void crypt( Map<String, List<Object>> m, boolean enc) throws Exception {
+    private Map<String,List<Object>> crypt( Map<String,List<Object>> m, boolean enc) throws Exception {
         TreeSet<String> ts = new TreeSet( m.keySet());
+        Map<String,List<Object>> nm = new HashMap<>();
         for( String k: ts)  {
             if( doNot.contains( "," + k + ",")) {
+                nm.put( k, m.get(  k));
                 continue;  
             }
-            LinkedList l = new LinkedList();
-            for( Object o: m.get( k)) {
-                l.add( crypt( o, enc));
+            List l = m.get( k);
+            List nl = new LinkedList();
+            for( Object o: l) {
+                nl.add( crypt( o, enc));
             }
-            m.put( k, l);
+            nm.put( k, nl);
+            //System.out.println( "crypt " + k + " " + l + " to " + nl);        
         }
+        return nm;
     }
     
     private Object crypt( Object o, boolean enc) throws Exception { 
@@ -165,6 +166,7 @@ public class Encryption implements AsyncService {
             len += 1;
             s = "0" + s;
         }
+        //System.out.println( "toByte " + s + " " + len);
         byte[] data = new byte[ len / 2];
         for( int i = 0; i < len; i += 2) {
             data[ i / 2] = (byte) ( ( Character.digit( s.charAt( i), 16) << 4)
@@ -178,27 +180,37 @@ public class Encryption implements AsyncService {
         return bigInt.toString( 16);
     }
     
-    /*
+    /**/
     public static void main( String args[]) {
         Configuration c = new Configuration();
         Encryption s = new Encryption();
         try {
-            ModuleInfo.setDefaultValues( s, c);
+            uy.com.r2.core.ModuleInfo.setDefaultValues( s, c);
             System.out.println( "cfg= " + c);
             c.put( "Password", "0123456789ABCDEF"); 
             c.put( "InitVector", "0123456789ABCDEF0123456789ABCDEF");  
             s.setConfiguration( c);
             String prb = "Esto es una prueba";
-            Object enc = s.crypt( prb, true);
-            Object des = s.crypt( enc, false);
-            System.out.println( "prb= |" + prb + "|");
-            System.out.println( "enc= " + enc);
-            System.out.println( "des= |" + des + "|");
+            //Object enc = s.crypt( prb, true);
+            //Object des = s.crypt( enc, false);
+            //System.out.println( "prb= |" + prb + "|");
+            //System.out.println( "enc= " + enc);
+            //System.out.println( "des= |" + des + "|");
+            SvcRequest rq = new SvcRequest( "TEST", 0, 0, "Tst", null, 0);
+            rq.put( "Field1", "Value0001");
+            rq.put( "Field2", "Value0002a");
+            rq.add( "Field2", "Value0002b");
+            SvcRequest rq2 = (SvcRequest)s.onRequest( rq, c);
+            c.put( "ServerMode", "true");
+            SvcRequest rq3 = (SvcRequest)s.onRequest( rq2, c);
+            System.out.println( "rq  = |" + rq + "|");
+            System.out.println( "rq2 = |" + rq2 + "|");
+            System.out.println( "rq3 = |" + rq3 + "|");
         } catch( Exception x) {
             x.printStackTrace( System.err);
         }    
     }
-    */
+    /**/
 
 }
 
