@@ -94,17 +94,6 @@ public class SvcRequest extends SvcMessage implements Serializable, Cloneable {
         return sb.toString();
     }
     
-    /** Clone itself. To isolate multiple messages.
-     * @return SvcRequest
-     */
-    @Override
-    public SvcRequest clone() {
-        Map<String,List<Object>> m = new HashMap<>();
-        m.putAll( getPayload());
-        return new SvcRequest( clientNode, nodeRqNr, sessionNr, service, 
-            m, amount, currency, timeOut);
-    }
-    
     /** Clone with new data. To make a new message.
      * @param payload New data
      * @return SvcRequest
