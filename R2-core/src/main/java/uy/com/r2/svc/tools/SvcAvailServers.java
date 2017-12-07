@@ -72,7 +72,7 @@ public class SvcAvailServers implements AsyncService, StartUpRequired, Runnable 
     private URL localUrl = null;
     private URL remoteUrl = null;
     private String masterName = null;
-    private TreeMap<String,String> knownServers = new TreeMap();
+    private Map<String,String> knownServers = new TreeMap();
     private int keepAliveTimeout = 10000;
     private int keepAliveDelay = 5000;
     private String outPipeline = "ClntJson,HttpClient_";
@@ -224,7 +224,7 @@ public class SvcAvailServers implements AsyncService, StartUpRequired, Runnable 
                 if( url.equals( "" + remoteUrl)) {  // Is  the url defined on start-up?
                     knownServers.remove( UNDEFINED);   // yes: remove _Undefined_
                 }
-                synchronizeServer( name, url);
+                addSyncAndBalance( name, url);
             case SVC_GETSERVERSLIST:
                 for( String k: knownServers.keySet()) {
                     SvcMessage.addToMap( respMap, k, knownServers.get(  k));
@@ -232,7 +232,7 @@ public class SvcAvailServers implements AsyncService, StartUpRequired, Runnable 
                 break;
             case SVC_REMOVESERVER:
                 knownServers.remove( name);
-                updateDestinations();
+                updateBalancerList();
                 break;
             case SVC_GETMASTER: 
                 if( masterName != null && !masterName.isEmpty()) {
@@ -249,7 +249,7 @@ public class SvcAvailServers implements AsyncService, StartUpRequired, Runnable 
                 masterTimeStamp = System.currentTimeMillis();
                 masterName = name;
                 if( !knownServers.containsKey( name)) {  // new?
-                    synchronizeServer( name, map.get( name));
+                    addSyncAndBalance( name, map.get( name));
                 }
                 break;
             case SVC_KEEPALIVE:
@@ -283,6 +283,9 @@ public class SvcAvailServers implements AsyncService, StartUpRequired, Runnable 
                         rq.put( "Url", knownServers.get( localName));
                         SvcCatalog.getDispatcher().callPipeline( name, rq);
                     }
+                } else {  // keepAlive from master
+                    knownServers = map;
+                    updateBalancerList();  // The master knows if it are usable (?)
                 }
                 // The master may KEEP_ALIIVE w/o know the localname & localurl, tell him
                 SvcMessage.addToMap( respMap, "Name", localName);
@@ -312,11 +315,9 @@ public class SvcAvailServers implements AsyncService, StartUpRequired, Runnable 
      */
     @Override
     public void run( ) {
-        long t, lt = System.currentTimeMillis();
         while( !stop) {
             try {
-                t = System.currentTimeMillis() + keepAliveDelay - lt;
-                Thread.sleep( ( t > 0)? t: 0);  
+                Thread.sleep( keepAliveDelay);  
             } catch( Exception ex) { }
             try {
                 if( isMaster()) {  
@@ -336,62 +337,6 @@ public class SvcAvailServers implements AsyncService, StartUpRequired, Runnable 
         }
     }
 
-    /** This method in executed on every change of the known servers */
-    private void updateDestinations() {
-        try {
-            LOG.trace( "updateDestinations " + knownServers);
-            // Prepare String
-            StringBuilder sb = new StringBuilder();
-            for( String s: knownServers.keySet()) {
-                sb.append( ',');
-                sb.append( s);
-            }
-            if( sb.length() > 0) {
-                sb = sb.replace( 0, 1, "");  // remove first ","
-            }
-            // Update Balancer list
-            ModuleInfo mi = getModInfoEndsWith( "Balancer");
-            if( mi != null) {
-                Configuration c = mi.getConfiguration();
-                c.put( "Modules", sb.toString());
-                mi.setConfiguration( c);
-            }    
-            // Check Pipelines
-            boolean changes = false;
-            ModuleInfo dmi = catalog.getModuleInfo( "SvcDispatcher");
-            if( dmi == null) {
-                LOG.warn( "Can't find SvcDispatcher to update destinations", 
-                        new Exception( "Ignore changes"));
-                return;
-            }
-            Configuration dc = dmi.getConfiguration();
-            Map<String,String> cm = dc.getStringMap( "Pipeline.*");
-            for( String sn: knownServers.keySet()) {
-                if( !knownServers.get( sn).equals( cm.get( sn ))) {
-                    LOG.info( "New destination " + sn + " " + knownServers.get( sn));
-                    // (Re)Define this HttpClient 
-                    ModuleInfo cmi = catalog.getModuleInfo( "HttpClient_" + sn);
-                    if( cmi == null) {
-                        // (Re)Deploy
-                        Configuration c = new Configuration();
-                        c.put( "class", HttpClient.class.getName());
-                        c.put( "Url", knownServers.get(  sn));
-                        catalog.installModule( "HttpClient_" + sn, c);
-                    }
-                    // (Re)Define this Pipeline
-                    dc.put( "Pipeline." + sn, outPipeline + sn);
-                    changes = true;
-                }
-            }
-            if( changes) {
-                LOG.trace( "new Dispatcher cfg=" + dc);
-                dmi.setConfiguration( dc);
-            }
-        } catch( Exception x) {
-            LOG.warn( "Failed update desinations", x);
-        }
-    }
-    
     private ModuleInfo getModInfoEndsWith( String className) {
         LOG.trace( "getModInfoEndsWith " + className);
         for( String n: catalog.getModuleNames()) {
@@ -443,8 +388,7 @@ public class SvcAvailServers implements AsyncService, StartUpRequired, Runnable 
                     if( rn.getResultCode() == 0) {
                         if( sn.equals( UNDEFINED)) {
                             knownServers.remove( UNDEFINED);
-                            knownServers.put( "" + rn.get( "Name"), "" + rn.get( "Url"));
-                            updateDest = true;
+                            addSyncAndBalance( "" + rn.get( "Name"), "" + rn.get( "Url"));
                         }
                     } else {  // Not ack
                         LOG.warn( "Error code on " + sn + ", to discard it !");
@@ -462,7 +406,7 @@ public class SvcAvailServers implements AsyncService, StartUpRequired, Runnable 
             }
         }
         if( updateDest) {
-            updateDestinations();
+            updateBalancerList();
         }
     }
   
@@ -480,22 +424,82 @@ public class SvcAvailServers implements AsyncService, StartUpRequired, Runnable 
         }
     }
 
-    private void synchronizeServer( String name, String url) throws Exception {
-        SvcRequest rq;
-        rq = new SvcRequest( localName, 0, nodeTxNr++, SVC_SYNC_LIBS, null, 1000);
-        rq.put( "Name", localName);
-        rq.put( "Url", localUrl);
-        rq.put( "RmtName", name);
-        rq.put( "RmtUrl", knownServers.get( name));
-        //SvcCatalog.getDispatcher().callPipeline( "_Internal_", rq);
-        rq = new SvcRequest( localName, 0, nodeTxNr++, SVC_SYNC_CFG, null, 1000);
-        rq.put( "Name", localName);
-        rq.put( "Url", localUrl);
-        rq.put( "RmtName", name);
-        rq.put( "RmtUrl", knownServers.get( name));
-        //SvcCatalog.getDispatcher().callPipeline( "_Internal_", rq);
+    /** Add a known server and its pipeline. */
+    private void addDestination( String name, String url) throws Exception {
+        LOG.trace( "addDestination " + name + " " + url);
         knownServers.put( name, url);
-        updateDestinations();
+        boolean changes = false;
+        // Check Pipelines
+        ModuleInfo dmi = catalog.getModuleInfo( "SvcDispatcher");
+        if( dmi == null) {
+            LOG.warn( "Can't find SvcDispatcher to update destinations", 
+                    new Exception( "Ignore changes"));
+            return;
+        }
+        Configuration dc = dmi.getConfiguration();
+        Map<String,String> cm = dc.getStringMap( "Pipeline.*");
+        for( String sn: knownServers.keySet()) {
+            if( !knownServers.get( sn).equals( cm.get( sn ))) {
+                LOG.info( "New destination " + sn + " " + knownServers.get( sn));
+                // (Re)Define this HttpClient 
+                ModuleInfo cmi = catalog.getModuleInfo( "HttpClient_" + sn);
+                if( cmi == null) {
+                    // (Re)Deploy
+                    Configuration c = new Configuration();
+                    c.put( "class", HttpClient.class.getName());
+                    c.put( "Url", knownServers.get(  sn));
+                    catalog.installModule( "HttpClient_" + sn, c);
+                }
+                // (Re)Define this Pipeline
+                dc.put( "Pipeline." + sn, outPipeline + sn);
+                changes = true;
+            }
+        }
+        if( changes) {
+            LOG.trace( "new Dispatcher cfg=" + dc);
+            dmi.setConfiguration( dc);
+        }
+    }    
+    
+    /** This method in executed on every change of the known servers */
+    private void updateBalancerList() {
+        try {
+            LOG.trace( "updateBalancer " + knownServers);
+            // Prepare String with destinations
+            StringBuilder sb = new StringBuilder();
+            for( String s: knownServers.keySet()) {
+                sb.append( ',');
+                sb.append( s);
+            }
+            if( sb.length() > 0) {
+                sb = sb.replace( 0, 1, "");  // remove first ","
+            }
+            // Update Balancer list
+            ModuleInfo mi = getModInfoEndsWith( "Balancer");
+            if( mi != null) {
+                Configuration c = mi.getConfiguration();
+                c.put( "Modules", sb.toString());
+                mi.setConfiguration( c);
+            }    
+        } catch( Exception x) {
+            LOG.warn( "Failed update balancer", x);
+        }
+    }
+    
+    /** Add a server, sychronize and add as balancing destination. */
+    private void addSyncAndBalance( String name, String url) throws Exception {
+        addDestination( name, url);
+        SvcRequest rq;
+        SvcResponse rs;
+        //rq = new SvcRequest( localName, 0, nodeTxNr++, SVC_SYNC_LIBS, null, 1000);
+        //rq.put( "RmtPipe", knownServers.get( name));
+        //SvcCatalog.getDispatcher().call( rq);
+        rq = new SvcRequest( localName, 0, nodeTxNr++, SVC_SYNC_CFG, null, 1000);
+        rq.put( "RmtPipe", knownServers.get( name));
+        rs = SvcCatalog.getDispatcher().call( rq);
+        if( rs.getResultCode() > 0) {
+            updateBalancerList();
+        }
     }
     
 }
