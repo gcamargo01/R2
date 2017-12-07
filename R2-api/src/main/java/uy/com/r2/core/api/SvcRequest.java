@@ -4,6 +4,7 @@ package uy.com.r2.core.api;
 import java.util.List;
 import java.util.Map;
 import java.io.Serializable;
+import java.util.HashMap;
 
 /** Request for a R2 service module.
  * @author G.Camargo
@@ -94,13 +95,14 @@ public class SvcRequest extends SvcMessage implements Serializable, Cloneable {
     }
     
     /** Clone itself. To isolate multiple messages.
-     * TODO: It should clone data (on not?)!!!!
      * @return SvcRequest
      */
     @Override
     public SvcRequest clone() {
+        Map<String,List<Object>> m = new HashMap<>();
+        m.putAll( getPayload());
         return new SvcRequest( clientNode, nodeRqNr, sessionNr, service, 
-            getPayload(), amount, currency, timeOut);
+            m, amount, currency, timeOut);
     }
     
     /** Clone with new data. To make a new message.
