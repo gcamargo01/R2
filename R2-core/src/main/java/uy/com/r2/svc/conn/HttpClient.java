@@ -160,9 +160,9 @@ public class HttpClient implements AsyncService {
             conn.setRequestProperty( "Accept", "application/json");
             //log.trace( "conn.getResponseMessage=" + conn.getResponseMessage());
             if( conn.getResponseCode() != 200) {
-                throw new RuntimeException( "Failed call remote service '" + service + "' " 
-                        + strUrl + ", HTTP error code: " 
-                        + conn.getResponseCode());
+                throw new RuntimeException( "HTTP error code: " + conn.getResponseCode() + 
+                        "on call remote service '" + service + "' to " + strUrl
+                        );
             }    
             InputStream is = conn.getInputStream();
             BufferedReader br = new BufferedReader( new InputStreamReader( is));
