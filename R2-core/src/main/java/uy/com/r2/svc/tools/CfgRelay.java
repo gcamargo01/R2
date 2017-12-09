@@ -126,7 +126,7 @@ public class CfgRelay implements AsyncService {
 
     private void rmtCommand( String dest, String cmd, String mod, Configuration cfg) 
             throws Exception {
-        LOG.trace( cmd + " (" + mod + "," + cfg);
+        LOG.trace( cmd + " " + mod + " " + cfg);
         SvcRequest rq;
         rq = new SvcRequest( null, 0, txNr++, cmd, null, 1000);
         rq.put( "Module", mod);
@@ -136,7 +136,7 @@ public class CfgRelay implements AsyncService {
         }
         SvcResponse rp = SvcCatalog.getDispatcher().callPipeline( "" + dest, rq);
         if( rp == null || rp.getResultCode() != 0) {
-            throw new Exception( "Failed to " + cmd + " " + mod + " with dest: " + dest + " " + rp);
+            throw new Exception( "Error response on " + cmd + " " + mod + " with dest: " + dest + " " + rp);
         }
     }
   
