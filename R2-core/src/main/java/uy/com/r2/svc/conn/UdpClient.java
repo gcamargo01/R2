@@ -65,7 +65,7 @@ public class UdpClient implements AsyncService {
             socket = new MulticastSocket();
             socket.setBroadcast( true);
             for( InetAddress ia: getAdaptersAddress()) {
-                LOG.trace( "   to send to: " + ia);
+                LOG.trace( "   sending to: " + ia);
                 DatagramPacket dp = new DatagramPacket( buff, buff.length, ia, port);
                 socket.send( dp);
             }
@@ -120,7 +120,7 @@ public class UdpClient implements AsyncService {
         NetworkInterface loop = null;
         try {
             for( NetworkInterface nif: Collections.list( NetworkInterface.getNetworkInterfaces())) {
-                LOG.trace( " " + nif.getDisplayName());
+                //LOG.trace( " " + nif.getDisplayName());
                 if( nif.isUp()) {
                     if( !nif.isLoopback()) {
                         al.add( nif);
@@ -135,10 +135,10 @@ public class UdpClient implements AsyncService {
             InetAddress anyIA = null;
             for( NetworkInterface ni: al) {
                 for( InterfaceAddress a: ni.getInterfaceAddresses()) {
-                    LOG.trace( "  " + ni.getDisplayName() + " " + a);
+                    //LOG.trace( "  " + ni.getDisplayName() + " " + a);
                     if( a.getBroadcast() != null) {
                         il.add( a.getBroadcast());
-                        LOG.trace( "  added " + a.getBroadcast());
+                        //LOG.trace( "  added " + a.getBroadcast());
                     } else {
                         anyIA = a.getAddress();
                     }
@@ -150,7 +150,7 @@ public class UdpClient implements AsyncService {
         } catch( Exception x) {
             LOG.warn( "Falied to get network adapters brodcast address " + x, x);
         }
-        LOG.trace( "Brodcast Adapter Address List = " + il);
+        LOG.trace( "getAdaptersAddress: " + il);
         return il;
     }
 

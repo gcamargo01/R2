@@ -27,6 +27,7 @@ public class UdpServer implements StartUpRequired {
     private int port = 0;
     private DatagramSocket soc = null;
     private boolean stop = false;
+    private String localName = null;
     private int receivedCount = 0;
      
     /** Get the configuration descriptors of this module.
@@ -46,6 +47,8 @@ public class UdpServer implements StartUpRequired {
     @Override
     public void startUp( Configuration cfg) throws Exception {
         port = cfg.getInt( "Port");
+        SvcRequest r = new SvcRequest( null, 0, 0, "", null, 0);  
+        localName = r.getClientNode();   // Get local node name
         new UdpListener().start();
         receivedCount = 0;
     }
@@ -95,17 +98,20 @@ public class UdpServer implements StartUpRequired {
                     soc = new DatagramSocket( port);
                     DatagramPacket dp = new DatagramPacket( buff, buff.length);
                     soc.receive( dp);
+                    LOG.trace( "************************* " + dp.getAddress()  + ":" + dp.getPort());
                     InetAddress a = dp.getAddress();
-                    if( !getExternalAddressList().contains( a)) {
-                        //LOG.trace( "************************************************* " + a);
-                        LOG.trace( "Packet(" + receivedCount + "): " + new String( dp.getData(), 0, dp.getLength()));
-                        ++receivedCount;
-                        SvcRequest rq = new SvcRequest( a.getHostName(), 0, 0, "SetMasterServer", null, 10000);
-                        rq.add( Json.SERIALIZED_JSON, new String( dp.getData(), 0, dp.getLength()));
-                        SvcCatalog.getDispatcher().call( rq);
-                    } else {
-                        LOG.trace( "Packet ignored, " + a);
+                    String msg = new String( dp.getData(), 0, dp.getLength());
+                    if( getExternalAddressList().contains( a) &&                // the same address?
+                            ( localName != null) && msg.contains( localName)) { // and already knows this instance
+                        LOG.trace( "Packet ignored, from " + a + " " + new String( dp.getData()));
+                        continue;
                     }
+                    LOG.trace( "Packet(" + receivedCount + "): " + msg);
+                    ++receivedCount;
+                    SvcRequest rq = new SvcRequest( a.getHostName(), 0, 0, "SetMasterServer", null, 10000);
+                    rq.add( Json.SERIALIZED_JSON, msg);
+                    LOG.trace( "to process " + rq);
+                    SvcCatalog.getDispatcher().call( rq);
                 } catch( Exception ex) {
                     if( !stop) {
                         LOG.warn( "Error on " + getName() + " " + ex, ex);
@@ -143,7 +149,7 @@ public class UdpServer implements StartUpRequired {
         cfg.put( "Port", 8015);
         try {
             u.startUp( cfg);
-            long t = System.currentTimeMillis() + 10000;
+            long t = System.currentTimeMillis() + 100000;
             while( System.currentTimeMillis() < t) {
                 Thread.sleep( 1000);
                 System.err.println( ".");
