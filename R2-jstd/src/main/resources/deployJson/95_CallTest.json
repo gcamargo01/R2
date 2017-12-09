@@ -1,9 +1,12 @@
 {
-    "class": "uy.com.r2.svc.tools.SimulateClientCaller",
+    "class": "uy.com.r2.svc.tools.SvcTestingCaller",
     "TestTime": 0,
-    "TestThreads": 1, 
-    "TestIterations": 10.00000,
-    "Service": "TestS1",
+    "TestThreads": 20, 
+    "TestIterations": 100000.0,
+    "Service": "Test",
+    "Node": "Test",
+    //"Node": "TestEJB",
+    //"Node": "TestS1",
     "SleepTime": 0,
     "Messages": "The data 1,Other data,One more 3",
     "DumpStatus": "true"
