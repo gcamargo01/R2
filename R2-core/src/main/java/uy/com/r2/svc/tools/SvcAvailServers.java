@@ -60,7 +60,6 @@ public class SvcAvailServers implements AsyncService, StartUpRequired, Runnable 
     };
     private static final List<String> COMMANDS = Arrays.asList( SERVICES);
     private static final String SVC_SYNC_LIBS = "Synclibs";
-    private static final String SVC_SYNC_CFG = "SyncConfig";
     private static final String UNDEFINED = "_Undefined_";
     private static final Logger LOG = Logger.getLogger(SvcAvailServers.class);
     private final SvcCatalog catalog = SvcCatalog.getCatalog();
@@ -293,9 +292,6 @@ public class SvcAvailServers implements AsyncService, StartUpRequired, Runnable 
                 break;
             case SVC_SHUTDOWN:
                 stop = true;
-                if( isMaster()) {  // Choose another Master
-                    chooseANewMaster();
-                }
                 notifyAllServers( SVC_REMOVESERVER, localName);
                 catalog.shutdown();
                 break;
@@ -357,7 +353,7 @@ public class SvcAvailServers implements AsyncService, StartUpRequired, Runnable 
     private boolean chooseANewMaster() {
         LOG.trace( "chooseANewMaster actual=" + masterName);
         for( String n: knownServers.keySet()) {  // alfabetical ordered
-            if( n.equals( localName) || n.equals( UNDEFINED)) {
+            if( n.equals( UNDEFINED)) {
                 continue;
             }
             LOG.trace( "promoted to Master " + n + " from " + masterName);
@@ -494,8 +490,8 @@ public class SvcAvailServers implements AsyncService, StartUpRequired, Runnable 
         //rq = new SvcRequest( localName, 0, nodeTxNr++, SVC_SYNC_LIBS, null, 1000);
         //rq.put( "RmtPipe", knownServers.get( name));
         //SvcCatalog.getDispatcher().call( rq);
-        rq = new SvcRequest( localName, 0, nodeTxNr++, SVC_SYNC_CFG, null, 1000);
-        rq.put( "RmtPipe", knownServers.get( name));
+        rq = new SvcRequest( localName, 0, nodeTxNr++, CfgRelay.SVC_SYNC_CFG, null, 1000);
+        rq.put( "RmtPipe", name);
         rs = SvcCatalog.getDispatcher().call( rq);
         if( rs.getResultCode() > 0) {
             updateBalancerList();
