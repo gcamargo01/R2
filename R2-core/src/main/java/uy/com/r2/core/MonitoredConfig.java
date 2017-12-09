@@ -39,8 +39,9 @@ public class MonitoredConfig extends Configuration {
                 }
             }
             for( String k: unknowCfg.keySet()) {
-                LOG.warn( "Undefined configuration: " + k + "=" + unknowCfg.get( k)
-                        + " on module " + name, new Exception( "Stacktrace"));
+                String s = "Undefined configuration: " + k + "=" + unknowCfg.get( k)
+                        + " on module " + name;
+                LOG.warn( "Ignored exception", new Exception( s));
             }
         } catch( Exception x) {
              LOG.warn( "Unable to check cfg definition, " + x, x);
@@ -64,7 +65,8 @@ public class MonitoredConfig extends Configuration {
     @Override
     public String getString( String key) {
         if( !cfgDesc.containsKey( key)) {
-            LOG.warn( moduleName + " uses undeclared config " + key, new Exception( "Stacktrace"));
+            String s = moduleName + " uses undeclared config " + key;
+            LOG.warn( "Ignored exception", new Exception( s));
         }
         String type = "?";
         try {
@@ -86,7 +88,8 @@ public class MonitoredConfig extends Configuration {
     public Map<String,String> getStringMap( String key) throws Exception {
         Map<String,String> m = super.getStringMap( key);
         if( !cfgDesc.containsKey( key)) {
-            LOG.warn( moduleName + " uses undeclared config " + key, new Exception( "Stacktrace"));
+            String s = moduleName + " uses undeclared config " + key; 
+            LOG.warn( "Ignored exception", new Exception( s));
         }
         LOG.info( moduleName + " getMap( " + key +  "):" + " = " + m);
         return m;
