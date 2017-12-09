@@ -22,6 +22,13 @@ public class Configuration implements Serializable, Cloneable {
     public Configuration( ) {
     }
 
+    /** Map Constructor.
+     * @param map Configuration items map
+     */
+    public Configuration( Map<String,Object> map) {
+        cfg = map;
+    }
+
     /** Create a new copy.
      * @return A new and updated Configuration (isUpdated = true)
      */
