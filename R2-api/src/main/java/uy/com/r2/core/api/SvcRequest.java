@@ -4,7 +4,6 @@ package uy.com.r2.core.api;
 import java.util.List;
 import java.util.Map;
 import java.io.Serializable;
-import java.util.HashMap;
 
 /** Request for a R2 service module.
  * @author G.Camargo
@@ -33,7 +32,7 @@ public class SvcRequest extends SvcMessage implements Serializable, Cloneable {
      * @param payload Message data multimap
      * @param amount Total amount of the service requested
      * @param currency Currency code of the amount
-     * @param timeOut Maximum response time in mS
+     * @param timeOut Maximum response time in mS, or 0
      */
     public SvcRequest( String clientNode, int nodeRqNr, int sessionNr, String service, 
             Map<String,List<Object>> payload, double amount, String currency, int timeOut) {
@@ -59,7 +58,7 @@ public class SvcRequest extends SvcMessage implements Serializable, Cloneable {
      * @param sessionNr Session ticket, only for auditory proposes
      * @param service Requested service name
      * @param payload Message data multimap
-     * @param timeOut Maximum response time in mS
+     * @param timeOut Maximum response time in mS, or 0 
      */
     public SvcRequest( String clientNode, int nodeRqNr, int sessionNr, String service, 
             Map<String,List<Object>> payload, int timeOut) {
