@@ -59,7 +59,7 @@ public class CfgRelay implements AsyncService {
         LOG.trace( "to copy cfg. to " + lastDest);
         SvcCatalog catalog = SvcCatalog.getCatalog();
         // Get rmt. module list
-        SvcRequest rq = new SvcRequest( null, 0, txNr++, SvcDeployer.SVC_GETMODULELIST, null, 1000);
+        SvcRequest rq = new SvcRequest( null, 0, txNr++, SvcDeployer.SVC_GETMODULELIST, null, 0);
         SvcResponse rp = SvcCatalog.getDispatcher().callPipeline( lastDest, rq);
         if( rp == null || rp.getResultCode() != 0) {
             throw new Exception( "Failed to get modules list from " + lastDest);
@@ -128,7 +128,7 @@ public class CfgRelay implements AsyncService {
             throws Exception {
         LOG.trace( cmd + " " + mod + " " + cfg);
         SvcRequest rq;
-        rq = new SvcRequest( null, 0, txNr++, cmd, null, 1000);
+        rq = new SvcRequest( null, 0, txNr++, cmd, null, 0);
         rq.put( "Module", mod);
         Map<String,String> cm = cfg.getStringMap( "*"); 
         for( String k: cm.keySet()) {

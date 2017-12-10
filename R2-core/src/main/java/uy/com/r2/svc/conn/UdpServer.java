@@ -108,7 +108,7 @@ public class UdpServer implements StartUpRequired {
                     }
                     LOG.trace( "Packet(" + receivedCount + "): " + msg);
                     ++receivedCount;
-                    SvcRequest rq = new SvcRequest( a.getHostName(), 0, 0, "SetMasterServer", null, 10000);
+                    SvcRequest rq = new SvcRequest( a.getHostName(), 0, 0, "SetMasterServer", null, 0);
                     rq.add( Json.SERIALIZED_JSON, msg);
                     LOG.trace( "to process " + rq);
                     SvcCatalog.getDispatcher().call( rq);

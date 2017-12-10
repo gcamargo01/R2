@@ -24,7 +24,6 @@ import uy.com.r2.svc.tools.SvcMonitor;
  */
 public class ModuleInfo implements Module {
     private final static Logger LOG = Logger.getLogger(ModuleInfo.class);
-    private final static int NO_TIME_OUT = Integer.MAX_VALUE;
     private final String moduleName;
     private final Module moduleImpl;
     private final AsyncService asyncImpl;  // Module Wrapped as AsyncService
@@ -34,6 +33,7 @@ public class ModuleInfo implements Module {
     private Configuration cfg = new Configuration();
 
     private int limitActiveCount = Integer.MAX_VALUE;
+    private int timeOut = Integer.MAX_VALUE;
     private int activeCount = 0;
     private int topActiveCount = 0;
     private int count = 0;
@@ -136,6 +136,10 @@ public class ModuleInfo implements Module {
             monitorImpl = null;
             this.cfg = cfg.clone();   // set as updated
         }
+        timeOut = cfg.getInt( "TimeOut");
+        if( timeOut == 0) {
+            timeOut = Integer.MAX_VALUE;
+        }
         // Reset status
         activeCount = 0;
         topActiveCount = 0;
@@ -201,7 +205,7 @@ public class ModuleInfo implements Module {
                 ((SvcResponse)msg).getRequest();
         // Chech Timed out processing
         int to = getTimeOut( req);
-        if( to != NO_TIME_OUT) {
+        if( to != Integer.MAX_VALUE) {
             int t = ( int)( System.currentTimeMillis() - req.getAbsoluteTime());
             if( t > to) {
                 ++count;
@@ -266,19 +270,14 @@ public class ModuleInfo implements Module {
         return true;
     }
 
+    /** Get request timeout.
+     */
     private int getTimeOut( SvcRequest req) {
         int to = req.getTimeOut();
         if( to == 0) {
-            to = NO_TIME_OUT;
+            to = Integer.MAX_VALUE;
         }
-        try {
-            int t = cfg.getInt( "TimeOut");
-            if( t == 0) {
-                t = NO_TIME_OUT;
-            }
-            //to = Integer.min( to, t);  // Android doesn't have min
-            to = ( to > t)? t: to;
-        } catch( Exception x) { }
+        to = ( to > timeOut)? timeOut: to;   // min
         return to;
     }
 

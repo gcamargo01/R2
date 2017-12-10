@@ -139,7 +139,7 @@ public class MicroHttpServer implements StartUpRequired {
                 LOG.trace( thr + " *** params=" + params);
             }
             // Invoke service
-            SvcRequest req = new SvcRequest( node, ++txNr, 0, svc, params, 5000);
+            SvcRequest req = new SvcRequest( node, ++txNr, 0, svc, params, 0);
             SvcResponse resp = new SvcResponse( 1, req);
             try {
                 // Dispatch invocation

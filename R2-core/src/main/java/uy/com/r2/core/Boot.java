@@ -192,10 +192,10 @@ public class Boot {
     static {
         DEFAULT_CFG.put( "00", SvcCatalog.DISPATCHER_NAME);
         DEFAULT_CFG.put( "00.class", SimpleDispatcher.class.getName());
-        DEFAULT_CFG.put( "00.DefaultServicePipeline", "SrvHtml,SrvJson,JdbcService,FileServices,SvcDeployer,SvcAvailServers");
+        DEFAULT_CFG.put( "00.DefaultServicePipeline", "SrvHtml,SrvJson,JdbcService,FileServices,SvcDeployer,CfgRelay,SvcAvailServers");
         DEFAULT_CFG.put( "00.Pipeline._Undefined_", "ClntJson,HttpClient");
         DEFAULT_CFG.put( "00.Pipeline.Udp", "ClntJson,UdpClient");
-        DEFAULT_CFG.put( "00.Pipeline.Test", "JavaScript,JavaScript,JavaScript,JavaScript,JavaScript,JavaScript,JavaScript,JavaScript,JavaScript,JavaScript,Echo");
+        //DEFAULT_CFG.put( "00.Pipeline.Test", "JavaScript,JavaScript,JavaScript,JavaScript,JavaScript,JavaScript,JavaScript,JavaScript,JavaScript,JavaScript,Echo");
         DEFAULT_CFG.put( "01", uy.com.r2.svc.conn.MicroHttpServer.class.getSimpleName());
         DEFAULT_CFG.put( "01.class", uy.com.r2.svc.conn.MicroHttpServer.class.getName());
         DEFAULT_CFG.put( "01.Port", "8015");
@@ -225,7 +225,7 @@ public class Boot {
         DEFAULT_CFG.put( "06.ToSerial", "true");
         DEFAULT_CFG.put( "06.ProcessRequest", "true");
         DEFAULT_CFG.put( "06.ProcessResponse", "true");
-        DEFAULT_CFG.put( "06.Monitor", "true");
+        //DEFAULT_CFG.put( "06.Monitor", "true");
         DEFAULT_CFG.put( "07", HttpClient.class.getSimpleName());
         DEFAULT_CFG.put( "07.class", HttpClient.class.getName());
         // Default add 07.Url = rmtUrl
@@ -249,9 +249,9 @@ public class Boot {
                 "function responseService( rp) { }");
         DEFAULT_CFG.put( "98", uy.com.r2.svc.tools.Echo.class.getSimpleName());
         DEFAULT_CFG.put( "98.class", uy.com.r2.svc.tools.Echo.class.getName());
-        DEFAULT_CFG.put( "99", uy.com.r2.svc.tools.SvcTestingCaller.class.getSimpleName());
-        DEFAULT_CFG.put( "99.class", uy.com.r2.svc.tools.SvcTestingCaller.class.getName());
-        DEFAULT_CFG.put( "99.Pipeline", "Test");
+        //DEFAULT_CFG.put( "99", uy.com.r2.svc.tools.SvcTestingCaller.class.getSimpleName());
+        //DEFAULT_CFG.put( "99.class", uy.com.r2.svc.tools.SvcTestingCaller.class.getName());
+        //DEFAULT_CFG.put( "99.Pipeline", "Test");
     }
 
 }
