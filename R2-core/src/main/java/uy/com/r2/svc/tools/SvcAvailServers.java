@@ -265,7 +265,7 @@ public class SvcAvailServers implements AsyncService, StartUpRequired, Runnable 
                             if( !map.containsKey( s)) {
                                 // Tell the new Master the servers unknown
                                 SvcRequest rq = new SvcRequest( localName, 0, nodeTxNr++, 
-                                        SVC_ADDSERVER, null, 1000);
+                                        SVC_ADDSERVER, null, 0);
                                 rq.put( "Name", s);
                                 rq.put( "Url", knownServers.get( s));
                                 SvcCatalog.getDispatcher().callPipeline( masterName, rq);
@@ -277,7 +277,7 @@ public class SvcAvailServers implements AsyncService, StartUpRequired, Runnable 
                         LOG.info( "Local Master replay a keepAlive from " + name);
                         // Tell it that local im the Master 
                         SvcRequest rq = new SvcRequest( localName, 0, nodeTxNr++, 
-                                SVC_SETMASTER, null, 1000);
+                                SVC_SETMASTER, null, 0);
                         rq.put( "Name", localName);
                         rq.put( "Url", knownServers.get( localName));
                         SvcCatalog.getDispatcher().callPipeline( name, rq);
@@ -373,8 +373,8 @@ public class SvcAvailServers implements AsyncService, StartUpRequired, Runnable 
             }
             try {
                 LOG.debug( " to notify " + sn + " from " + localName + " " + localUrl);
-                SvcRequest rq = new SvcRequest( localName, 0, nodeTxNr++, command, null, 
-                        1000);
+                SvcRequest rq = new SvcRequest( localName, 0, nodeTxNr++, command, 
+                        null, 0);
                 rq.put( "Name", name);
                 rq.put( "Url", localUrl);
                 rq.put( "Servers", knownServers);
@@ -409,8 +409,8 @@ public class SvcAvailServers implements AsyncService, StartUpRequired, Runnable 
     private void notifyXUdp() {
         LOG.trace( "notifyXUdpMaster " + masterName);
         try {
-            SvcRequest rq = new SvcRequest( localName, 0, nodeTxNr++, SVC_SETMASTER, null, 
-                    1000);
+            SvcRequest rq = new SvcRequest( localName, 0, nodeTxNr++, SVC_SETMASTER, 
+                    null, 0);
             rq.put( "Name", masterName);
             rq.put( "Url", knownServers.get( masterName));
             rq.put( "Servers", knownServers);
@@ -490,7 +490,7 @@ public class SvcAvailServers implements AsyncService, StartUpRequired, Runnable 
         //rq = new SvcRequest( localName, 0, nodeTxNr++, SVC_SYNC_LIBS, null, 1000);
         //rq.put( "RmtPipe", knownServers.get( name));
         //SvcCatalog.getDispatcher().call( rq);
-        rq = new SvcRequest( localName, 0, nodeTxNr++, CfgRelay.SVC_SYNC_CFG, null, 1000);
+        rq = new SvcRequest( localName, 0, nodeTxNr++, CfgRelay.SVC_SYNC_CFG, null, 0);
         rq.put( "RmtPipe", name);
         rs = SvcCatalog.getDispatcher().call( rq);
         if( rs.getResultCode() > 0) {
