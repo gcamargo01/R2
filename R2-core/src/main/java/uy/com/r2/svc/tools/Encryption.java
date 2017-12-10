@@ -180,7 +180,7 @@ public class Encryption implements AsyncService {
         return bigInt.toString( 16);
     }
     
-    /**/
+    /*
     public static void main( String args[]) {
         Configuration c = new Configuration();
         Encryption s = new Encryption();
@@ -210,7 +210,7 @@ public class Encryption implements AsyncService {
             x.printStackTrace( System.err);
         }    
     }
-    /**/
+    */
 
 }
 

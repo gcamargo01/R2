@@ -9,9 +9,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import javax.crypto.Cipher;
+import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import org.apache.log4j.Logger;
-import uy.com.r2.core.ModuleInfo;
 import uy.com.r2.core.api.AsyncService;
 import uy.com.r2.core.api.ConfigItemDescriptor;
 import uy.com.r2.core.api.Configuration;
@@ -24,7 +24,7 @@ import uy.com.r2.core.api.SvcResponse;
  * @author G.Camargo
  */
 public class KeyValidation implements AsyncService {
-    private static Logger log = Logger.getLogger(KeyValidation.class);
+    private static Logger LOG = Logger.getLogger( KeyValidation.class);
     private static String SECRET_TAG = "Secret";
     private boolean serverMode = true;
     private Cipher encryptCipher = null;
@@ -43,7 +43,9 @@ public class KeyValidation implements AsyncService {
         l.add( new ConfigItemDescriptor( "Transformation", ConfigItemDescriptor.STRING,
                 "Algorithm / Blocking / Padding used", "AES/CBC/PKCS5Padding"));
         l.add( new ConfigItemDescriptor( "Password", ConfigItemDescriptor.STRING,
-                "Password used to encript/desencript key", "0123456789ABCDEF"));
+                "Password used to encript/desencript key", null));
+        l.add( new ConfigItemDescriptor( "InitVector", ConfigItemDescriptor.STRING,
+                "InitVector to use to encript key; as 16 bytes Hex", null));
         return l;
     }
 
@@ -56,7 +58,9 @@ public class KeyValidation implements AsyncService {
         encryptCipher = Cipher.getInstance( cfg.getString( "Transformation"));
         SecretKeySpec secKey = new SecretKeySpec( password.getBytes("UTF-8"), 
                 cfg.getString( "Algorithm"));
-        encryptCipher.init( Cipher.ENCRYPT_MODE, secKey);
+        byte[] iv = cfg.getString( "InitVector").getBytes( "UTF-8");
+        IvParameterSpec ivPar = new IvParameterSpec( iv);        
+        encryptCipher.init( Cipher.ENCRYPT_MODE, secKey, ivPar);
         cfg.clearUpdated();
     }
 
@@ -72,7 +76,7 @@ public class KeyValidation implements AsyncService {
     public SvcMessage onRequest( SvcRequest req, Configuration cfg) throws Exception {
         setConfiguration( cfg);
         String h = sortAndSerialize( req.getPayload());
-        log.debug( "hash=" + h);
+        LOG.debug( "hash=" + h);
         if( serverMode) {
             if( !validate(h, "" + req.get(SECRET_TAG))) {
                 throw new Exception( "Invalid secret key");
@@ -95,11 +99,11 @@ public class KeyValidation implements AsyncService {
     public SvcResponse onResponse( SvcResponse res, Configuration cfg) throws Exception {
         setConfiguration( cfg);
         String h = sortAndSerialize( res.getPayload());
-        log.debug( "hash=" + h);
+        LOG.debug( "hash=" + h);
         if( serverMode) {
             res.put( SECRET_TAG, generate( h)); 
         } else {
-            if( !validate(h, "" + res.get( SECRET_TAG))) {
+            if( !validate( h, "" + res.get( SECRET_TAG))) {
                 throw new Exception( "Invalid secret key");
             }    
         }
@@ -129,7 +133,7 @@ public class KeyValidation implements AsyncService {
         sm.putAll( m);
         StringBuilder sb = new StringBuilder();
         for( String k: sm.keySet())  {
-            if( k.equals(SECRET_TAG)) {
+            if( k.equals( SECRET_TAG)) {
                 continue;
             }
             sb.append( k);
@@ -138,32 +142,38 @@ public class KeyValidation implements AsyncService {
                 sb.append( "" + o);
                 sb.append( ',');
             }
-            sb.append( '\n');
+            sb.append( '|');
         }
         return sb.toString();
     }
 
-    private boolean validate( String str, String key) throws Exception {
-        return generate( str).equals( key);
+    private boolean validate( String str, String sec) throws Exception {
+        return generate( str).equals( sec);
     }
     
     private String generate( String str) throws Exception {
         // Hash
         byte[] b = str.getBytes( "UTF-8");
         MessageDigest md = MessageDigest.getInstance( "MD5");
+        //LOG.trace( "inp=" + new String( b));
         byte[] d = md.digest( b);
+        //LOG.trace( "dig=" + new String( d));
         // Encript
         byte[] ed = encryptCipher.doFinal( d);
+        //LOG.trace( "enc=" + new String( ed));
         BigInteger bigInt = new BigInteger( 1, ed);
         return bigInt.toString( 16);
     }
 
-    /**/
+    /** Basic tests.
     public static void main( String args[]) {
+        org.apache.log4j.BasicConfigurator.configure();
         Configuration c = new Configuration();
         KeyValidation s = new KeyValidation();
         try {
-            ModuleInfo.setDefaultValues( s, c);
+            uy.com.r2.core.ModuleInfo.setDefaultValues( s, c);
+            c.put( "Password", "0123456789ABCDEF"); 
+            c.put( "InitVector", "0123456789ABCDEF");  
             System.out.println( "cfg= " + c);
             s.setConfiguration( c);
             String prb = "Esto es una prueba";
@@ -171,11 +181,20 @@ public class KeyValidation implements AsyncService {
             System.out.println( "prb= " + prb);
             System.out.println( "sign= " + sign);
             System.out.println( "" + s.validate( prb, sign));
+            SvcRequest rq = new SvcRequest( null, 0, 0, "Svc", null, 0);
+            rq.put( "Key", "Value");
+            System.out.println( "rq= " + rq);
+            c.put( "ServerMode", "false");
+            SvcMessage rq2 = s.onRequest( rq, c);
+            System.out.println( "rq2= " + rq2);
+            c.put( "ServerMode", "true");
+            SvcMessage rq3 = s.onRequest( (SvcRequest)rq2, c);
+            System.out.println( "rq3= " + rq3);
         } catch( Exception x) {
             x.printStackTrace( System.err);
         }    
     }
-    /**/
+    */
 
 }
 
