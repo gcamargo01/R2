@@ -25,7 +25,7 @@ public class Json implements AsyncService {
     public static final String RESULT_CODE = "ResultCode";
     private static final Logger LOG = Logger.getLogger( Json.class);
     private Gson mapper = new Gson();
-    private boolean toSerial = true;
+    private boolean serverMode = true;
     private boolean procRequest = true;
     private boolean procResponse = true;
     private int parsedCount = 0;
@@ -37,8 +37,8 @@ public class Json implements AsyncService {
     @Override
     public List<ConfigItemDescriptor> getConfigDescriptors() {
         LinkedList<ConfigItemDescriptor> l = new LinkedList<ConfigItemDescriptor>();
-        l.add( new ConfigItemDescriptor( "ToSerial", ConfigItemDescriptor.BOOLEAN,
-                "Going to a serialized service, or not", "true"));
+        l.add( new ConfigItemDescriptor( "ServerMode", ConfigItemDescriptor.BOOLEAN,
+                "Convert request from json and resp. to json, or do it as client", "true"));
         l.add( new ConfigItemDescriptor( "ProcessRequest", ConfigItemDescriptor.BOOLEAN,
                 "Process the Requests (default true)", "true"));
         l.add( new ConfigItemDescriptor( "ProcessResponse", ConfigItemDescriptor.BOOLEAN,
@@ -54,7 +54,7 @@ public class Json implements AsyncService {
         if( !cfg.isUpdated()) {
             return;
         }
-        toSerial = cfg.getBoolean( "ToSerial");
+        serverMode = cfg.getBoolean( "ServerMode");
         procRequest = cfg.getBoolean( "ProcessRequest");
         procResponse = cfg.getBoolean( "ProcessResponse");
         // reset statistics
@@ -77,7 +77,7 @@ public class Json implements AsyncService {
         if( !procRequest) {
             return req;
         }
-        if( toSerial) {
+        if( serverMode) {
             // Add or replace a "Data" field with JSON
             req.put( SERIALIZED_JSON, toJSON( req.getPayload()));
         } else {
@@ -106,7 +106,7 @@ public class Json implements AsyncService {
         if( !procResponse) {
             return res;
         }
-        if( toSerial) {
+        if( serverMode) {  
             // Take one field Data an serialize it
             Map<String, List<Object>> r = fromJSON("" + res.get( SERIALIZED_JSON));
             // Remove SerializedJson and try to parse ResultCode

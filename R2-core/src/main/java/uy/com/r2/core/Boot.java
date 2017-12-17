@@ -140,13 +140,16 @@ public class Boot {
             LOG.info( "Can't load R2.properties: " + x);
         }    
         if( pr.isEmpty()) {
+            // Get local IP
+            String localIP = hostName;
+            
             // calculate default server name
-            String localUrl = "http://" + hostName + ":" + localPort;
+            String localUrl = "http://" + localIP + ":" + localPort;
             String localName = hostName + localPort;
             // Set default cliendNode
             new SvcRequest( localName, 0, 0, null, null, 0).getClientNode();
             // configure
-            pr.putAll(DEFAULT_CFG);
+            pr.putAll( DEFAULT_CFG);
             pr.put( "01.Port", "" + localPort);
             pr.put( "02.LocalUrl", localUrl);
             if( rmtUrl != null && !rmtUrl.isEmpty()) {
@@ -186,7 +189,6 @@ public class Boot {
         LOG.trace( "getHostName= " + ln);        
         return ln;
     }
-    
 
     static final Map<String,String> DEFAULT_CFG = new HashMap();
     static {
@@ -208,7 +210,7 @@ public class Boot {
         DEFAULT_CFG.put( "03.class", uy.com.r2.svc.tools.ToHtml.class.getName());
         DEFAULT_CFG.put( "04", "SrvJson");
         DEFAULT_CFG.put( "04.class", uy.com.r2.svc.tools.Json.class.getName());
-        DEFAULT_CFG.put( "04.ToSerial", "false");
+        DEFAULT_CFG.put( "04.ServerMode", "true");
         DEFAULT_CFG.put( "04.ProcessRequest", "true");
         DEFAULT_CFG.put( "04.ProcessResponse", "true");
         DEFAULT_CFG.put( "05", uy.com.r2.svc.conn.JdbcService.class.getSimpleName());
@@ -222,7 +224,7 @@ public class Boot {
         DEFAULT_CFG.put( "05.Service.AddClient.Params", "Id,Name");
         DEFAULT_CFG.put( "06", "ClntJson");
         DEFAULT_CFG.put( "06.class", Json.class.getName());
-        DEFAULT_CFG.put( "06.ToSerial", "true");
+        DEFAULT_CFG.put( "06.ServerMode", "false");
         DEFAULT_CFG.put( "06.ProcessRequest", "true");
         DEFAULT_CFG.put( "06.ProcessResponse", "true");
         //DEFAULT_CFG.put( "06.Monitor", "true");
