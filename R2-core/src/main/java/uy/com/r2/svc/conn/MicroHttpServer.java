@@ -242,7 +242,7 @@ public class MicroHttpServer implements StartUpRequired {
                 String line;
                 while( ( line = reader.readLine()) != null && !line.isEmpty()) {
                     //LOG.trace( "parsing line " + line);
-                    if( line.startsWith( "GET /")) {
+                    if( line.startsWith( "GET /") || line.startsWith( "POST /")) {
                         int start = line.indexOf( '/');
                         int end = line.indexOf( ' ', start);
                         route = line.substring( start, end);
