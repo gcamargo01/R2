@@ -77,17 +77,15 @@ public class Json implements AsyncService {
         if( !procRequest) {
             return req;
         }
-        if( serverMode) {
-            // Add or replace a "Data" field with JSON
-            req.put( SERIALIZED_JSON, toJSON( req.getPayload()));
-        } else {
-            // Take one field Data an serialize it
+        if( serverMode) {  // Take Serialixed field Data an parse it
             Map<String, List<Object>> r;
             r = fromJSON( "" + req.get( SERIALIZED_JSON));
             // Add parsed params is better
             for( String k: r.keySet()) {
                 req.getPayload().put( k, r.get( k));  // Already is a list
             }
+        } else {  // Put a Serialized field with JSON contents
+            req.put( SERIALIZED_JSON, toJSON( req.getPayload()));
         }
         return req;
     }
@@ -106,8 +104,7 @@ public class Json implements AsyncService {
         if( !procResponse) {
             return res;
         }
-        if( serverMode) {  
-            // Take one field Data an serialize it
+        if( !serverMode) {  // Take Serialized field an parse it
             Map<String, List<Object>> r = fromJSON("" + res.get( SERIALIZED_JSON));
             // Remove SerializedJson and try to parse ResultCode
             r.remove( SERIALIZED_JSON);
@@ -118,8 +115,7 @@ public class Json implements AsyncService {
             }
             res = new SvcResponse( rc, res.getRequest());
             res.getPayload().putAll( r);
-        } else {
-            // Add some fields
+        } else {  // Put a Serialized field with JSON contents
             Map<String,List<Object>> m = new HashMap( res.getPayload());
             List<Object> l = new ArrayList();
             l.add( "" + res.getResultCode());
