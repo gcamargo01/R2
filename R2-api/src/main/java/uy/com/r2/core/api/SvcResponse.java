@@ -35,6 +35,19 @@ public class SvcResponse extends SvcMessage implements Serializable {
     private final SvcRequest request;
     private transient int responseTime;
     
+    /** Build a simple response without any data.
+     * Should be instanced right in the event of the response.
+     * @param resultCode Error code, 0 is ok, 
+     * @param request Invocation request
+     */
+    public SvcResponse( int resultCode, SvcRequest request) {
+        super( request.getRequestId(), null);
+        this.responseTime = ( int)( System.currentTimeMillis() - 
+                request.getAbsoluteTime());
+        this.resultCode = resultCode;
+        this.request = request;
+    }
+    
     /** Successful response constructor with data.
      * Should be instanced right in the event of the response.
      * @param data Message data or null
@@ -56,38 +69,25 @@ public class SvcResponse extends SvcMessage implements Serializable {
         this.request = request;
     }
     
-    /** Build a simple response without any data.
-     * Should be instanced right in the event of the response.
-     * @param resultCode Error code, 0 is ok, 
-     * @param request Invocation request
-     */
-    public SvcResponse( int resultCode, SvcRequest request) {
-        super( request.getRequestId(), null);
-        this.responseTime = ( int)( System.currentTimeMillis() - 
-                request.getAbsoluteTime());
-        this.resultCode = resultCode;
-        this.request = request;
-    }
-    
     /** Build a failure response from a Exception.
      * Should be instanced right in the event of the response. <br>
      * @param reasonOrAction Cause of error and/or failed action in progress
-     * @param resultCode Result code, lower than 0 if its fatal
+     * @param errorResultCode Result code, in this method must be lower than 0 
      * @param exception Exception if there was one, optional
      * @param request Invocation request
      */
-    public SvcResponse( String reasonOrAction, int resultCode, Throwable exception, 
+    public SvcResponse( String reasonOrAction, int errorResultCode, Throwable exception, 
             SvcRequest request) {
         super( request.getRequestId(), null);
-        if( resultCode >= 0) {
-            log.warn( "The resultCode " + resultCode + " of error '" + reasonOrAction  
+        if( errorResultCode >= 0) {
+            log.warn( "The resultCode " + errorResultCode + " of error '" + reasonOrAction  
                     + "' should be negative or generic exception " + RES_CODE_EXCEPTION 
                     + " on SvcErrorResponses from " + request);
-            resultCode = RES_CODE_EXCEPTION;
+            errorResultCode = RES_CODE_EXCEPTION;
         }
         this.responseTime = ( int)( System.currentTimeMillis() - 
                 request.getAbsoluteTime());
-        this.resultCode = resultCode;
+        this.resultCode = errorResultCode;
         this.request = request;
         addToMap( super.getPayload(), "Exception", exception);
         addToMap( super.getPayload(), "ReasonOrAction", reasonOrAction);
@@ -96,18 +96,18 @@ public class SvcResponse extends SvcMessage implements Serializable {
     /** Build a failure response from a message.
      * Should be instanced right in the event of the response. <br>
      * @param reasonOrAction Cause of error and/or failed action in progress
-     * @param resultCode Result code, lower than 0 if its fatal
+     * @param errorResultCode Result code, in this method must be lower than 0 
      * @param request Invocation request
      */
-    public SvcResponse( String reasonOrAction, int resultCode, SvcRequest request) {
+    public SvcResponse( String reasonOrAction, int errorResultCode, SvcRequest request) {
         super( request.getRequestId(), null);
-        if( resultCode >= 0) {
-            log.warn( "The resultCode " + resultCode + " of error '" + reasonOrAction  
+        if( errorResultCode >= 0) {
+            log.warn( "The resultCode " + errorResultCode + " of error '" + reasonOrAction  
                     + "' should be negative on SvcErrorResponses from " + request);
         }
         this.responseTime = ( int)( System.currentTimeMillis() - 
                 request.getAbsoluteTime());
-        this.resultCode = resultCode;
+        this.resultCode = errorResultCode;
         this.request = request;
         addToMap( super.getPayload(), "ReasonOrAction", reasonOrAction);
     }
