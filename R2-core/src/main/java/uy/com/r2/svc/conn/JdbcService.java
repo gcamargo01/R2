@@ -12,9 +12,10 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.util.LinkedHashMap;
 import org.apache.log4j.Logger;
+import uy.com.r2.core.SvcCatalog;
 import uy.com.r2.core.api.SvcRequest;
 import uy.com.r2.core.api.SvcResponse;
-import uy.com.r2.core.api.AsyncService;
+import uy.com.r2.core.api.SimpleService;
 import uy.com.r2.core.api.ConfigItemDescriptor;
 import uy.com.r2.core.api.Configuration;
 import uy.com.r2.core.api.Dispatcher;
@@ -28,7 +29,7 @@ import uy.com.r2.core.api.SvcMessage;
  * It should support stored procedures.
  * @author G.Camargo
  */
-public class JdbcService implements AsyncService {
+public class JdbcService implements SimpleService {
     private static final Logger log = Logger.getLogger(JdbcService.class);
     private String driverClass = "";
     private String url = "";
@@ -105,13 +106,19 @@ public class JdbcService implements AsyncService {
      * @throws Exception Unexpected error, the responseCode will be lower than 0
      */
     @Override
-    public SvcMessage onRequest( SvcRequest req, Configuration cfg) throws Exception {
+    public SvcResponse call( SvcRequest req, Configuration cfg) throws Exception {
         setConfiguration( cfg);
         String svcName = req.getServiceName();
         ServiceInfo si = svcs.get( svcName);
         if( si == null) {
+            if( req.getServiceName().equals( Dispatcher.SVC_GETSERVICESLIST)) {
+                SvcResponse resp = new SvcResponse( 0, req);
+                for( String k: svcs.keySet()) {
+                    resp.add( "Services", k);
+                }
+            }
             //throw new Exception( SvcResponse.MSG_INVALID_SERVICE + req.getServiceName());
-            return req;
+            SvcCatalog.getDispatcher().callNext( req);
         }
         Map<String,List<Object>> r = execute( req.getPayload(), si);
         SvcResponse resp = new SvcResponse( r, 0, req);
@@ -193,20 +200,6 @@ public class JdbcService implements AsyncService {
             try { rs.close(); } catch( Exception xx) { }
             try { ps.close(); } catch( Exception xx) { }
         }
-    }
-
-    
-    /** Process a response from another modules
-     * @throws Exception Unexpected
-     */
-    @Override
-    public SvcResponse onResponse( SvcResponse resp, Configuration cfg) throws Exception {
-        if( resp.getRequest().getServiceName().equals( Dispatcher.SVC_GETSERVICESLIST)) {
-            for( String k: svcs.keySet()) {
-                resp.add( "Services", k);
-            }
-        }
-        return resp;
     }
     
     private class ServiceInfo {
