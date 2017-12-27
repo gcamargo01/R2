@@ -110,18 +110,19 @@ public class JdbcService implements SimpleService {
         setConfiguration( cfg);
         String svcName = req.getServiceName();
         ServiceInfo si = svcs.get( svcName);
+        SvcResponse resp;
         if( si == null) {
             if( req.getServiceName().equals( Dispatcher.SVC_GETSERVICESLIST)) {
-                SvcResponse resp = new SvcResponse( 0, req);
+                resp = new SvcResponse( 0, req);
                 for( String k: svcs.keySet()) {
                     resp.add( "Services", k);
                 }
             }
             //throw new Exception( SvcResponse.MSG_INVALID_SERVICE + req.getServiceName());
-            SvcCatalog.getDispatcher().callNext( req);
+            resp = SvcCatalog.getDispatcher().callNext( req);
+        } else {
+            resp = new SvcResponse( execute( req.getPayload(), si), 0, req);
         }
-        Map<String,List<Object>> r = execute( req.getPayload(), si);
-        SvcResponse resp = new SvcResponse( r, 0, req);
         return resp;
     }
 
