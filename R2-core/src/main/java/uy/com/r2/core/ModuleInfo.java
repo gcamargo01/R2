@@ -34,6 +34,7 @@ public class ModuleInfo implements Module {
 
     private int limitActiveCount = Integer.MAX_VALUE;
     private int timeOut = Integer.MAX_VALUE;
+    // Statistics
     private int activeCount = 0;
     private int topActiveCount = 0;
     private int count = 0;
@@ -143,6 +144,8 @@ public class ModuleInfo implements Module {
         // Reset status
         activeCount = 0;
         topActiveCount = 0;
+        count = 0;
+        errorCount = 0;
         // Update config
         if( moduleImpl instanceof StartUpRequired) {  
             ( (StartUpRequired)moduleImpl).startUp( this.cfg);
@@ -189,7 +192,7 @@ public class ModuleInfo implements Module {
         cdl.add( new ConfigItemDescriptor( "Monitor", ConfigItemDescriptor.BOOLEAN,
                "Wrap module with SvcMonitor to get statistics and acitvity (internal)", null));
         cdl.add( new ConfigItemDescriptor( "MonitorLastNr", ConfigItemDescriptor.INTEGER, 
-                "Keep last messages to show it", "10"));
+               "Keep last messages to show it", "10"));
         return cdl;
     }
 
