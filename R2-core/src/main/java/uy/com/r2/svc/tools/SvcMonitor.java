@@ -43,6 +43,7 @@ public class SvcMonitor implements AsyncService, SimpleService {
     private int avgResponseTime = 0;
     private int lastResponseTime = 0;
     private int maxResponseTime = 0;
+    private String maxResponseTimeId = "";
     private int moduleProcessingTime = 0;
     private long deployTime = 0;
     private long setupTime = 0;
@@ -89,6 +90,7 @@ public class SvcMonitor implements AsyncService, SimpleService {
             avgResponseTime = 0;
             lastResponseTime = 0;
             maxResponseTime = 0;
+            maxResponseTimeId = "";
             moduleProcessingTime = 0;
             // setConfiguration
             if( cfg.getInt( "MonitorLastNr") > 0) {
@@ -129,15 +131,23 @@ public class SvcMonitor implements AsyncService, SimpleService {
             r = new SvcResponse( "Failed to process request to module " + name, 
                     SvcResponse.RES_CODE_EXCEPTION, x, req);
         }
-        moduleProcessingTime += System.currentTimeMillis() - t0;
-        if( moduleProcessingTime >= cfg.getInt( "TimeOut")) {
+        long t = System.currentTimeMillis() - t0;
+        moduleProcessingTime += t;
+        if( t >= cfg.getInt( "TimeOut")) {
             ++timeoutCount;
         }
         if( r instanceof SvcResponse) {
             ++responseOnReqCount;
             SvcResponse rr = (SvcResponse)r;
+            int rt = rr.getResponseTime();
+            lastResponseTime = rt;
+            avgResponseTime = ( int)( 9L * avgResponseTime + rt) / 10;
+            if( rt > maxResponseTime) {
+                maxResponseTime = rt;
+                maxResponseTimeId = r.getRequestId();
+            }
             if( rr.getResultCode() < 0) {
-                ++errorsCount;
+               ++errorsCount;
             }
             putResp( rr);
         }
@@ -164,12 +174,14 @@ public class SvcMonitor implements AsyncService, SimpleService {
             r = new SvcResponse( "Failed to process reposne on module " + name, 
                     SvcResponse.RES_CODE_EXCEPTION, x, r.getRequest());
         }    
-        moduleProcessingTime += System.currentTimeMillis() - t0;
+        long t = System.currentTimeMillis() - t0;
+        moduleProcessingTime += t;
         int rt = r.getResponseTime();
         lastResponseTime = rt;
         avgResponseTime = ( int)( 9L * avgResponseTime + rt) / 10;
         if( rt > maxResponseTime) {
             maxResponseTime = rt;
+            maxResponseTimeId = r.getRequestId();
         }
         if( r.getResultCode() < 0) {
             ++errorsCount;
@@ -221,6 +233,7 @@ public class SvcMonitor implements AsyncService, SimpleService {
         m.put( "LastResponseTime", lastResponseTime);
         m.put( "AvgResponseTime", avgResponseTime);
         m.put( "MaxResponseTime", maxResponseTime);
+        m.put( "MaxResponseTimeId", maxResponseTimeId);
         m.put( "ModuleProcessingTime", moduleProcessingTime);
         SimpleDateFormat df = new SimpleDateFormat( DATE_FORMAT);
         m.put( "DeployTime", df.format( new Date( deployTime)));
