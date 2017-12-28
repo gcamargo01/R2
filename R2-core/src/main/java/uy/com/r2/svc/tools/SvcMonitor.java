@@ -33,8 +33,10 @@ public class SvcMonitor implements AsyncService, SimpleService {
     private int keepLast = 0;
     private SvcRequest lastReqs[];
     private SvcResponse lastResp[];
+    private SvcResponse lastErrors[];
     private int lastReqIndex = 0;
     private int lastRespIndex = 0;
+    private int lastErrorIndex = 0;
     // Statistics
     private int invocationsCount = 0;
     private int errorsCount = 0;
@@ -99,6 +101,7 @@ public class SvcMonitor implements AsyncService, SimpleService {
             if( keepLast > 0) {
                 lastReqs = new SvcRequest[ keepLast];
                 lastResp = new SvcResponse[ keepLast];
+                lastErrors = new SvcResponse[ keepLast];
             } 
         } else {
             LOG.info( name + " same Configuration " + cfg.hashCode());
@@ -148,6 +151,7 @@ public class SvcMonitor implements AsyncService, SimpleService {
             }
             if( rr.getResultCode() < 0) {
                ++errorsCount;
+               putError( rr);
             }
             putResp( rr);
         }
@@ -185,6 +189,7 @@ public class SvcMonitor implements AsyncService, SimpleService {
         }
         if( r.getResultCode() < 0) {
             ++errorsCount;
+            putError( r);
         }
         putResp( r);
         LOG.trace( name + " keepLast=" + keepLast + " lastRespIndex=" + lastRespIndex + " " + lastResp);
@@ -214,6 +219,7 @@ public class SvcMonitor implements AsyncService, SimpleService {
         moduleProcessingTime += System.currentTimeMillis() - t0;
         if( r.getResultCode() < 0) {
             ++errorsCount;
+            putError( r);
         }
         LOG.info( name + ".call returns " + r);
         putResp( r);
@@ -226,8 +232,8 @@ public class SvcMonitor implements AsyncService, SimpleService {
     @Override
     public Map<String, Object> getStatusVars() {
         Map<String,Object> m = new TreeMap();
-        m.put( "Count", invocationsCount);
-        m.put( "ErrorCount", errorsCount);
+        //m.put( "Count", invocationsCount);  // Altrady set by ModuleInfo
+        //m.put( "ErrorCount", errorsCount);  // Altrady set by ModuleInfo
         m.put( "TimeOuts", timeoutCount);
         m.put( "ResponseOnReqCount", responseOnReqCount);
         m.put( "LastResponseTime", lastResponseTime);
@@ -247,6 +253,10 @@ public class SvcMonitor implements AsyncService, SimpleService {
                 m.put( "Request_" + i, lastReqs[ iq]);
                 int ir = ( lastRespIndex + keepLast - i - 1) % keepLast;
                 m.put( "Response_" + i, lastResp[ ir]);
+                int ie = ( lastErrorIndex + keepLast - i - 1) % keepLast;
+                if( lastErrors[ ie] != null) {
+                    m.put( "Errors_" + i, lastErrors[ ie]);
+                }
             }
         }
         Map<String,Object> mm = new HashMap();
@@ -288,6 +298,14 @@ public class SvcMonitor implements AsyncService, SimpleService {
         if( keepLast > 0) {
             lastResp[ lastRespIndex++] = res;
             lastRespIndex %= keepLast;
+        }
+    }
+
+    private synchronized void putError( SvcResponse res) {
+        res.updateResponseTime();
+        if( keepLast > 0) {
+            lastErrors[ lastErrorIndex++] = res;
+            lastErrorIndex %= keepLast;
         }
     }
 
