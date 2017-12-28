@@ -28,7 +28,10 @@ public class Json implements AsyncService {
     private boolean serverMode = true;
     private boolean procRequest = true;
     private boolean procResponse = true;
+    // Statistics
     private int parsedCount = 0;
+    private int maxLength = 0;
+    private String maxLengthId = "";
     private int generatedCount = 0;
      
     /** Get the configuration descriptors of this module.
@@ -60,6 +63,8 @@ public class Json implements AsyncService {
         // reset statistics
         parsedCount = 0;
         generatedCount = 0;
+        maxLength = 0;
+        maxLengthId = "";
         cfg.clearUpdated();
     }
 
@@ -79,13 +84,13 @@ public class Json implements AsyncService {
         }
         if( serverMode) {  // Take Serialixed field Data an parse it
             Map<String, List<Object>> r;
-            r = fromJSON( "" + req.get( SERIALIZED_JSON));
+            r = fromJSON( "" + req.get( SERIALIZED_JSON), req.getRequestId());
             // Add parsed params is better
             for( String k: r.keySet()) {
                 req.getPayload().put( k, r.get( k));  // Already is a list
             }
         } else {  // Put a Serialized field with JSON contents
-            req.put( SERIALIZED_JSON, toJSON( req.getPayload()));
+            req.put( SERIALIZED_JSON, toJSON( req.getPayload(), req.getRequestId()));
         }
         return req;
     }
@@ -105,7 +110,7 @@ public class Json implements AsyncService {
             return res;
         }
         if( !serverMode) {  // Take Serialized field an parse it
-            Map<String, List<Object>> r = fromJSON("" + res.get( SERIALIZED_JSON));
+            Map<String, List<Object>> r = fromJSON("" + res.get( SERIALIZED_JSON), res.getRequestId());
             // Remove SerializedJson and try to parse ResultCode
             r.remove( SERIALIZED_JSON);
             int rc = res.getResultCode();
@@ -121,7 +126,7 @@ public class Json implements AsyncService {
             l.add( "" + res.getResultCode());
             m.put( RESULT_CODE, l);
             // Add or replace a "SerialisexJson" field with JSON
-            res.put( SERIALIZED_JSON, toJSON( m));
+            res.put( SERIALIZED_JSON, toJSON( m, res.getRequestId()));
         }
         return res;
     }
@@ -134,6 +139,8 @@ public class Json implements AsyncService {
         Map<String,Object> m = new HashMap();
         m.put( "ParsedChars", parsedCount);
         m.put( "GeneratedChars", generatedCount);
+        m.put( "MaxLength", maxLength);
+        m.put( "MaxLengthId", maxLengthId);
         return m;
     }
 
@@ -142,7 +149,7 @@ public class Json implements AsyncService {
     public void shutdown() {
     }
 
-    private String toJSON( Map<String, List<Object>> data) throws Exception {
+    private String toJSON( Map<String, List<Object>> data, String id) throws Exception {
         LOG.trace( "process toJSON");
         String js = "";
         if( data == null) {
@@ -153,13 +160,17 @@ public class Json implements AsyncService {
             mapper.toJson( data, sw);
             js = sw.toString();
             generatedCount += js.length();
+            if( js.length() > maxLength) {
+                maxLength = js.length();
+                maxLengthId = id;
+            }
         } catch( Exception x) {
             throw new Exception( "Error generate JSON " + data + " " + x, x);
         }
         return js;
     }
 
-    private Map<String, List<Object>> fromJSON( String data) throws Exception {
+    private Map<String, List<Object>> fromJSON( String data, String id) throws Exception {
         LOG.trace( "process fromJSON");
         Map<String,List<Object>> r = new HashMap<String,List<Object>>();
         try {
@@ -170,6 +181,10 @@ public class Json implements AsyncService {
                 r = t;
             }
             parsedCount += data.length();
+            if( data.length() > maxLength) {
+                maxLength = data.length();
+                maxLengthId = id;
+            }
         } catch( Exception x) {
             throw new Exception( "Error parsing JSON \"" + data + "\" " + x, x);
         }
