@@ -112,6 +112,11 @@ public class ModuleInfo implements Module {
             } else {
                 tm.put( "ValuesMap", cfg.getStringMap( cd.getKey()));
             }
+            if( cd.getAttribute() == ConfigItemDescriptor.SECURED) {
+                tm.put( "Attribute", "SECURED");
+            } else if( cd.getAttribute() == ConfigItemDescriptor.ENVIRONMENT) {
+                tm.put( "Attribute", "ENVIRONMENT");
+            }
             r.put( cd.getKey(), tm);
         }
         return r;
