@@ -87,41 +87,6 @@ public class ModuleInfo implements Module {
         return cfg;
     }
 
-    /** Get the actual module configuration full detailed.
-     * @return Map 
-     * @throws Exception Error on configuration
-     */
-    public Map<String,Map<String,Object>> getDetailedConfiguration() throws Exception {
-        Map<String, Map<String,Object>> r = new TreeMap();
-        Map<String, String> vm = cfg.getStringMap( "*");
-        List<ConfigItemDescriptor> cdl = getConfigDescriptors();
-        for( ConfigItemDescriptor cd: cdl) {
-            TreeMap<String,Object> tm = new TreeMap();
-            tm.put( "Key", cd.getKey());
-            tm.put( "Type", "" + cd.getKlass());
-            tm.put( "Description", cd.getDescription());
-            if( cd.getDefaultValue() != null) {
-                tm.put( "DefaultValue", cd.getDefaultValue());
-            }
-            if( !cd.getKey().contains( "*")) {    // Simple cfg.
-                if( cfg.containsKey( cd.getKey())) {
-                    tm.put( "Value", vm.get( cd.getKey()));
-                } else {
-                    tm.put( "Unused", "true");
-                }
-            } else {
-                tm.put( "ValuesMap", cfg.getStringMap( cd.getKey()));
-            }
-            if( cd.getAttribute() == ConfigItemDescriptor.SECURED) {
-                tm.put( "Attribute", "SECURED");
-            } else if( cd.getAttribute() == ConfigItemDescriptor.ENVIRONMENT) {
-                tm.put( "Attribute", "ENVIRONMENT");
-            }
-            r.put( cd.getKey(), tm);
-        }
-        return r;
-    }
-
     /** Set the new module configuration.
      * @param cfg New configuration
      * @throws Exception Unexpected error
