@@ -17,6 +17,7 @@ import uy.com.r2.core.api.SvcRequest;
 import uy.com.r2.core.api.SvcResponse;
 import uy.com.r2.core.api.SimpleService;
 import uy.com.r2.core.api.ConfigItemDescriptor;
+import static uy.com.r2.core.api.ConfigItemDescriptor.*;
 import uy.com.r2.core.api.Configuration;
 import uy.com.r2.core.api.Dispatcher;
 import uy.com.r2.core.api.SvcMessage;
@@ -45,22 +46,16 @@ public class JdbcService implements SimpleService {
     @Override
     public List<ConfigItemDescriptor> getConfigDescriptors() {
         LinkedList<ConfigItemDescriptor> l = new LinkedList();
-        l.add( new ConfigItemDescriptor( "Driver", ConfigItemDescriptor.STRING,
-                "JDBC Driver class", null));
-        l.add( new ConfigItemDescriptor( "URL", ConfigItemDescriptor.STRING,
-                "JDBC URL", null));
-        l.add( new ConfigItemDescriptor( "User", ConfigItemDescriptor.STRING,
-                "JDBC User", null));
-        l.add( new ConfigItemDescriptor( "Password", ConfigItemDescriptor.STRING,
-                "JDBC Password", null));
-        l.add( new ConfigItemDescriptor( "Service.*.SQL", ConfigItemDescriptor.STRING,
-                "Service and SQL sentence", null));
-        l.add( new ConfigItemDescriptor( "Service.*.Params", ConfigItemDescriptor.STRING,
-                "Service and SQL parameters separated by coma (,)", null));
-        l.add( new ConfigItemDescriptor( "Service.*.RowName", ConfigItemDescriptor.STRING,
-                "Name of a tuple", "Row"));
-        l.add( new ConfigItemDescriptor( "SeptUpTest", ConfigItemDescriptor.BOOLEAN,
-                "Check to test JDBC on startup", "false"));
+        l.add( new ConfigItemDescriptor( "Driver", STRING, "JDBC Driver class"));
+        l.add( new ConfigItemDescriptor( "URL", STRING, "JDBC URL", null, ENVIRONMENT));
+        l.add( new ConfigItemDescriptor( "User", STRING, "JDBC User", null, ENVIRONMENT));
+        l.add( new ConfigItemDescriptor( "Password", STRING, "JDBC Password", null, SECURED));
+        l.add( new ConfigItemDescriptor( "Service.*.SQL", STRING, "Service and SQL sentence", null));
+        l.add( new ConfigItemDescriptor( "Service.*.Params", STRING, 
+                "Service and SQL parameters separated by coma (,)"));
+        l.add( new ConfigItemDescriptor( "Service.*.RowName", STRING, "Name of a tuple", "Row"));
+        l.add( new ConfigItemDescriptor( "SeptUpTest", BOOLEAN, 
+                "Check connection on startup", "false"));
         return l;
     }
     

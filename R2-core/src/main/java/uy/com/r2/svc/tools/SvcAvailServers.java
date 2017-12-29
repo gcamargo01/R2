@@ -87,15 +87,15 @@ public class SvcAvailServers implements AsyncService, StartUpRequired, Runnable 
     public List<ConfigItemDescriptor> getConfigDescriptors() {
         LinkedList<ConfigItemDescriptor> l = new LinkedList();
         l.add( new ConfigItemDescriptor( "LocalUrl", ConfigItemDescriptor.URL,
-                "local URL of this  server", null));
+                "local URL of this  server"));
         l.add( new ConfigItemDescriptor( "RemoteUrl", ConfigItemDescriptor.URL,
-                "local URL of this  server", null));
+                "local URL of this  server"));
         l.add( new ConfigItemDescriptor( "MasterName", ConfigItemDescriptor.STRING,
-                "The primary node name", null));
+                "The primary node name"));
         l.add( new ConfigItemDescriptor( "OuterPipeline", ConfigItemDescriptor.STRING,
                 "Pipeline to remote server", outPipeline));
         l.add( new ConfigItemDescriptor( "Server.*", ConfigItemDescriptor.STRING,
-                "Known servers and URLs", null));
+                "Known servers and URLs"));
         l.add( new ConfigItemDescriptor( "KeepAliveTimeout", ConfigItemDescriptor.INTEGER,
                 "Max.time to wait a KEEP_ALIVE, in mS", "10000"));
         l.add( new ConfigItemDescriptor( "KeepAliveDelay", ConfigItemDescriptor.INTEGER,

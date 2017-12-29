@@ -16,8 +16,8 @@ import uy.com.r2.core.api.SvcRequest;
 import uy.com.r2.core.api.SvcResponse;
 import uy.com.r2.core.api.SimpleService;
 import uy.com.r2.core.api.ConfigItemDescriptor;
+import static uy.com.r2.core.api.ConfigItemDescriptor.*;
 import uy.com.r2.core.api.Configuration;
-import uy.com.r2.core.api.SvcMessage;
 
 
 /** HTTP client connector.
@@ -42,17 +42,17 @@ public class HttpClient implements SimpleService {
     @Override
     public List<ConfigItemDescriptor> getConfigDescriptors() {
         LinkedList<ConfigItemDescriptor> l = new LinkedList();
-        l.add( new ConfigItemDescriptor( "Url.*", ConfigItemDescriptor.URL,
-                "Service names and URL with $(var) to replace", null));
-        l.add( new ConfigItemDescriptor( "Url", ConfigItemDescriptor.URL,
-                "Default URL with $(var) to replace", null));
-        l.add( new ConfigItemDescriptor( "DoPost", ConfigItemDescriptor.URL,
+        l.add( new ConfigItemDescriptor( "Url.*", URL,
+                "Service names and URL with $(var) to replace", null, ENVIRONMENT));
+        l.add( new ConfigItemDescriptor( "Url", URL,
+                "Default URL with $(var) to replace", null, ENVIRONMENT));
+        l.add( new ConfigItemDescriptor( "DoPost", URL,
                 "Use ethod POST (or GET) to call", "true"));
-        l.add( new ConfigItemDescriptor( "SleepTimeWait", ConfigItemDescriptor.INTEGER,
+        l.add( new ConfigItemDescriptor( "SleepTimeWait", INTEGER,
                 "Sleep time waiting for a response, in mS", "10"));
-        l.add( new ConfigItemDescriptor( "UserAgentHeader", ConfigItemDescriptor.INTEGER,
+        l.add( new ConfigItemDescriptor( "UserAgentHeader", INTEGER,
                 "User-agetn header on requests", ""));
-        l.add( new ConfigItemDescriptor( "AccpetHeader", ConfigItemDescriptor.INTEGER,
+        l.add( new ConfigItemDescriptor( "AccpetHeader", INTEGER,
                 "User-agetn header on requests", "application/json"));
         return l;
     }

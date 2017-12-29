@@ -27,21 +27,20 @@ public class EjbAsyncProxy implements AsyncService {
     void setConfiguration( Configuration cfg) throws Exception {
         String url = "";
         try {
-            if( ( !cfg.isChanged()) && service != null) {
+            if( ( !cfg.isUpdated()) && service != null) {
                 return;
             }
             Properties jndiProperties = new Properties();
             jndiProperties.put( Context.INITIAL_CONTEXT_FACTORY, 
                     "org.jboss.naming.remote.client.InitialContextFactory");
-            jndiProperties.put( Context.PROVIDER_URL, cfg.getString( "ProviderUrl", 
-                    "http-remoting://localhost:8080"));
+            jndiProperties.put( Context.PROVIDER_URL, cfg.getString( "ProviderUrl"));
             context = new InitialContext( jndiProperties);
-            final String appName = cfg.getString( "AppName", "");
+            final String appName = cfg.getString( "AppName");
             final String moduleName = cfg.getString( "EjbRemoteServer");
             final String beanName = cfg.getString( "ServiceImpl");
             url = "" + appName + "/" + moduleName + "/" + beanName + "!" + AsyncService.class.getName();
             service = (AsyncService)context.lookup( url);
-            cfg.resetChanged();
+            cfg.clearUpdated();
         } catch( Exception x) {
             Exception xx = new Exception( "Error biding " + url, x);
             throw xx;
@@ -89,21 +88,24 @@ public class EjbAsyncProxy implements AsyncService {
     public List<ConfigItemDescriptor> getConfigDescriptors() {
         LinkedList<ConfigItemDescriptor> l = new LinkedList();
         l.add( new ConfigItemDescriptor( "ProviderUrl", ConfigItemDescriptor.STRING, 
-                "Initial Context Provider URL like http-remoting://localhost:8080", null));
+                "Initial Context Provider URL like http-remoting://localhost:8080", 
+                "http-remoting://localhost:8080", ConfigItemDescriptor.ENVIRONMENT));
         l.add( new ConfigItemDescriptor( "AppName", ConfigItemDescriptor.STRING, 
                 "The app name is the application name of the deployed EJBs. This is typically the ear name" +
                 "without the .ear suffix. However, the application name could be overridden in the " +
-                "application.xml of the EJB deployment on the server. ", "")); 
+                "application.xml of the EJB deployment on the server. ", 
+                "", ConfigItemDescriptor.ENVIRONMENT));
         l.add( new ConfigItemDescriptor( "EjbRemoteServer", ConfigItemDescriptor.STRING, 
                 "This is the module name of the deployed EJBs on the server. This is typically the jar name " +
                 "of the EJB deployment, without the .jar suffix, but can be overridden via the ejb-jar.xml",
-                null));
+                null, ConfigItemDescriptor.ENVIRONMENT));
         l.add( new ConfigItemDescriptor( "DistinctName", ConfigItemDescriptor.STRING, 
                 "AS7 allows each deployment to have an (optional) distinct name. We haven't specified a " + 
-                "distinct name for our EJB deployment, or an empty string", ""));
+                "distinct name for our EJB deployment, or an empty string", 
+                "", ConfigItemDescriptor.ENVIRONMENT));
         l.add( new ConfigItemDescriptor( "ServiceImpl", ConfigItemDescriptor.STRING, 
                 "The EJB name which by default is the simple class name of the bean implementation class",
-                ""));
+                "", ConfigItemDescriptor.ENVIRONMENT));
         return l;
     }
 

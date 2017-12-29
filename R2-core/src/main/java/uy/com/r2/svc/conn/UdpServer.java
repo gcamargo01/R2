@@ -3,7 +3,6 @@ package uy.com.r2.svc.conn;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.util.Collections;
@@ -13,10 +12,11 @@ import java.util.HashMap;
 import java.util.Map;
 import org.apache.log4j.Logger;
 import uy.com.r2.core.api.ConfigItemDescriptor;
+import static uy.com.r2.core.api.ConfigItemDescriptor.*;
 import uy.com.r2.core.api.Configuration;
+import uy.com.r2.core.api.SvcRequest;
 import uy.com.r2.core.StartUpRequired;
 import uy.com.r2.core.SvcCatalog;
-import uy.com.r2.core.api.SvcRequest;
 import uy.com.r2.svc.tools.Json;
 
 /** UDP client and server connector.
@@ -36,8 +36,8 @@ public class UdpServer implements StartUpRequired {
     @Override
     public List<ConfigItemDescriptor> getConfigDescriptors() {
         LinkedList<ConfigItemDescriptor> l = new LinkedList();
-        l.add( new ConfigItemDescriptor( "Port", ConfigItemDescriptor.INTEGER, 
-                "UDP Port", "8015"));
+        l.add( new ConfigItemDescriptor( "Port", INTEGER, "UDP Port to listen", 
+                "8015", ENVIRONMENT));
         return l;
     }
     
