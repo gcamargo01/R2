@@ -32,7 +32,7 @@ public class Router implements AsyncService {
     public List<ConfigItemDescriptor> getConfigDescriptors() {
         LinkedList<ConfigItemDescriptor> l = new LinkedList();
         l.add( new ConfigItemDescriptor( "Service.*", ConfigItemDescriptor.MODULE,
-                "Service and pipeline name to invoke", null));
+                "Service and pipeline name to invoke"));
         return l;
     }
     
