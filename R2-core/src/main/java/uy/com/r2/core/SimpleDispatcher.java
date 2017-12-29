@@ -186,11 +186,11 @@ public class SimpleDispatcher implements Dispatcher, StartUpRequired {
     public List<ConfigItemDescriptor> getConfigDescriptors() {
         LinkedList<ConfigItemDescriptor> l = new LinkedList();
         l.add( new ConfigItemDescriptor( "DefaultServicePipeline", ConfigItemDescriptor.STRING,
-                "Default list of services to dispatch separated by comma (,)", null));
+                "Default list of services to dispatch separated by comma (,)"));
         l.add( new ConfigItemDescriptor( "Pipeline.*", ConfigItemDescriptor.STRING,
-                "List of services to dispatch by Pipeline name; separated by comma (,) ", null));
+                "List of services to dispatch by Pipeline name; separated by comma (,) "));
         l.add( new ConfigItemDescriptor( "Node.*", ConfigItemDescriptor.STRING,
-                "Pipelinee name to use, by Client Node", null));
+                "Pipelinee name to use, by Client Node"));
         return l;        
     }
 
