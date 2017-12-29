@@ -182,17 +182,17 @@ public class ModuleInfo implements Module {
         }
         // Add generic config descriptors
         cdl.add( new ConfigItemDescriptor( "class", ConfigItemDescriptor.STRING,
-               "Long class name of the service impelmentation (internal)", null));
+               "Long class name of the service impelmentation (internal)"));
         cdl.add( new ConfigItemDescriptor( "classUrl", ConfigItemDescriptor.URL,
-               "URL to load class of the service impelmentation (internal)", null));
+               "URL to load class of the service impelmentation (internal)"));
         cdl.add( new ConfigItemDescriptor( "LimitActiveThreads", ConfigItemDescriptor.BOOLEAN,
-               "Keep track and limit the concurrent threads ons this module (internal)", null));
+               "Keep track and limit the concurrent threads ons this module (internal)"));
         cdl.add( new ConfigItemDescriptor( "TimeOut", ConfigItemDescriptor.INTEGER,
-               "Time out of this module (internal)", null));
+               "Time out of this module (internal)"));
         cdl.add( new ConfigItemDescriptor( "Monitor", ConfigItemDescriptor.BOOLEAN,
-               "Wrap module with SvcMonitor to get statistics and acitvity (internal)", null));
+               "Wrap module with SvcMonitor to get statistics and acitvity (internal)"));
         cdl.add( new ConfigItemDescriptor( "MonitorLastNr", ConfigItemDescriptor.INTEGER, 
-               "Keep last messages to show it", "10"));
+               "Keep last messages to show it", "5"));
         return cdl;
     }
 
