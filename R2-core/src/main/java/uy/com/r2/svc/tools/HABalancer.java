@@ -54,7 +54,7 @@ public class HABalancer implements AsyncService {
         l.add( new ConfigItemDescriptor( "RespTimeThresold", ConfigItemDescriptor.INTEGER,
                 "Respone time in mS where is trated as an error", "5000"));
         l.add( new ConfigItemDescriptor( "TestMessage", ConfigItemDescriptor.STRING,
-                "Invocation to verify status", null));
+                "Invocation to verify status"));
         return l;
     }
     
