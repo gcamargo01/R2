@@ -49,7 +49,7 @@ public class SvcTestingCaller implements StartUpRequired {
     public List<ConfigItemDescriptor> getConfigDescriptors() {
         LinkedList<ConfigItemDescriptor> l = new LinkedList<ConfigItemDescriptor>();
         l.add( new ConfigItemDescriptor( "TestTime", ConfigItemDescriptor.INTEGER,
-                "Test time in mS", null));
+                "Test time in mS"));
         l.add( new ConfigItemDescriptor( "TestThreads", ConfigItemDescriptor.INTEGER,
                 "Test threads", "1"));
         l.add( new ConfigItemDescriptor( "TestIterations", ConfigItemDescriptor.INTEGER,
@@ -57,7 +57,7 @@ public class SvcTestingCaller implements StartUpRequired {
         l.add( new ConfigItemDescriptor( "SleepTime", ConfigItemDescriptor.INTEGER,
                 "Sleep time after each test loop in mS", "0"));
         l.add( new ConfigItemDescriptor( "Messages", ConfigItemDescriptor.STRING,
-                "List of request messages, separated by comma (,)", null));
+                "List of request messages, separated by comma (,)"));
         l.add( new ConfigItemDescriptor( "Service", ConfigItemDescriptor.STRING,
                 "Service name called in the test", "Service"));
         l.add( new ConfigItemDescriptor( "Node", ConfigItemDescriptor.STRING,
@@ -65,7 +65,7 @@ public class SvcTestingCaller implements StartUpRequired {
         l.add( new ConfigItemDescriptor( "InvocationTimeout", ConfigItemDescriptor.INTEGER,
                 "Response time-out in mS", "1000"));
         l.add( new ConfigItemDescriptor( "Pipeline", ConfigItemDescriptor.STRING,
-                "Service pipeline name to dispatch", null));
+                "Service pipeline name to dispatch"));
         l.add( new ConfigItemDescriptor( "DumpStatus", ConfigItemDescriptor.BOOLEAN,
                 "Dump all the status at the end ofthe test", "true"));
         return l;
