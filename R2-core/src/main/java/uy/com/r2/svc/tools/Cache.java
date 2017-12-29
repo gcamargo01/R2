@@ -36,7 +36,7 @@ public class Cache implements AsyncService {
     public List<ConfigItemDescriptor> getConfigDescriptors() {
         LinkedList<ConfigItemDescriptor> l = new LinkedList();
         l.add( new ConfigItemDescriptor( "CacheablesServices", ConfigItemDescriptor.STRING,
-                "Cacheable services names, comma separated", null));
+                "Cacheable services names, comma separated"));
         l.add( new ConfigItemDescriptor( "TimeToDiscard", ConfigItemDescriptor.INTEGER,
                 "Time in mS to discard a cache entry", "60000"));
         l.add( new ConfigItemDescriptor( "ResetCache", ConfigItemDescriptor.BOOLEAN,
@@ -49,7 +49,7 @@ public class Cache implements AsyncService {
             return;
         }
         ttd = cfg.getInt( "TimeToDiscard");
-        if( cfg.getBoolean( "Reset")) {
+        if( cfg.getBoolean( "ResetCache")) {
             String sa[] = cfg.getString( "CacheablesServices").split( ",");
             cacheableServices = new HashSet( Arrays.asList( sa));
             cache = new HashMap();
