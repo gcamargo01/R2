@@ -35,9 +35,9 @@ public class JavaScript implements AsyncService {
     public List<ConfigItemDescriptor> getConfigDescriptors() {
         LinkedList<ConfigItemDescriptor> l = new LinkedList();
         l.add( new ConfigItemDescriptor( "Script", ConfigItemDescriptor.STRING, 
-                "JavaScript source code to execute previous to run", null));
+                "JavaScript source code to execute previous to run"));
         l.add( new ConfigItemDescriptor( "SourceFile", ConfigItemDescriptor.STRING, 
-                "JavaScript file to execute previous to run", null));
+                "JavaScript file to execute previous to run"));
         return l;
     }
 
