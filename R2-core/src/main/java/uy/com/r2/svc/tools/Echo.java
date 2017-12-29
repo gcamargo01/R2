@@ -27,7 +27,7 @@ public class Echo implements SimpleService {
     public List<ConfigItemDescriptor> getConfigDescriptors() {
         LinkedList<ConfigItemDescriptor> l = new LinkedList<>();
         l.add( new ConfigItemDescriptor( "Time", ConfigItemDescriptor.INTEGER,
-                "Max value of average time to wait, in mS", null));
+                "Max value of average time to wait, in mS"));
         return l;
     }
     
