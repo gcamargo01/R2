@@ -228,7 +228,7 @@ public class SvcDeployer implements AsyncService {
         Configuration cfg = catalog.getModuleInfo( mn).getConfiguration();
         Map<String, Map<String,Object>> r = new TreeMap();
         Map<String, String> vm = cfg.getStringMap( "*");
-        List<ConfigItemDescriptor> cdl = getConfigDescriptors();
+        List<ConfigItemDescriptor> cdl = catalog.getModuleInfo( mn).getConfigDescriptors();
         for( ConfigItemDescriptor cd: cdl) {
             TreeMap<String,Object> tm = new TreeMap();
             tm.put( "Key", cd.getKey());
