@@ -47,7 +47,7 @@ public class JdbcService implements SimpleService {
     public List<ConfigItemDescriptor> getConfigDescriptors() {
         LinkedList<ConfigItemDescriptor> l = new LinkedList();
         l.add( new ConfigItemDescriptor( "Driver", STRING, "JDBC Driver class"));
-        l.add( new ConfigItemDescriptor( "URL", STRING, "JDBC URL", null, ENVIRONMENT));
+        l.add( new ConfigItemDescriptor( "URL", STRING, "URL to JDBC server", null, ENVIRONMENT));
         l.add( new ConfigItemDescriptor( "User", STRING, "JDBC User", null, ENVIRONMENT));
         l.add( new ConfigItemDescriptor( "Password", STRING, "JDBC Password", null, SECURED));
         l.add( new ConfigItemDescriptor( "Service.*.SQL", STRING, "Service and SQL sentence", null));
