@@ -1,4 +1,4 @@
-/* UdpCliend.ava */
+/* AsyncCliend.ava */
 package uy.com.r2.svc.conn;
 
 import java.net.DatagramPacket;
@@ -21,11 +21,12 @@ import uy.com.r2.core.api.Configuration;
 import uy.com.r2.core.api.SvcMessage;
 import uy.com.r2.svc.tools.Json;
 
-/** UDP client and server connector.
+/** Single TCP connection client.
+ * Connector used in ISO-8586 connections or some HSM.
  * @author G.Camargo
  */
-public class UdpClient implements AsyncService {
-    private final static Logger LOG = Logger.getLogger(UdpClient.class);
+public class AsyncClient implements AsyncService {
+    private final static Logger LOG = Logger.getLogger(AsyncClient.class);
     private int port = 0;
      
     /** Get the configuration descriptors of this module.
@@ -35,7 +36,9 @@ public class UdpClient implements AsyncService {
     public List<ConfigItemDescriptor> getConfigDescriptors() {
         LinkedList<ConfigItemDescriptor> l = new LinkedList();
         l.add( new ConfigItemDescriptor( "Port", INTEGER, 
-                "UDP Port to send packets", "8015", DEPLOYER));
+                "UDP Port to contact", "8020", DEPLOYER));
+        l.add( new ConfigItemDescriptor( "Host", INTEGER, 
+                "Remote Host name to contact", "iso", DEPLOYER));
         return l;
     }
     

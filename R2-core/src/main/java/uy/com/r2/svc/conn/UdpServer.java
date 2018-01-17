@@ -37,7 +37,7 @@ public class UdpServer implements StartUpRequired {
     public List<ConfigItemDescriptor> getConfigDescriptors() {
         LinkedList<ConfigItemDescriptor> l = new LinkedList();
         l.add( new ConfigItemDescriptor( "Port", INTEGER, "UDP Port to listen", 
-                "8015", ENVIRONMENT));
+                "8015", DEPLOYER));
         return l;
     }
     

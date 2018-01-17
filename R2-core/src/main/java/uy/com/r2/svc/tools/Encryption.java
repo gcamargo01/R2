@@ -50,10 +50,10 @@ public class Encryption implements AsyncService {
                 "Algorithm / Blocking / Padding used", "AES/CBC/PKCS5Padding"));
         l.add( new ConfigItemDescriptor( "Password", ConfigItemDescriptor.STRING,
                 "Password used to encript/desencript key; in Hexadecimal", null, 
-                ConfigItemDescriptor.SECURED));
+                ConfigItemDescriptor.SECURITY));
         l.add( new ConfigItemDescriptor( "InitVector", ConfigItemDescriptor.STRING,
                 "InitVector to use to encript/desencript key; as 16 bytes Hex", null,
-                ConfigItemDescriptor.SECURED));
+                ConfigItemDescriptor.SECURITY));
         return l;
     }
 

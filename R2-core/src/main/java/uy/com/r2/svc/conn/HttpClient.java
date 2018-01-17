@@ -43,9 +43,9 @@ public class HttpClient implements SimpleService {
     public List<ConfigItemDescriptor> getConfigDescriptors() {
         LinkedList<ConfigItemDescriptor> l = new LinkedList();
         l.add( new ConfigItemDescriptor( "Url.*", URL,
-                "Service names and URL with $(var) to replace", null, ENVIRONMENT));
+                "Service names and URL with $(var) to replace", null, DEPLOYER));
         l.add( new ConfigItemDescriptor( "Url", URL,
-                "Default URL with $(var) to replace", null, ENVIRONMENT));
+                "Default URL with $(var) to replace", null, DEPLOYER));
         l.add( new ConfigItemDescriptor( "DoPost", URL,
                 "Use ethod POST (or GET) to call", "true"));
         l.add( new ConfigItemDescriptor( "SleepTimeWait", INTEGER,

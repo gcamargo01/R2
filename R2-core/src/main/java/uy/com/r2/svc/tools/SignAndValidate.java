@@ -52,7 +52,7 @@ public class SignAndValidate implements AsyncService {
                 "Path to the Key Store including Path", System.getProperty( "javax.net.ssl.keyStore")));
         l.add( new ConfigItemDescriptor( "PassPhrase", ConfigItemDescriptor.STRING, 
                 "Password to open the certificate", System.getProperty( "javax.net.ssl.keyStorePassword"),
-                ConfigItemDescriptor.SECURED));
+                ConfigItemDescriptor.SECURITY));
         l.add( new ConfigItemDescriptor( "ExcludeFields", ConfigItemDescriptor.STRING, 
                 "Data fields to exclude from signature", ""));
         l.add( new ConfigItemDescriptor( "SignatureAlgorithm", ConfigItemDescriptor.STRING, 

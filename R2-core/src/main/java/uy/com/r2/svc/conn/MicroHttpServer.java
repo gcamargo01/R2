@@ -44,7 +44,7 @@ public class MicroHttpServer implements StartUpRequired {
     public List<ConfigItemDescriptor> getConfigDescriptors() {
         LinkedList<ConfigItemDescriptor> l = new LinkedList();
         l.add( new ConfigItemDescriptor( "Port", INTEGER,
-                "Port nomber where the server is listening", "8012", ENVIRONMENT));
+                "Port nomber where the server is listening", "8012", DEPLOYER));
         l.add( new ConfigItemDescriptor( "Encoding", STRING,
                 "Encoding", System.getProperty( "file.encoding")));
         l.add( new ConfigItemDescriptor( "Pipeline", STRING,
