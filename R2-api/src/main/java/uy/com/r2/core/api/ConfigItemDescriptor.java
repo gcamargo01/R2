@@ -15,32 +15,33 @@ public class ConfigItemDescriptor {
     public static final Class URL = URL.class;
     public static final Class MODULE = Module.class;
     
-    public enum Attribute {
-        Secured, 
-        Environment 
+    /** Particular role that is responsible for setting this item. */
+    public enum Role {
+        Security, 
+        Deployer 
     }
     
     /** Safeguard and environment dependant item. */
-    public static final Attribute SECURED = Attribute.Secured;  
+    public static final Role SECURITY = Role.Security;  
     
     /** Environment dependant item, should change on deploy. */
-    public static final Attribute ENVIRONMENT = Attribute.Environment;  
+    public static final Role DEPLOYER = Role.Deployer;  
     
     private final String key;
     private final Class klass;
     private final String description;
     private final String defaultValue;
-    private final Attribute attribute;
+    private final Role attribute;
     
     /** Constructor, full detailed item.
      * @param key Configuration key
      * @param klass Value type
      * @param description Item description
      * @param defaultValue Default value as String, in development environment
-     * @param attribute Special attribute modifier
+     * @param attribute Particular role 
      */
     public ConfigItemDescriptor( String key, Class klass, String description, 
-            String defaultValue, Attribute attribute) {
+            String defaultValue, Role attribute) {
         this.key = key;
         this.klass = klass;
         this.description = description;
@@ -107,7 +108,7 @@ public class ConfigItemDescriptor {
     /** Getter.
      * @return the attribute
      */
-    public Attribute getAttribute() {
+    public Role getAttribute() {
         return attribute;
     }
         
