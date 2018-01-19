@@ -12,7 +12,6 @@ import java.util.HashMap;
 import java.util.Map;
 import org.apache.log4j.Logger;
 import uy.com.r2.core.api.ConfigItemDescriptor;
-import static uy.com.r2.core.api.ConfigItemDescriptor.*;
 import uy.com.r2.core.api.Configuration;
 import uy.com.r2.core.api.SvcRequest;
 import uy.com.r2.core.StartUpRequired;
@@ -36,8 +35,8 @@ public class UdpServer implements StartUpRequired {
     @Override
     public List<ConfigItemDescriptor> getConfigDescriptors() {
         LinkedList<ConfigItemDescriptor> l = new LinkedList();
-        l.add( new ConfigItemDescriptor( "Port", INTEGER, "UDP Port to listen", 
-                "8015", DEPLOYER));
+        l.add( new ConfigItemDescriptor( "Port", ConfigItemDescriptor.INTEGER, 
+                "UDP Port to listen", "8015", ConfigItemDescriptor.DEPLOYER));
         return l;
     }
     

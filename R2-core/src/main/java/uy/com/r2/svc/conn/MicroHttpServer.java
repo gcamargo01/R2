@@ -18,7 +18,6 @@ import java.util.ArrayList;
 import org.apache.log4j.Logger;
 import uy.com.r2.core.SvcCatalog;
 import uy.com.r2.core.api.ConfigItemDescriptor;
-import static uy.com.r2.core.api.ConfigItemDescriptor.*;
 import uy.com.r2.core.api.Configuration;
 import uy.com.r2.core.api.SvcRequest;
 import uy.com.r2.core.api.SvcResponse;
@@ -43,15 +42,16 @@ public class MicroHttpServer implements StartUpRequired {
     @Override
     public List<ConfigItemDescriptor> getConfigDescriptors() {
         LinkedList<ConfigItemDescriptor> l = new LinkedList();
-        l.add( new ConfigItemDescriptor( "Port", INTEGER,
-                "Port nomber where the server is listening", "8012", DEPLOYER));
-        l.add( new ConfigItemDescriptor( "Encoding", STRING,
+        l.add( new ConfigItemDescriptor( "Port", ConfigItemDescriptor.INTEGER,
+                "Port nomber where the server is listening", "8012", 
+                ConfigItemDescriptor.DEPLOYER));
+        l.add( new ConfigItemDescriptor( "Encoding", ConfigItemDescriptor.STRING,
                 "Encoding", System.getProperty( "file.encoding")));
-        l.add( new ConfigItemDescriptor( "Pipeline", STRING,
+        l.add( new ConfigItemDescriptor( "Pipeline", ConfigItemDescriptor.STRING,
                 "System Pipeline name to route requests", ""));
-        l.add( new ConfigItemDescriptor( "MaxThreads", INTEGER,
+        l.add( new ConfigItemDescriptor( "MaxThreads", ConfigItemDescriptor.INTEGER,
                 "Maximum number of Threads used to serve current requests", "5"));
-        l.add( new ConfigItemDescriptor( "TimeOut", INTEGER,
+        l.add( new ConfigItemDescriptor( "TimeOut", ConfigItemDescriptor.INTEGER,
                 "Maximum time to dispatch a request", "5000"));
         return l;
     }

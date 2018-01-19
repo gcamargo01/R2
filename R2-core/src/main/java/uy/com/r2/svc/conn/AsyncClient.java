@@ -16,7 +16,6 @@ import uy.com.r2.core.api.SvcRequest;
 import uy.com.r2.core.api.SvcResponse;
 import uy.com.r2.core.api.AsyncService;
 import uy.com.r2.core.api.ConfigItemDescriptor;
-import static uy.com.r2.core.api.ConfigItemDescriptor.*;
 import uy.com.r2.core.api.Configuration;
 import uy.com.r2.core.api.SvcMessage;
 import uy.com.r2.svc.tools.Json;
@@ -35,10 +34,10 @@ public class AsyncClient implements AsyncService {
     @Override
     public List<ConfigItemDescriptor> getConfigDescriptors() {
         LinkedList<ConfigItemDescriptor> l = new LinkedList();
-        l.add( new ConfigItemDescriptor( "Port", INTEGER, 
-                "UDP Port to contact", "8020", DEPLOYER));
-        l.add( new ConfigItemDescriptor( "Host", INTEGER, 
-                "Remote Host name to contact", "iso", DEPLOYER));
+        l.add( new ConfigItemDescriptor( "Port", ConfigItemDescriptor.INTEGER, 
+                "UDP Port to contact", "8020", ConfigItemDescriptor.DEPLOYER));
+        l.add( new ConfigItemDescriptor( "Host", ConfigItemDescriptor.INTEGER, 
+                "Remote Host name to contact", "iso", ConfigItemDescriptor.DEPLOYER));
         return l;
     }
     

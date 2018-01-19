@@ -16,7 +16,6 @@ import uy.com.r2.core.api.SvcRequest;
 import uy.com.r2.core.api.SvcResponse;
 import uy.com.r2.core.api.SimpleService;
 import uy.com.r2.core.api.ConfigItemDescriptor;
-import static uy.com.r2.core.api.ConfigItemDescriptor.*;
 import uy.com.r2.core.api.Configuration;
 
 
@@ -42,17 +41,19 @@ public class HttpClient implements SimpleService {
     @Override
     public List<ConfigItemDescriptor> getConfigDescriptors() {
         LinkedList<ConfigItemDescriptor> l = new LinkedList();
-        l.add( new ConfigItemDescriptor( "Url.*", URL,
-                "Service names and URL with $(var) to replace", null, DEPLOYER));
-        l.add( new ConfigItemDescriptor( "Url", URL,
-                "Default URL with $(var) to replace", null, DEPLOYER));
-        l.add( new ConfigItemDescriptor( "DoPost", URL,
+        l.add( new ConfigItemDescriptor( "Url.*", ConfigItemDescriptor.URL,
+                "Service names and URL with $(var) to replace", null, 
+                ConfigItemDescriptor.DEPLOYER));
+        l.add( new ConfigItemDescriptor( "Url", ConfigItemDescriptor.URL,
+                "Default URL with $(var) to replace", null, 
+                ConfigItemDescriptor.DEPLOYER));
+        l.add( new ConfigItemDescriptor( "DoPost", ConfigItemDescriptor.URL,
                 "Use ethod POST (or GET) to call", "true"));
-        l.add( new ConfigItemDescriptor( "SleepTimeWait", INTEGER,
+        l.add( new ConfigItemDescriptor( "SleepTimeWait", ConfigItemDescriptor.INTEGER,
                 "Sleep time waiting for a response, in mS", "10"));
-        l.add( new ConfigItemDescriptor( "UserAgentHeader", INTEGER,
+        l.add( new ConfigItemDescriptor( "UserAgentHeader", ConfigItemDescriptor.INTEGER,
                 "User-agetn header on requests", ""));
-        l.add( new ConfigItemDescriptor( "AccpetHeader", INTEGER,
+        l.add( new ConfigItemDescriptor( "AccpetHeader", ConfigItemDescriptor.INTEGER,
                 "User-agetn header on requests", "application/json"));
         return l;
     }
