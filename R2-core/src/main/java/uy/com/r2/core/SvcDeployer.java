@@ -246,10 +246,10 @@ public class SvcDeployer implements AsyncService {
             } else {
                 tm.put( "ValuesMap", cfg.getStringMap( cd.getKey()));
             }
-            if( cd.getAttribute() == ConfigItemDescriptor.SECURITY) {
-                tm.put( "Attribute", "SECURED");
-            } else if( cd.getAttribute() == ConfigItemDescriptor.DEPLOYER) {
-                tm.put( "Attribute", "ENVIRONMENT");
+            if( cd.getRole() == ConfigItemDescriptor.SECURITY) {
+                tm.put( "Role", "SECURITY");
+            } else if( cd.getRole() == ConfigItemDescriptor.DEPLOYER) {
+                tm.put( "Role", "DEPLOYER");
             }
             r.put( cd.getKey(), tm);
         }

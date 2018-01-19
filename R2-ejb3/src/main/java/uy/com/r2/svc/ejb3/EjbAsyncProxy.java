@@ -89,23 +89,23 @@ public class EjbAsyncProxy implements AsyncService {
         LinkedList<ConfigItemDescriptor> l = new LinkedList();
         l.add( new ConfigItemDescriptor( "ProviderUrl", ConfigItemDescriptor.STRING, 
                 "Initial Context Provider URL like http-remoting://localhost:8080", 
-                "http-remoting://localhost:8080", ConfigItemDescriptor.ENVIRONMENT));
+                "http-remoting://localhost:8080", ConfigItemDescriptor.DEPLOYER));
         l.add( new ConfigItemDescriptor( "AppName", ConfigItemDescriptor.STRING, 
                 "The app name is the application name of the deployed EJBs. This is typically the ear name" +
                 "without the .ear suffix. However, the application name could be overridden in the " +
                 "application.xml of the EJB deployment on the server. ", 
-                "", ConfigItemDescriptor.ENVIRONMENT));
+                "", ConfigItemDescriptor.DEPLOYER));
         l.add( new ConfigItemDescriptor( "EjbRemoteServer", ConfigItemDescriptor.STRING, 
                 "This is the module name of the deployed EJBs on the server. This is typically the jar name " +
                 "of the EJB deployment, without the .jar suffix, but can be overridden via the ejb-jar.xml",
-                null, ConfigItemDescriptor.ENVIRONMENT));
+                null, ConfigItemDescriptor.DEPLOYER));
         l.add( new ConfigItemDescriptor( "DistinctName", ConfigItemDescriptor.STRING, 
                 "AS7 allows each deployment to have an (optional) distinct name. We haven't specified a " + 
                 "distinct name for our EJB deployment, or an empty string", 
-                "", ConfigItemDescriptor.ENVIRONMENT));
+                "", ConfigItemDescriptor.DEPLOYER));
         l.add( new ConfigItemDescriptor( "ServiceImpl", ConfigItemDescriptor.STRING, 
                 "The EJB name which by default is the simple class name of the bean implementation class",
-                "", ConfigItemDescriptor.ENVIRONMENT));
+                "", ConfigItemDescriptor.DEPLOYER));
         return l;
     }
 

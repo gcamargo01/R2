@@ -31,22 +31,22 @@ public class ConfigItemDescriptor {
     private final Class klass;
     private final String description;
     private final String defaultValue;
-    private final Role attribute;
+    private final Role role;
     
     /** Constructor, full detailed item.
      * @param key Configuration key
      * @param klass Value type
      * @param description Item description
      * @param defaultValue Default value as String, in development environment
-     * @param attribute Particular role 
+     * @param role Particular role 
      */
     public ConfigItemDescriptor( String key, Class klass, String description, 
-            String defaultValue, Role attribute) {
+            String defaultValue, Role role) {
         this.key = key;
         this.klass = klass;
         this.description = description;
         this.defaultValue = defaultValue;
-        this.attribute = attribute;
+        this.role = role;
     }
     
     /** Constructor, simple item with default value.
@@ -61,7 +61,7 @@ public class ConfigItemDescriptor {
         this.klass = klass;
         this.description = description;
         this.defaultValue = defaultValue;
-        this.attribute = null;
+        this.role = null;
     }
         
     /** Constructor, simple item.
@@ -74,7 +74,7 @@ public class ConfigItemDescriptor {
         this.klass = klass;
         this.description = description;
         this.defaultValue = null;
-        this.attribute = null;
+        this.role = null;
     }
     
     /** Getter.
@@ -108,8 +108,8 @@ public class ConfigItemDescriptor {
     /** Getter.
      * @return the attribute
      */
-    public Role getAttribute() {
-        return attribute;
+    public Role getRole() {
+        return role;
     }
         
 }
