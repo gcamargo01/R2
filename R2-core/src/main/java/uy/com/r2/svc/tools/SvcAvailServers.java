@@ -311,11 +311,12 @@ public class SvcAvailServers implements AsyncService, StartUpRequired, Runnable 
      */
     @Override
     public void run( ) {
-        while( !stop) {
+        for( ; ;) {
             try {
                 Thread.sleep( keepAliveDelay);  
-            } catch( Exception ex) { }
-            try {
+                if( stop) {
+                    break;
+                }
                 if( isMaster()) {  
                     masterTimeStamp = System.currentTimeMillis();
                     notifyAllServers( SVC_KEEPALIVE, localName);
