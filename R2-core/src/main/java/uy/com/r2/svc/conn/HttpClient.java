@@ -234,11 +234,10 @@ public class HttpClient implements SimpleService {
         
     /**/
     public static void main( String args[]) {
-        Configuration c = new Configuration();
         HttpClient s = new HttpClient();
+        Configuration c = new Configuration( s.getConfigDescriptors());
         uy.com.r2.core.api.AsyncService sj = new uy.com.r2.svc.tools.Json();
         try {
-            uy.com.r2.core.ModuleInfo.setDefaultValues( s, c);
             c.put( "DoPost", "false"); 
             c.put( "Url", "http://localhost:8015/$(_Service)"); 
             System.out.println( "cfg= " + c);
