@@ -4,6 +4,7 @@ package uy.com.r2.core.api;
 import java.net.URL;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.List;
 import java.io.Serializable;
 
 /** Module configuration.
@@ -22,11 +23,22 @@ public class Configuration implements Serializable, Cloneable {
     public Configuration( ) {
     }
 
-    /** Map Constructor.
+    /** Map constructor.
      * @param map Configuration items map
      */
     public Configuration( Map<String,Object> map) {
         cfg = map;
+    }
+
+    /** Default values constructor.
+     * @param cdl Configuration descriptor list
+     */
+    public Configuration( List<ConfigItemDescriptor> cdl) {
+        for( ConfigItemDescriptor cd: cdl) {
+            if( cd.getDefaultValue() != null) {  // it has a default value
+                cfg.put( cd.getKey(), cd.getDefaultValue());
+            }
+        }
     }
 
     /** Create a new copy.
