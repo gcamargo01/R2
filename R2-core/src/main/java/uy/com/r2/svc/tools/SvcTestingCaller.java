@@ -12,14 +12,14 @@ import uy.com.r2.core.api.SvcResponse;
 import uy.com.r2.core.api.ConfigItemDescriptor;
 import uy.com.r2.core.api.Configuration;
 import uy.com.r2.core.api.SvcMessage;
-import uy.com.r2.core.StartUpRequired;
+import uy.com.r2.core.api.StartableModule;
 
 
 /** Module to simulate client invocations, like automated stress-test.
  * This module is not a real service. It implements StartUpRequired to be loaded.
  * @author G.Camargo
  */
-public class SvcTestingCaller implements StartUpRequired {
+public class SvcTestingCaller implements StartableModule {
     private static final Logger LOG = Logger.getLogger(SvcTestingCaller.class);
     // Cfg
     private int testTime = 0; 
@@ -73,7 +73,7 @@ public class SvcTestingCaller implements StartUpRequired {
 
     /** Configure an perform tests */
     @Override
-    public void startUp( Configuration cfg) throws Exception { 
+    public void start( Configuration cfg) throws Exception { 
         testTime = cfg.getInt( "TestTime");
         testThreads = cfg.getInt( "TestThreads");
         testIterations = cfg.getInt( "TestIterations");

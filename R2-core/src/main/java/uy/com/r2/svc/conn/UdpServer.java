@@ -14,14 +14,14 @@ import org.apache.log4j.Logger;
 import uy.com.r2.core.api.ConfigItemDescriptor;
 import uy.com.r2.core.api.Configuration;
 import uy.com.r2.core.api.SvcRequest;
-import uy.com.r2.core.StartUpRequired;
 import uy.com.r2.core.SvcCatalog;
 import uy.com.r2.svc.tools.Json;
+import uy.com.r2.core.api.StartableModule;
 
 /** UDP client and server connector.
  * @author G.Camargo
  */
-public class UdpServer implements StartUpRequired {
+public class UdpServer implements StartableModule {
     private final static Logger LOG = Logger.getLogger(UdpServer.class);
     private int port = 0;
     private DatagramSocket soc = null;
@@ -44,7 +44,7 @@ public class UdpServer implements StartUpRequired {
      * @throws java.lang.Exception 
      */
     @Override
-    public void startUp( Configuration cfg) throws Exception {
+    public void start( Configuration cfg) throws Exception {
         port = cfg.getInt( "Port");
         SvcRequest r = new SvcRequest( null, 0, 0, "", null, 0);  
         localName = r.getClientNode();   // Get local node name

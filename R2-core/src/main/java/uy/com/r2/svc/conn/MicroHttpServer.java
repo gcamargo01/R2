@@ -21,14 +21,14 @@ import uy.com.r2.core.api.ConfigItemDescriptor;
 import uy.com.r2.core.api.Configuration;
 import uy.com.r2.core.api.SvcRequest;
 import uy.com.r2.core.api.SvcResponse;
-import uy.com.r2.core.StartUpRequired;
+import uy.com.r2.core.api.StartableModule;
 
 /**
  * Micro HTTP server, to process remote commands.
  *
  * @author G.Camargo
  */
-public class MicroHttpServer implements StartUpRequired {
+public class MicroHttpServer implements StartableModule {
 
     public static String encoding = System.getProperty( "file.encoding");
     private static final Logger LOG = Logger.getLogger( MicroHttpServer.class);
@@ -60,7 +60,7 @@ public class MicroHttpServer implements StartUpRequired {
      * @throws java.lang.Exception 
      */
     @Override
-    public void startUp( Configuration cfg) throws Exception {
+    public void start( Configuration cfg) throws Exception {
         LOG.trace( "startup " + cfg);
         if( !cfg.isUpdated()) {
             return;

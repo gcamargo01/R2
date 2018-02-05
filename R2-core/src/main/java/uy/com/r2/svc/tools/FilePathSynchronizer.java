@@ -11,12 +11,12 @@ import uy.com.r2.core.api.ConfigItemDescriptor;
 import uy.com.r2.core.api.Configuration;
 import uy.com.r2.core.api.SvcRequest;
 import uy.com.r2.core.api.SvcResponse;
-import uy.com.r2.core.StartUpRequired;
+import uy.com.r2.core.api.StartableModule;
 
 /** Synchronize a Path in local file system from remote file system.
  * @author G.Camargo
  */
-public class FilePathSynchronizer implements StartUpRequired {
+public class FilePathSynchronizer implements StartableModule {
     private final static int TIME_OUT = 10000;
     private final static Logger log = Logger.getLogger( FilePathSynchronizer.class);
     private final static String RMT = "_Undefined_";
@@ -46,7 +46,7 @@ public class FilePathSynchronizer implements StartUpRequired {
     
     /** Configure. */
     @Override
-    public void startUp( Configuration cfg) throws Exception {
+    public void start( Configuration cfg) throws Exception {
         interval = cfg.getInt( "Interval");
         remote = cfg.getString( "RemoteServer");
         pathMap = cfg.getStringMap( "Path.*");

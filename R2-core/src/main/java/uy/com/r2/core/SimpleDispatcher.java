@@ -13,6 +13,7 @@ import uy.com.r2.core.api.Dispatcher;
 import uy.com.r2.core.api.SvcMessage;
 import uy.com.r2.core.api.SvcRequest;
 import uy.com.r2.core.api.SvcResponse;
+import uy.com.r2.core.api.StartableModule;
 
 
 /** Direct and simple dispatcher.
@@ -23,7 +24,7 @@ import uy.com.r2.core.api.SvcResponse;
  * Catalog has a Configuration item to set the Dispatcher class.
  * @author G.Camargo
  */
-public class SimpleDispatcher implements Dispatcher, StartUpRequired {
+public class SimpleDispatcher implements Dispatcher, StartableModule {
     private static final Logger LOG = Logger.getLogger( SimpleDispatcher.class);
     
     // Current running pipeline
@@ -165,7 +166,7 @@ public class SimpleDispatcher implements Dispatcher, StartUpRequired {
      * @throws Exception Unexpected error that must be warned
      */
     @Override
-    public void startUp( Configuration cfg ) throws Exception {
+    public void start( Configuration cfg ) throws Exception {
         defaultServicePipeline = cfg.getString( "DefaultServicePipeline").split( ",");
         LOG.debug( "DefaultServicePipeline " + cfg.getString( "DefaultServicePipeline"));
         defPipes = new ConcurrentHashMap();

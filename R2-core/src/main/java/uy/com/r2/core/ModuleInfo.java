@@ -11,6 +11,7 @@ import uy.com.r2.core.api.ConfigItemDescriptor;
 import uy.com.r2.core.api.Module;
 import uy.com.r2.core.api.Configuration;
 import uy.com.r2.core.api.SimpleService;
+import uy.com.r2.core.api.StartableModule;
 import uy.com.r2.core.api.SvcMessage;
 import uy.com.r2.core.api.SvcRequest;
 import uy.com.r2.core.api.SvcResponse;
@@ -117,8 +118,8 @@ public class ModuleInfo implements Module {
         count = 0;
         errorCount = 0;
         // Update config
-        if( moduleImpl instanceof StartUpRequired) {  
-            ( (StartUpRequired)moduleImpl).startUp( this.cfg);
+        if( moduleImpl instanceof StartableModule) {  
+            ( (StartableModule)moduleImpl).start( this.cfg);
         }
     }
     

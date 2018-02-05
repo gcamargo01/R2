@@ -19,7 +19,7 @@ import uy.com.r2.core.api.Configuration;
 import uy.com.r2.core.api.Dispatcher;
 import uy.com.r2.core.api.SvcMessage;
 import uy.com.r2.svc.conn.HttpClient;
-import uy.com.r2.core.StartUpRequired;
+import uy.com.r2.core.api.StartableModule;
 
 
 /** Keep alive based available servers and master selection module.
@@ -41,7 +41,7 @@ import uy.com.r2.core.StartUpRequired;
  * <p>
  * @author G.Camargo
  */
-public class SvcAvailServers implements AsyncService, StartUpRequired, Runnable {
+public class SvcAvailServers implements AsyncService, StartableModule, Runnable {
     public static final String SVC_ADDSERVER       = "AddServer";
     public static final String SVC_GETMASTER       = "GetMasterServer";
     public static final String SVC_GETSERVERSLIST  = "GetServersList";
@@ -105,7 +105,7 @@ public class SvcAvailServers implements AsyncService, StartUpRequired, Runnable 
     
     /** Configure and start keep alive thread. */
     @Override
-    public void startUp( Configuration cfg) throws Exception {
+    public void start( Configuration cfg) throws Exception {
         localUrl = cfg.getUrl( "LocalUrl");
         remoteUrl = cfg.getUrl( "RemoteUrl");
         masterName = cfg.getString( "MasterName");
