@@ -181,10 +181,9 @@ public class SignAndValidate implements AsyncService {
 
     /**/   
     public static void main( String args[]) {
-        Configuration c = new Configuration();
         SignAndValidate s = new SignAndValidate();
+        Configuration c = new Configuration( s.getConfigDescriptors());
         try {
-            uy.com.r2.core.ModuleInfo.setDefaultValues( s, c);
             System.out.println( "cfg= " + c);
             s.setConfiguration( c);
             String prb = "Esto es una prueba";
