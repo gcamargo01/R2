@@ -93,8 +93,15 @@ public class ModuleInfo implements Module {
      * @throws Exception Unexpected error
      */
     public void setConfiguration( Configuration cfg) throws Exception {
-        // Get config descriptors with generic config def
-        setDefaultValues( this, cfg);
+        // Set unsetted default values 
+        List<ConfigItemDescriptor> cdl = getConfigDescriptors();
+        for( ConfigItemDescriptor cd: cdl) {
+            if( cd.getDefaultValue() != null &&           // has a default value
+                    ( !cd.getKey().contains( "*")) &&     // Simple cfg. 
+                    ( !cfg.containsKey( cd.getKey()))) {  // w/o given value in cfg
+                cfg.put( cd.getKey(), cd.getDefaultValue());
+            }
+        }    
         // Apply generic configuration
         if( cfg.containsKey( "LimitActiveThreads")) {
             limitActiveCount = cfg.getInt( "LimitActiveThreads");
@@ -266,18 +273,6 @@ public class ModuleInfo implements Module {
         }
     }
 
-    public static void setDefaultValues( Module m, Configuration cfg) {
-        // Set default values 
-        List<ConfigItemDescriptor> cdl = m.getConfigDescriptors();
-        for( ConfigItemDescriptor cd: cdl) {
-            if( cd.getDefaultValue() != null &&           // has a default value
-                    ( !cd.getKey().contains( "*")) &&     // Simple cfg. 
-                    ( !cfg.containsKey( cd.getKey()))) {  // w/o given value in cfg
-                cfg.put( cd.getKey(), cd.getDefaultValue());
-            }
-        }    
-    }
-    
     /** SimpleService wrapper as a AsyncService. */
     private class WrapAsAsyncService implements AsyncService {
         private SimpleService s;
