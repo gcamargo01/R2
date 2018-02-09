@@ -23,7 +23,7 @@ public class EjbProxy implements SimpleService {
     private SimpleService service = null;
     private Context context = null;
     
-    void setConfiguration( Configuration cfg) throws Exception {
+    private void setConfiguration( Configuration cfg) throws Exception {
         String url = "";
         try {
             if( ( !cfg.isUpdated()) && service != null) {
