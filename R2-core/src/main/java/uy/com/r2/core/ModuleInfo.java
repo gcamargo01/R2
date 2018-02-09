@@ -52,7 +52,7 @@ public class ModuleInfo implements Module {
             this.asyncImpl = (AsyncService)impl;
         } else if( impl instanceof SimpleService) {
             this.asyncImpl = new WrapAsAsyncService( (SimpleService)impl); 
-        } else {  // StartUpRequired, cant be monitored
+        } else {  // StartabeModule cant be monitored
             this.asyncImpl = null;
         }
     }    
@@ -163,14 +163,16 @@ public class ModuleInfo implements Module {
                "Long class name of the service impelmentation (internal)"));
         cdl.add( new ConfigItemDescriptor( "classUrl", ConfigItemDescriptor.URL,
                "URL to load class of the service impelmentation (internal)"));
-        cdl.add( new ConfigItemDescriptor( "LimitActiveThreads", ConfigItemDescriptor.BOOLEAN,
-               "Keep track and limit the concurrent threads ons this module (internal)"));
-        cdl.add( new ConfigItemDescriptor( "TimeOut", ConfigItemDescriptor.INTEGER,
-               "Time out of this module (internal)"));
-        cdl.add( new ConfigItemDescriptor( "Monitor", ConfigItemDescriptor.BOOLEAN,
-               "Wrap module with SvcMonitor to get statistics and acitvity (internal)"));
-        cdl.add( new ConfigItemDescriptor( "MonitorLastNr", ConfigItemDescriptor.INTEGER, 
-               "Keep last messages to show it", "5"));
+        if( asyncImpl != null ) {  // SimpleService or AsyncService only 
+            cdl.add( new ConfigItemDescriptor( "LimitActiveThreads", ConfigItemDescriptor.BOOLEAN,
+                   "Keep track and limit the concurrent threads ons this module (internal)"));
+            cdl.add( new ConfigItemDescriptor( "TimeOut", ConfigItemDescriptor.INTEGER,
+                   "Time out of this module (internal)"));
+            cdl.add( new ConfigItemDescriptor( "Monitor", ConfigItemDescriptor.BOOLEAN,
+                   "Wrap module with SvcMonitor to get statistics and acitvity (internal)"));
+            cdl.add( new ConfigItemDescriptor( "MonitorLastNr", ConfigItemDescriptor.INTEGER, 
+                   "Keep last messages to show it", "5"));
+        }
         return cdl;
     }
 
