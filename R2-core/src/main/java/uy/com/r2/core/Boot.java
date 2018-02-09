@@ -37,7 +37,8 @@ public class Boot {
     public static void main( String args[]) {
         // Default values
         String hostName = getHostName();
-        String rmtUrl = "http://" + hostName + ":8016";  // Asume there is another in this machine
+        //String rmtUrl = "http://" + hostName + ":8016";  // Asume there is another in this machine
+        String rmtUrl = null;
         int localPort = 8015;
         // Parse args
         switch( args.length) {
