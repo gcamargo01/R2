@@ -317,6 +317,9 @@ public class SvcAvailServers implements AsyncService, StartableModule, Runnable 
                 if( stop) {
                     break;
                 }
+                if( knownServers.size() <= 1) {
+                    continue;  // Keep quiet if doesnt know anyrhing
+                }
                 if( isMaster()) {  
                     masterTimeStamp = System.currentTimeMillis();
                     notifyAllServers( SVC_KEEPALIVE, localName);
