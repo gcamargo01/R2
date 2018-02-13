@@ -1,0 +1,67 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <!--  
+  <parent>
+    <groupId>uy.com.r2</groupId>
+    <artifactId>R2</artifactId>
+    <version>1.0-SNAPSHOT</version>
+  </parent>
+  -->
+  <groupId>uy.com.r2</groupId>
+  <artifactId>R2-front</artifactId>
+  <version>1.0-SNAPSHOT</version>
+
+  <packaging>jar</packaging>
+  <name>R2 - Front end</name>
+
+  <properties>
+    <jettyVersion>9.4.6.v20170531</jettyVersion>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <version>1.2.17</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-server</artifactId>
+      <version>${jettyVersion}</version>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>R2-api</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>R2-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.mortbay.jetty</groupId>
+        <artifactId>jetty-maven-plugin</artifactId>
+        <version>${jettyVersion}</version>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>1.1</version>
+        <executions>
+          <execution><goals><goal>java</goal></goals></execution>
+        </executions>
+        <configuration>
+          <mainClass>uy.com.r2.front.JettyServer</mainClass>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>
