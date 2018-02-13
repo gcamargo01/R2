@@ -11,6 +11,8 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.HttpURLConnection;
 import java.io.InputStream;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLSocketFactory;
 import org.apache.log4j.Logger;
 import uy.com.r2.core.api.SvcRequest;
 import uy.com.r2.core.api.SvcResponse;
@@ -55,6 +57,16 @@ public class HttpClient implements SimpleService {
                 "User-agetn header on requests", ""));
         l.add( new ConfigItemDescriptor( "AccpetHeader", ConfigItemDescriptor.INTEGER,
                 "User-agetn header on requests", "application/json"));
+        /* SSL client cert args, should be settings
+        Properties p = System.getProperties();
+        p.put( "javax.net.ssl.keyStoreType", "pkcs12");
+        p.put( "javax.net.ssl.trustStoreType", "jks");
+        p.put( "javax.net.ssl.keyStore", "clientcertificate.p12");
+        p.put( "javax.net.ssl.trustStore", "gridserver.keystore");
+        p.put( "javax.net.debug", "ssl");
+        p.put( "javax.net.ssl.keyStorePassword", "passworrd");
+        p.put( "javax.net.ssl.trustStorePassword", "password");
+        */
         return l;
     }
     
@@ -112,6 +124,10 @@ public class HttpClient implements SimpleService {
         try {
             URL url = new URL( strUrl);
             HttpURLConnection conn = ( HttpURLConnection)url.openConnection();
+            if( conn instanceof HttpsURLConnection) {
+                SSLSocketFactory sf = (SSLSocketFactory)SSLSocketFactory.getDefault();
+                ((HttpsURLConnection)conn).setSSLSocketFactory( sf);                
+            }
             conn.setRequestProperty( "User-Agent", userAgentHeader);
             conn.setRequestProperty( "Accept", acceptHeader);
             if( doPost) {
