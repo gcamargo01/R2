@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 /** Base interface of all R2 service modules.
- * Interface that with methods to configure (getConfigDescriptors, 
+ * Interface with methods to configure (getConfigDescriptors, 
  * setConfiguration), to get status (getStatusVars) and to release  
  * resources been used (shutdown). 
  * @author G.Camargo
