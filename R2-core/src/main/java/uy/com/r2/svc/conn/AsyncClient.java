@@ -20,8 +20,7 @@ import uy.com.r2.core.api.Configuration;
 import uy.com.r2.core.api.SvcMessage;
 import uy.com.r2.svc.tools.Json;
 
-/** Single TCP connection client.
- * Connector used in ISO-8586 connections or some HSM.
+/** Datagram (UDP) sender connector.
  * @author G.Camargo
  */
 public class AsyncClient implements AsyncService {
