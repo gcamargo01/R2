@@ -1,17 +1,13 @@
 /* AsyncCliend.ava */
 package uy.com.r2.svc.conn;
 
-import java.net.DatagramPacket;
-import java.net.InetAddress;
-import java.net.InterfaceAddress;
-import java.net.MulticastSocket;
-import java.net.NetworkInterface;
-import java.util.Collections;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.HashMap;
 import java.util.Map;
+import java.net.Socket;
 import org.apache.log4j.Logger;
+import uy.com.r2.core.SvcCatalog;
 import uy.com.r2.core.api.SvcRequest;
 import uy.com.r2.core.api.SvcResponse;
 import uy.com.r2.core.api.AsyncService;
@@ -20,12 +16,15 @@ import uy.com.r2.core.api.Configuration;
 import uy.com.r2.core.api.SvcMessage;
 import uy.com.r2.svc.tools.Json;
 
-/** Datagram (UDP) broadcast sender connector.
+/** Single connection client.
+ * Connector used in ISO-8586 connections or some HSM.
+ * WORK IN PROGRESS!!!!
  * @author G.Camargo
  */
 public class AsyncClient implements AsyncService {
     private final static Logger LOG = Logger.getLogger(AsyncClient.class);
     private int port = 0;
+    private Socket socket = null;
      
     /** Get the configuration descriptors of this module.
      * @return ConfigItemDescriptor List
@@ -34,9 +33,9 @@ public class AsyncClient implements AsyncService {
     public List<ConfigItemDescriptor> getConfigDescriptors() {
         LinkedList<ConfigItemDescriptor> l = new LinkedList();
         l.add( new ConfigItemDescriptor( "Port", ConfigItemDescriptor.INTEGER, 
-                "UDP Port to contact", "8020", ConfigItemDescriptor.DEPLOYER));
+                "TCP Port to connect", "8888", ConfigItemDescriptor.DEPLOYER));
         l.add( new ConfigItemDescriptor( "Host", ConfigItemDescriptor.INTEGER, 
-                "Remote Host name to contact", "iso", ConfigItemDescriptor.DEPLOYER));
+                "Remote Host name to connect", null, ConfigItemDescriptor.DEPLOYER));
         return l;
     }
     
@@ -54,28 +53,19 @@ public class AsyncClient implements AsyncService {
      */
     @Override
     public SvcMessage onRequest( SvcRequest req, Configuration cfg) throws Exception {
-        port = cfg.getInt( "Port");
         // Get serialized request
         Object s = req.get( Json.SERIALIZED_JSON);
         if( s == null) {
             s = req.get( "Serialized");
         }
+        // check the socket
+        if( socket == null) {
+            startup( cfg);
+        }
+        // Send
         byte buff[] = ( "" + s).getBytes();
         LOG.trace( "Content to send: '" + s + "' to port=" + port);
-        MulticastSocket socket = null;
-        try {
-            socket = new MulticastSocket();
-            socket.setBroadcast( true);
-            for( InetAddress ia: getAdaptersAddress()) {
-                LOG.trace( "   sending to: " + ia);
-                DatagramPacket dp = new DatagramPacket( buff, buff.length, ia, port);
-                socket.send( dp);
-            }
-        } catch( Exception x) {
-            LOG.warn( "Failed to send UDP " + x, x);
-        } finally {
-            socket.close();
-        }
+        socket.sendUrgentData( port );
         return new SvcResponse( 0, req);
     }
 
@@ -89,6 +79,7 @@ public class AsyncClient implements AsyncService {
      */
     @Override
     public SvcResponse onResponse( SvcResponse resp, Configuration cfg) throws Exception {
+        // PENDING IMPLEMENT !!!!
         return null;
     }
     
@@ -102,64 +93,33 @@ public class AsyncClient implements AsyncService {
         if( pak != null) {
             map.put( "Version", "" + pak.getImplementationVersion());
         } 
-        StringBuilder sb = new StringBuilder();
-        for( InetAddress a: getAdaptersAddress()) {
-            sb.append( a);
-            sb.append( " ");
-        }
-        map.put( "BrodcastAddrss", sb.toString());
         return map;
     }
 
     /** Release all the allocated resources. */
     @Override
     public void shutdown() {
-    }
-
-    private List<InetAddress> getAdaptersAddress() {
-        List<NetworkInterface> al = new LinkedList();
-        List<InetAddress> il = new LinkedList();
-        NetworkInterface loop = null;
-        try {
-            for( NetworkInterface nif: Collections.list( NetworkInterface.getNetworkInterfaces())) {
-                //LOG.trace( " " + nif.getDisplayName());
-                if( nif.isUp()) {
-                    if( !nif.isLoopback()) {
-                        al.add( nif);
-                    } else {
-                        loop = nif;
-                    }
-                }
-            }
-            if( al.isEmpty() && loop != null) {  
-                al.add( loop);  // Add loopback if it was empty
-            }
-            InetAddress anyIA = null;
-            for( NetworkInterface ni: al) {
-                for( InterfaceAddress a: ni.getInterfaceAddresses()) {
-                    //LOG.trace( "  " + ni.getDisplayName() + " " + a);
-                    if( a.getBroadcast() != null) {
-                        il.add( a.getBroadcast());
-                        //LOG.trace( "  added " + a.getBroadcast());
-                    } else {
-                        anyIA = a.getAddress();
-                    }
-                }
-            }
-            if( il.isEmpty() && anyIA != null) {
-                il.add( anyIA);
-            }
-        } catch( Exception x) {
-            LOG.warn( "Falied to get network adapters brodcast address " + x, x);
+        if( socket != null) {
+            try {
+                socket.close();
+                socket = null;
+            } catch( Exception x) { }
         }
-        LOG.trace( "getAdaptersAddress: " + il);
-        return il;
     }
 
-    /*
+    private synchronized void startup( Configuration cfg) 
+            throws Exception {
+        if( socket != null) {
+            return;
+        } 
+        socket = new Socket( cfg.getString( "Host"), cfg.getInt( "Port"));
+        new Thread( new SockerListener( socket, this));
+    }
+    
+    /**/
     public static void main( String args[]) {
         org.apache.log4j.BasicConfigurator.configure();
-        UdpClient u = new UdpClient();
+        AsyncClient u = new AsyncClient();
         SvcRequest r = new SvcRequest( "Test", 0, 0, "TestService", null, 5000);
         Configuration cfg = new Configuration();
         cfg.put( "Port", 8015);
@@ -169,7 +129,26 @@ public class AsyncClient implements AsyncService {
             ex.printStackTrace();
         }
     }
-    */
+    /**/
+
+    private static class SockerListener implements Runnable {
+
+        public SockerListener( Socket socket, AsyncClient ac) {
+        }
+
+        @Override
+        public void run() {
+            for( ; ;) {
+                SvcResponse r = null; ///new SvcResponse();
+                try {
+                    SvcCatalog.getDispatcher().onMessage( r);
+                } catch( Exception x) {
+                    
+                }
+            }            
+        }
+    }
+    
 }
 
 
