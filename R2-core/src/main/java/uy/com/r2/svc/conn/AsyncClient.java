@@ -20,7 +20,7 @@ import uy.com.r2.core.api.Configuration;
 import uy.com.r2.core.api.SvcMessage;
 import uy.com.r2.svc.tools.Json;
 
-/** Datagram (UDP) sender connector.
+/** Datagram (UDP) broadcast sender connector.
  * @author G.Camargo
  */
 public class AsyncClient implements AsyncService {
