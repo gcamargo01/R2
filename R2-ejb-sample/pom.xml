@@ -12,9 +12,9 @@
     <groupId>uy.com.r2</groupId>
     <artifactId>R2-ejb-sample</artifactId>
     <version>1.0-SNAPSHOT</version>
+    
     <packaging>pom</packaging>
-    <name>R2-ejb-sample</name>
-    <description>R2 EJB3 sample service</description>
+    <name>R2 EJB3 proof of concept</name>
 
     <modules>
         <module>R2-ejb-ejb</module>
