@@ -15,7 +15,7 @@ import uy.com.r2.core.api.SvcMessage;
 import uy.com.r2.core.api.SvcRequest;
 import uy.com.r2.core.api.SvcResponse;
 
-/** EJB3 session bean service proxy.
+/** Proxy to EJB3 session bean R2 async service.
  * @author G.Camargo
  */
 public class EjbAsyncProxy implements AsyncService {
@@ -75,8 +75,7 @@ public class EjbAsyncProxy implements AsyncService {
      */
     public SvcResponse onResponse( SvcResponse resp, Configuration cfg) throws Exception {
         setConfiguration( cfg);
-        return resp; // !!!!
-        //return service.onResponse( resp, cfg);
+        return service.onResponse( resp, cfg);
     }
 
     /** Get the configuration descriptors of this module.

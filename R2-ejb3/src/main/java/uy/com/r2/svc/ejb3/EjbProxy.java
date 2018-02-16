@@ -14,7 +14,7 @@ import uy.com.r2.core.api.ConfigItemDescriptor;
 import uy.com.r2.core.api.SvcRequest;
 import uy.com.r2.core.api.SvcResponse;
 
-/** EJB3 session bean service proxy.
+/** Proxy to EJB3 session bean R2 service.
  * @author G.Camargo
  */
 public class EjbProxy implements SimpleService {
