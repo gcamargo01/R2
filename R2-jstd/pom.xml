@@ -11,7 +11,7 @@
   <version>1.0-SNAPSHOT</version>
     
   <packaging>jar</packaging>
-  <name>R2 Java standalone dispatcher</name>
+  <name>R2 java standalone deployer</name>
     
   <dependencies>
     <dependency>
