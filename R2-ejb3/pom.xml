@@ -12,7 +12,7 @@
     <version>1.0-SNAPSHOT</version>
     
     <packaging>jar</packaging>
-    <name>R2 EJB3 implementation</name>
+    <name>R2 proxy to wildfly EJB3 services</name>
     
     <dependencies>
         <dependency>
