@@ -5,31 +5,41 @@
 </head>
 <body>
 <p>
-R2 Service application program interface.
+R2 services application program interface.
 </p>
 
 <p>
     <u>List of different kind of R2 modules implementations</u>
 </p>
 
-{@link uy.com.r2.core.api.SimpleService} - A simple interface to implement e service. 
+{@link uy.com.r2.core.api.SimpleService} - The simplest interface to implement e service. 
 It is a {@link uy.com.r2.core.api.Module} with one main method: <br/>
 &nbsp; SvcResponse <b>call</b>( SvcRequest) <p/>
 
-{@link uy.com.r2.core.api.AsyncService} - The better way to implement a service module, 
+{@link uy.com.r2.core.api.AsyncService} - The asynchronous way to implement a service module, 
 it handles request and response in two times, with the methods:<br/>
 &nbsp; SvcMessage <b>onRequest</b>( SvcRequest) <br/>
 &nbsp; SvcRequest <b>onResponse</b>( SvcRequest) <p/>
 
 
-    <u>Each service request or response is represented as a: </u>
+<p>
+    <u>Each service has a requests and a responses </u>
 </p>
 
-{@link uy.com.r2.core.api.SvcRequest}  - Service request message information: Service, Data, ...<br/>
-{@link uy.com.r2.core.api.SvcResponse}  - Response message, with a ResultCode: <br>
+{@link uy.com.r2.core.api.SvcRequest} - Service request message information: Service, Data, ...<br/>
+{@link uy.com.r2.core.api.SvcResponse} - Response message, with a ResultCode: <br>
 &nbsp; Zero - A normal response <br>
 &nbsp; Positive - A kind of error condition, example: Not found <br>
 &nbsp; Negative - Fatal error, some infrastructure is failing <br>
+
+<p>
+    <u>Support methods (from {@link uy.com.r2.core.api.Module} interface)</u>
+</p>
+
+&nbsp; {@link uy.com.r2.core.api.ConfigDescriptor} <b>getConfigDescriptors</b>() - 
+Sets the name, type and attributes of each parameter that controls the operation of the service.<br/>
+&nbsp; Map&lt;String,Object&gt; <b>getStatusVars</b>() - Get service status indicators to monitor and diagnose.<br/>
+&nbsp; <b>shutdown</b>() - Stop the service execution, so release its resources. <br/>
 
 </body>
 </html>
