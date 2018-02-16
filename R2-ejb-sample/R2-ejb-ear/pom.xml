@@ -12,9 +12,9 @@
     <groupId>uy.com.m3</groupId>
     <artifactId>R2-ejb-ear</artifactId>
     <version>1.0-SNAPSHOT</version>
+    
     <packaging>ear</packaging>
-    <name>R2-ejb-ear</name>
-    <description>R2 EJB3 sample EAR</description>
+    <name>R2 EJB3 sample EAR</name>
 
     <dependencies>
         <!-- Dependencies on the EJB and Web modules so that they can be found by the EAR plug-in -
