@@ -6,6 +6,8 @@ import java.util.LinkedList;
 import java.util.HashMap;
 import java.util.Map;
 import java.net.Socket;
+import java.io.InputStream;
+import java.io.OutputStream;
 import org.apache.log4j.Logger;
 import uy.com.r2.core.SvcCatalog;
 import uy.com.r2.core.api.SvcRequest;
@@ -18,13 +20,14 @@ import uy.com.r2.svc.tools.Json;
 
 /** Single connection client.
  * Connector used in ISO-8586 connections or some HSM.
+ * Here we have only one "channel" (a TCP connection) and 
+ * N "slots" to send messages concurrently. 
  * WORK IN PROGRESS!!!!
  * @author G.Camargo
  */
 public class AsyncClient implements AsyncService {
     private final static Logger LOG = Logger.getLogger(AsyncClient.class);
-    private int port = 0;
-    private Socket socket = null;
+    private ChannelRunnable channelTh = null;
      
     /** Get the configuration descriptors of this module.
      * @return ConfigItemDescriptor List
@@ -34,8 +37,10 @@ public class AsyncClient implements AsyncService {
         LinkedList<ConfigItemDescriptor> l = new LinkedList();
         l.add( new ConfigItemDescriptor( "Port", ConfigItemDescriptor.INTEGER, 
                 "TCP Port to connect", "8888", ConfigItemDescriptor.DEPLOYER));
-        l.add( new ConfigItemDescriptor( "Host", ConfigItemDescriptor.INTEGER, 
+        l.add( new ConfigItemDescriptor( "Host", ConfigItemDescriptor.STRING, 
                 "Remote Host name to connect", null, ConfigItemDescriptor.DEPLOYER));
+        l.add( new ConfigItemDescriptor( "Slots", ConfigItemDescriptor.INTEGER, 
+                "Numver od concurrent requests", "10", ConfigItemDescriptor.DEPLOYER));
         return l;
     }
     
@@ -53,20 +58,12 @@ public class AsyncClient implements AsyncService {
      */
     @Override
     public SvcMessage onRequest( SvcRequest req, Configuration cfg) throws Exception {
-        // Get serialized request
-        Object s = req.get( Json.SERIALIZED_JSON);
-        if( s == null) {
-            s = req.get( "Serialized");
-        }
         // check the socket
-        if( socket == null) {
+        if( channelTh == null) {
             startup( cfg);
         }
         // Send
-        byte buff[] = ( "" + s).getBytes();
-        LOG.trace( "Content to send: '" + s + "' to port=" + port);
-        socket.sendUrgentData( port );
-        return new SvcResponse( 0, req);
+        return channelTh.send( req);
     }
 
     /** Process a response phase.
@@ -79,8 +76,7 @@ public class AsyncClient implements AsyncService {
      */
     @Override
     public SvcResponse onResponse( SvcResponse resp, Configuration cfg) throws Exception {
-        // PENDING IMPLEMENT !!!!
-        return null;
+        throw new UnsupportedOperationException( "AsyncClient.onResponse() is invalid");
     }
     
     /** Get the status report.
@@ -99,21 +95,104 @@ public class AsyncClient implements AsyncService {
     /** Release all the allocated resources. */
     @Override
     public void shutdown() {
-        if( socket != null) {
+        if( channelTh != null) {
             try {
-                socket.close();
-                socket = null;
+                channelTh.close();
             } catch( Exception x) { }
+            channelTh = null;
         }
     }
 
-    private synchronized void startup( Configuration cfg) 
-            throws Exception {
-        if( socket != null) {
+    private synchronized void startup( Configuration cfg) throws Exception {
+        if( channelTh != null) {
             return;
         } 
-        socket = new Socket( cfg.getString( "Host"), cfg.getInt( "Port"));
-        new Thread( new SockerListener( socket, this));
+        LOG.debug( "Opening socket " + cfg.getString( "Host") + ":" + cfg.getInt( "Port"));
+        Socket s = new Socket( cfg.getString( "Host"), cfg.getInt( "Port"));
+        channelTh = new ChannelRunnable( s, this, cfg.getInt( "Slots"));
+        new Thread( channelTh).start();
+    }
+    
+    private static class ChannelRunnable implements Runnable {
+        private final Socket socket;
+        private InputStream inS = null;
+        private OutputStream outS = null;
+        private SvcRequest request = null;
+        private Slot slots[];
+
+        ChannelRunnable( Socket socket, AsyncClient ac, int slotsNr) {
+            this.socket = socket;
+            try {
+                inS = socket.getInputStream();
+                outS = socket.getOutputStream();
+            } catch( Exception x) {
+                LOG.warn( "Failed to get Streams", x);
+            }
+            slots = new Slot[ slotsNr];
+            LOG.debug( "SocketRunnable started");
+        }
+
+        SvcResponse send( SvcRequest rq) throws Exception {
+            Slot slot = getNewSlot( rq);
+            if( slot == null) {
+                return new SvcResponse( "Busy, too many slots: " + slots.length, 
+                        SvcResponse.RES_CODE_TOPPED, rq);   
+            }
+            request = rq;   
+            // Get serialized request
+            Object s = rq.get( Json.SERIALIZED_JSON);
+            if( s == null) {
+                s = rq.get( "Serialized");
+            }
+            // Send
+            byte buff[] = ( "" + s).getBytes();
+            LOG.trace( "Content to send: '" + s);
+            outS.write( buff);
+            return null;
+        }
+        
+        @Override
+        public void run() {
+            byte buff[] = new byte[ 10240];
+            for( ; ;) {
+                try {
+                    inS.read( buff, 0, buff.length);
+                    // Get the slotNr from the mmesage
+                    int slotNr = 0;   // This is msg dependant!
+                    // Dispatch response
+                    SvcResponse r = new SvcResponse( 0, slots[ slotNr].request);
+                    releaseSlot( slotNr);
+                    SvcCatalog.getDispatcher().onMessage( r);
+                } catch( Exception x) { 
+                    LOG.info( "Thread stopped", x);
+                }
+            }            
+        }
+        
+        void close() throws Exception {
+            socket.close();
+            inS = null;
+        }
+        
+        synchronized Slot getNewSlot( SvcRequest rq) {
+            for( int i = 0; i < slots.length; ++i) {
+                if( slots[ i].free) {
+                    slots[ i].free = false;
+                    return slots[ i];
+                }
+            }
+            return null;
+        }
+        
+        synchronized void releaseSlot( int i) {
+            slots[ i].free = true;
+        }
+        
+    }
+    
+    private class Slot {
+        SvcRequest request;
+        boolean free = true;
     }
     
     /**/
@@ -131,24 +210,6 @@ public class AsyncClient implements AsyncService {
     }
     /**/
 
-    private static class SockerListener implements Runnable {
-
-        public SockerListener( Socket socket, AsyncClient ac) {
-        }
-
-        @Override
-        public void run() {
-            for( ; ;) {
-                SvcResponse r = null; ///new SvcResponse();
-                try {
-                    SvcCatalog.getDispatcher().onMessage( r);
-                } catch( Exception x) {
-                    
-                }
-            }            
-        }
-    }
-    
 }
 
 
