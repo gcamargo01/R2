@@ -89,6 +89,9 @@ public class AsyncClient implements AsyncService {
         if( pak != null) {
             map.put( "Version", "" + pak.getImplementationVersion());
         } 
+        if( channelTh != null) {
+            map.put( "ActiveSlots", channelTh.getActiveSlotsNr());
+        }
         return map;
     }
 
@@ -115,10 +118,9 @@ public class AsyncClient implements AsyncService {
     
     private static class ChannelRunnable implements Runnable {
         private final Socket socket;
+        private final Slot slots[];
         private InputStream inS = null;
         private OutputStream outS = null;
-        private SvcRequest request = null;
-        private Slot slots[];
 
         ChannelRunnable( Socket socket, AsyncClient ac, int slotsNr) {
             this.socket = socket;
@@ -129,7 +131,7 @@ public class AsyncClient implements AsyncService {
                 LOG.warn( "Failed to get Streams", x);
             }
             slots = new Slot[ slotsNr];
-            LOG.debug( "SocketRunnable started");
+            LOG.debug( "SocketRunnable started with " + slots.length + " slots");
         }
 
         SvcResponse send( SvcRequest rq) throws Exception {
@@ -138,7 +140,6 @@ public class AsyncClient implements AsyncService {
                 return new SvcResponse( "Busy, too many slots: " + slots.length, 
                         SvcResponse.RES_CODE_TOPPED, rq);   
             }
-            request = rq;   
             // Get serialized request
             Object s = rq.get( Json.SERIALIZED_JSON);
             if( s == null) {
@@ -158,7 +159,7 @@ public class AsyncClient implements AsyncService {
                 try {
                     inS.read( buff, 0, buff.length);
                     // Get the slotNr from the mmesage
-                    int slotNr = 0;   // This is msg dependant!
+                    int slotNr = 0;   // This is msg dependant!, pending!!!!!
                     // Dispatch response
                     SvcResponse r = new SvcResponse( 0, slots[ slotNr].request);
                     releaseSlot( slotNr);
@@ -188,6 +189,15 @@ public class AsyncClient implements AsyncService {
             slots[ i].free = true;
         }
         
+        int getActiveSlotsNr() {
+            int count = 0;
+            for( int i = 0; i < slots.length; ++i) {
+                if( !slots[ i].free) {
+                    ++count;
+                }
+            }
+            return count;
+        }
     }
     
     private class Slot {
