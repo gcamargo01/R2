@@ -8,6 +8,7 @@ import java.util.Map;
 import java.net.Socket;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.Charset;
 import org.apache.log4j.Logger;
 import uy.com.r2.core.SvcCatalog;
 import uy.com.r2.core.api.SvcRequest;
@@ -28,6 +29,7 @@ import uy.com.r2.svc.tools.Json;
 public class AsyncClient implements AsyncService {
     private final static Logger LOG = Logger.getLogger(AsyncClient.class);
     private ChannelRunnable channelTh = null;
+    private String charset = Charset.defaultCharset().name();
      
     /** Get the configuration descriptors of this module.
      * @return ConfigItemDescriptor List
@@ -41,6 +43,11 @@ public class AsyncClient implements AsyncService {
                 "Remote Host name to connect", null, ConfigItemDescriptor.DEPLOYER));
         l.add( new ConfigItemDescriptor( "Slots", ConfigItemDescriptor.INTEGER, 
                 "Numver od concurrent requests", "10", ConfigItemDescriptor.DEPLOYER));
+        l.add( new ConfigItemDescriptor( "Charset", ConfigItemDescriptor.STRING, 
+                "Charset used to converto to String messages", Charset.defaultCharset().name(), 
+                ConfigItemDescriptor.DEPLOYER));
+        l.add( new ConfigItemDescriptor( "SlotNrMgr", ConfigItemDescriptor.STRING, 
+                "Pipeline to put an get SlotNr", "SlotNrMgr", ConfigItemDescriptor.DEPLOYER));
         return l;
     }
     
@@ -110,13 +117,14 @@ public class AsyncClient implements AsyncService {
         if( channelTh != null) {
             return;
         } 
+        charset = cfg.getString( "Charset");
         LOG.debug( "Opening socket " + cfg.getString( "Host") + ":" + cfg.getInt( "Port"));
         Socket s = new Socket( cfg.getString( "Host"), cfg.getInt( "Port"));
         channelTh = new ChannelRunnable( s, this, cfg.getInt( "Slots"));
         new Thread( channelTh).start();
     }
     
-    private static class ChannelRunnable implements Runnable {
+    private class ChannelRunnable implements Runnable {
         private final Socket socket;
         private final Slot slots[];
         private InputStream inS = null;
@@ -135,8 +143,8 @@ public class AsyncClient implements AsyncService {
         }
 
         SvcResponse send( SvcRequest rq) throws Exception {
-            Slot slot = getNewSlot( rq);
-            if( slot == null) {
+            int slotNr = getNewSlotNr( rq);
+            if( slotNr < 0) {
                 return new SvcResponse( "Busy, too many slots: " + slots.length, 
                         SvcResponse.RES_CODE_TOPPED, rq);   
             }
@@ -144,6 +152,15 @@ public class AsyncClient implements AsyncService {
             Object s = rq.get( Json.SERIALIZED_JSON);
             if( s == null) {
                 s = rq.get( "Serialized");
+            }
+            try { // In this point we have to put the slotNr in the mmesage
+                // or link slotNr with something of the request
+                SvcRequest rqSetSlot = new SvcRequest( "", 0, 0, "GetSlotNr", null, 0);
+                rqSetSlot.add( "Serialized", s);
+                SvcResponse rpSlot = SvcCatalog.getDispatcher().call( rqSetSlot);
+                s = "" + rpSlot.get( "Serialized");
+            } catch( Exception x) { 
+                LOG.info( "Failed set SlotNr in msg " + s, x);
             }
             // Send
             byte buff[] = ( "" + s).getBytes();
@@ -155,17 +172,31 @@ public class AsyncClient implements AsyncService {
         @Override
         public void run() {
             byte buff[] = new byte[ 10240];
+            int l = 0;
+            String sBuff = "";
+            int slotNr = 0;
             for( ; ;) {
                 try {
-                    inS.read( buff, 0, buff.length);
-                    // Get the slotNr from the mmesage
-                    int slotNr = 0;   // This is msg dependant!, pending!!!!!
-                    // Dispatch response
+                    l = inS.read( buff, 0, buff.length);
+                    sBuff = new String( buff, 0, l, charset);
+                } catch( Exception x) { 
+                    LOG.info( "Failed read msg " + x, x);
+                }
+                try { // In this point we have to get the slotNr from the mmesage
+                    // To do that a specific pipe si called
+                    SvcRequest rqGetSlot = new SvcRequest( "", 0, 0, "GetSlotNr", null, 0);
+                    rqGetSlot.add( "Serialized", sBuff);
+                    SvcResponse rpSlotNr = SvcCatalog.getDispatcher().call( rqGetSlot);
+                    slotNr = Integer.parseInt( "" + rpSlotNr.get( "SlotNr"));
+                } catch( Exception x) { 
+                    LOG.info( "Failed get SlotNr in msg " + sBuff, x);
+                }
+                try { // Dispatch response
                     SvcResponse r = new SvcResponse( 0, slots[ slotNr].request);
                     releaseSlot( slotNr);
                     SvcCatalog.getDispatcher().onMessage( r);
                 } catch( Exception x) { 
-                    LOG.info( "Thread stopped", x);
+                    LOG.info( "Failed to process message " + sBuff, x);
                 }
             }            
         }
@@ -175,14 +206,14 @@ public class AsyncClient implements AsyncService {
             inS = null;
         }
         
-        synchronized Slot getNewSlot( SvcRequest rq) {
+        synchronized int getNewSlotNr( SvcRequest rq) {
             for( int i = 0; i < slots.length; ++i) {
                 if( slots[ i].free) {
                     slots[ i].free = false;
-                    return slots[ i];
+                    return i;
                 }
             }
-            return null;
+            return -1;
         }
         
         synchronized void releaseSlot( int i) {
