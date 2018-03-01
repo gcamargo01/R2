@@ -9,6 +9,7 @@ import java.net.Socket;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
+import java.util.concurrent.ConcurrentHashMap;
 import org.apache.log4j.Logger;
 import uy.com.r2.core.SvcCatalog;
 import uy.com.r2.core.api.SvcRequest;
@@ -22,7 +23,7 @@ import uy.com.r2.svc.tools.Json;
 /** Single connection client.
  * Connector used in ISO-8586 connections or some HSM.
  * Here we have only one "channel" (a TCP connection) and 
- * N "slots" to send messages concurrently. 
+ * a map of request to handle messages concurrently. 
  * WORK IN PROGRESS!!!!
  * @author G.Camargo
  */
@@ -30,6 +31,7 @@ public class AsyncClient implements AsyncService {
     private final static Logger LOG = Logger.getLogger(AsyncClient.class);
     private ChannelRunnable channelTh = null;
     private String charset = Charset.defaultCharset().name();
+    private int maxReq = 100;
      
     /** Get the configuration descriptors of this module.
      * @return ConfigItemDescriptor List
@@ -41,8 +43,8 @@ public class AsyncClient implements AsyncService {
                 "TCP Port to connect", "8888", ConfigItemDescriptor.DEPLOYER));
         l.add( new ConfigItemDescriptor( "Host", ConfigItemDescriptor.STRING, 
                 "Remote Host name to connect", null, ConfigItemDescriptor.DEPLOYER));
-        l.add( new ConfigItemDescriptor( "Slots", ConfigItemDescriptor.INTEGER, 
-                "Numver od concurrent requests", "10", ConfigItemDescriptor.DEPLOYER));
+        l.add( new ConfigItemDescriptor( "MaxReq", ConfigItemDescriptor.INTEGER, 
+                "Numver od concurrent requests", "100", ConfigItemDescriptor.DEPLOYER));
         l.add( new ConfigItemDescriptor( "Charset", ConfigItemDescriptor.STRING, 
                 "Charset used to converto to String messages", Charset.defaultCharset().name(), 
                 ConfigItemDescriptor.DEPLOYER));
@@ -97,7 +99,7 @@ public class AsyncClient implements AsyncService {
             map.put( "Version", "" + pak.getImplementationVersion());
         } 
         if( channelTh != null) {
-            map.put( "ActiveSlots", channelTh.getActiveSlotsNr());
+            map.put( "ActiveSlots", channelTh.reqMap.size());
         }
         return map;
     }
@@ -118,19 +120,20 @@ public class AsyncClient implements AsyncService {
             return;
         } 
         charset = cfg.getString( "Charset");
+        maxReq = cfg.getInt( "MaxReq");
         LOG.debug( "Opening socket " + cfg.getString( "Host") + ":" + cfg.getInt( "Port"));
         Socket s = new Socket( cfg.getString( "Host"), cfg.getInt( "Port"));
-        channelTh = new ChannelRunnable( s, this, cfg.getInt( "Slots"));
+        channelTh = new ChannelRunnable( s, this);
         new Thread( channelTh).start();
     }
     
     private class ChannelRunnable implements Runnable {
         private final Socket socket;
-        private final Slot slots[];
+        private final ConcurrentHashMap<String,SvcRequest> reqMap = new ConcurrentHashMap();
         private InputStream inS = null;
         private OutputStream outS = null;
 
-        ChannelRunnable( Socket socket, AsyncClient ac, int slotsNr) {
+        ChannelRunnable( Socket socket, AsyncClient ac) {
             this.socket = socket;
             try {
                 inS = socket.getInputStream();
@@ -138,14 +141,12 @@ public class AsyncClient implements AsyncService {
             } catch( Exception x) {
                 LOG.warn( "Failed to get Streams", x);
             }
-            slots = new Slot[ slotsNr];
-            LOG.debug( "SocketRunnable started with " + slots.length + " slots");
+            LOG.debug( "ChannelRunnable started");
         }
 
         SvcResponse send( SvcRequest rq) throws Exception {
-            int slotNr = getNewSlotNr( rq);
-            if( slotNr < 0) {
-                return new SvcResponse( "Busy, too many slots: " + slots.length, 
+            if( reqMap.size() > maxReq) {
+                return new SvcResponse( "Busy, too many requests: " + reqMap.size(), 
                         SvcResponse.RES_CODE_TOPPED, rq);   
             }
             // Get serialized request
@@ -153,15 +154,19 @@ public class AsyncClient implements AsyncService {
             if( s == null) {
                 s = rq.get( "Serialized");
             }
-            try { // In this point we have to put the slotNr in the mmesage
-                // or link slotNr with something of the request
-                SvcRequest rqSetSlot = new SvcRequest( "", 0, 0, "GetSlotNr", null, 0);
-                rqSetSlot.add( "Serialized", s);
-                SvcResponse rpSlot = SvcCatalog.getDispatcher().call( rqSetSlot);
-                s = "" + rpSlot.get( "Serialized");
+            String msgId = "";
+            try { // In this point we have to put some id in the mmesage (like HSM)
+                // or keep something to link requst and response (like ISO-8683)
+                SvcRequest rqSetId = new SvcRequest( "", 0, 0, "SetMsgId", null, 0);
+                rqSetId.add( "Serialized", s);
+                SvcResponse rpSetId = SvcCatalog.getDispatcher().call( rqSetId);
+                s = "" + rpSetId.get( "Serialized");
+                msgId = "" + rpSetId.get( "MsgId");
             } catch( Exception x) { 
-                LOG.info( "Failed set SlotNr in msg " + s, x);
+                LOG.info( "Failed set SetMsgId in msg " + s, x);
             }
+            // Store Request by msgId
+            reqMap.put( msgId, rq);
             // Send
             byte buff[] = ( "" + s).getBytes();
             LOG.trace( "Content to send: '" + s);
@@ -174,29 +179,46 @@ public class AsyncClient implements AsyncService {
             byte buff[] = new byte[ 10240];
             int l = 0;
             String sBuff = "";
-            int slotNr = 0;
+            String msgId = "";
             for( ; ;) {
                 try {
+                    // check time-outs
+                    while( inS.available() == 0) {
+                        for( Object id: reqMap.keySet()) {
+                            SvcRequest r = reqMap.get( id);
+                            if( ( int)( System.currentTimeMillis() - r.getAbsoluteTime()) > r.getTimeOut()) {
+                                LOG.warn( "Timeout from req. " + r.toString());
+                                reqMap.remove( id);
+                                SvcResponse rp = new SvcResponse( SvcResponse.RES_CODE_TIMEOUT, r);
+                                SvcCatalog.getDispatcher().onMessage( rp);
+                            }
+                        }
+                        Thread.sleep( 10);
+                    }
+                    // read 
                     l = inS.read( buff, 0, buff.length);
                     sBuff = new String( buff, 0, l, charset);
                 } catch( Exception x) { 
                     LOG.info( "Failed read msg " + x, x);
                 }
-                try { // In this point we have to get the slotNr from the mmesage
-                    // To do that a specific pipe si called
-                    SvcRequest rqGetSlot = new SvcRequest( "", 0, 0, "GetSlotNr", null, 0);
-                    rqGetSlot.add( "Serialized", sBuff);
-                    SvcResponse rpSlotNr = SvcCatalog.getDispatcher().call( rqGetSlot);
-                    slotNr = Integer.parseInt( "" + rpSlotNr.get( "SlotNr"));
+                try { // In this point we have to get the msgId from the mmesage
+                    // to get the original request 
+                    SvcRequest rqGetId = new SvcRequest( "", 0, 0, "GetMsgId", null, 0);
+                    rqGetId.add( "Serialized", sBuff);
+                    SvcResponse rpGetId = SvcCatalog.getDispatcher().call( rqGetId);
+                    msgId = "" + rpGetId.get( "MsgId");
                 } catch( Exception x) { 
-                    LOG.info( "Failed get SlotNr in msg " + sBuff, x);
+                    LOG.info( "Failed get MsgId in msg " + sBuff, x);
                 }
                 try { // Dispatch response
-                    SvcResponse r = new SvcResponse( 0, slots[ slotNr].request);
-                    releaseSlot( slotNr);
+                    SvcRequest rq = reqMap.remove( msgId);
+                    if( rq == null) {
+                        throw new Exception( "Failed to get Request for MsgId " + msgId);
+                    }
+                    SvcResponse r = new SvcResponse( 0, rq);
                     SvcCatalog.getDispatcher().onMessage( r);
                 } catch( Exception x) { 
-                    LOG.info( "Failed to process message " + sBuff, x);
+                    LOG.info( "Failed to process message " + sBuff + ", its ignored", x);
                 }
             }            
         }
@@ -206,34 +228,6 @@ public class AsyncClient implements AsyncService {
             inS = null;
         }
         
-        synchronized int getNewSlotNr( SvcRequest rq) {
-            for( int i = 0; i < slots.length; ++i) {
-                if( slots[ i].free) {
-                    slots[ i].free = false;
-                    return i;
-                }
-            }
-            return -1;
-        }
-        
-        synchronized void releaseSlot( int i) {
-            slots[ i].free = true;
-        }
-        
-        int getActiveSlotsNr() {
-            int count = 0;
-            for( int i = 0; i < slots.length; ++i) {
-                if( !slots[ i].free) {
-                    ++count;
-                }
-            }
-            return count;
-        }
-    }
-    
-    private class Slot {
-        SvcRequest request;
-        boolean free = true;
     }
     
     /**/
@@ -242,12 +236,15 @@ public class AsyncClient implements AsyncService {
         AsyncClient u = new AsyncClient();
         SvcRequest r = new SvcRequest( "Test", 0, 0, "TestService", null, 5000);
         Configuration cfg = new Configuration();
+        cfg.put( "Host", "localhost");
         cfg.put( "Port", 8015);
         try {
             u.onRequest( r, cfg);
+            Thread.sleep( 500);
         } catch( Exception ex) {
             ex.printStackTrace();
         }
+        u.shutdown();
     }
     /**/
 
