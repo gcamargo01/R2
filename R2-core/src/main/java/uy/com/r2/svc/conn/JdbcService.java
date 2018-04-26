@@ -58,7 +58,7 @@ public class JdbcService implements SimpleService {
         l.add( new ConfigItemDescriptor( "Service.*.Params", ConfigItemDescriptor.STRING, 
                 "Service and SQL parameters separated by coma (,)"));
         l.add( new ConfigItemDescriptor( "Service.*.RowName", ConfigItemDescriptor.STRING,
-                "Name of a tuple", "Row"));
+                "Name of a tuple", null));
         l.add( new ConfigItemDescriptor( "SeptUpTest", ConfigItemDescriptor.BOOLEAN, 
                 "Check connection on startup", "false"));
         return l;
@@ -90,9 +90,6 @@ public class JdbcService implements SimpleService {
             String pns = svcsParams.get( k);
             si.paramNames = ( pns != null)? svcsParams.get( k).split( ","): new String[ 0];
             si.rowName = svcsRowName.get( k);
-            if( si.rowName == null) {
-                si.rowName = "Row";
-            }
             svcs.put( k, si);
             log.debug( "Service " + k + " " + si.sqlSentence);
         }
@@ -186,11 +183,17 @@ public class JdbcService implements SimpleService {
             ResultSetMetaData rsmd = rs.getMetaData();
             Map<String,List<Object>> resp = new LinkedHashMap();
             while( rs != null && rs.next()) {
-                Map<String,List<Object>> row = new LinkedHashMap();
-                for( int i = 0; i < rsmd.getColumnCount(); ++i) {
-                    SvcMessage.addToMap( row, rsmd.getColumnName( i + 1), rs.getString( i + 1));
+                if( si.rowName != null) {  // Add a map structure for each row
+                    Map<String,List<Object>> row = new LinkedHashMap();
+                    for( int i = 0; i < rsmd.getColumnCount(); ++i) {
+                        SvcMessage.addToMap( row, rsmd.getColumnName( i + 1), rs.getString( i + 1));
+                    }
+                    SvcMessage.addToMap( resp, si.rowName, row);
+                } else {  // Just add multivalued fields to root element
+                    for( int i = 0; i < rsmd.getColumnCount(); ++i) {
+                        SvcMessage.addToMap( resp, rsmd.getColumnName( i + 1), rs.getString( i + 1));
+                    }
                 }
-                SvcMessage.addToMap( resp, si.rowName, row);
             }    
             si.time += ( int)(System.currentTimeMillis() - t0);
             return resp;
