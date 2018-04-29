@@ -6,9 +6,12 @@ package uy.com.r2.core.api;
  */
 public interface Dispatcher extends Module {
     
-    /** A special service to collect all the implmented services known. */
+    /** Special service to collect all the implemented services known. */
     public static final String SVC_GETSERVICESLIST = "GetServicesList";
     
+    /** Special service to get the service API reference. */
+    public static final String SVC_GETSVCREFERENCE = "GetSvcReference";
+
     /** Start the execution of a request.
      * This method is used by end-point implementation, for example a remote client.
      * The pipeline of services to be executed depends on the Node configuration 
