@@ -11,9 +11,6 @@ import uy.com.r2.core.api.SvcMessage;
  */
 public class SvcMessageTest {
     
-    public SvcMessageTest() {
-    }
-    
     /**
      * Test of get method, of class SvcMessage.
      */
@@ -50,22 +47,6 @@ public class SvcMessageTest {
         instance.put( "Field", "Value2");
         assertNotNull( "Get a null field shoud retirn a value", instance.get( null));
         assertEquals( "Get a Field shoud retirn Value2", "Value2", instance.get( "Field"));
-    }
-
-    /**
-     * Test of addToMap method, of class SvcMessage.
-     *
-    @Test
-    public void testAddToMap() {
-        System.out.println( "addToMap" );
-        Map<String, List<Object>> payload = null;
-        String field = "";
-        Object obj = null;
-        Map<String, List<Object>> expResult = null;
-        Map<String, List<Object>> result = SvcMessage.addToMap( payload, field, obj );
-        assertEquals( expResult, result );
-        // TODO review the generated test code and remove the default call to fail.
-        fail( "The test case is a prototype." );
     }
 
     /**
