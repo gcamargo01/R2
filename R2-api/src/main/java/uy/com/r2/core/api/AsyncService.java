@@ -3,14 +3,13 @@ package uy.com.r2.core.api;
 
 
 /** R2 stateless service module interface.
- * This interface implements a service by dividing it into two phases:
- * onRequest and onResponse.
- * The module implementation may call 
+ * This interface implements a service by splitting it into two methods
+ * onRequest and onResponse. Also the module implementation may notify with
  * {@link uy.com.r2.core.api.Dispatcher}.onEvent( 
  * {@link uy.com.r2.core.api.SvcMessage} )
  * to signal the event of a new message to be processed (asynchronous). <br>
- * The Configuration is a parameter of each method, to allow 
- * a stateless implementation, such a EJB3 Stateless Session Bean. 
+ * The Configuration is a parameter of each method, to allow a
+ * pure stateless implementation, such a EJB3 Stateless Session Bean. 
  * The container may restart, create few instances and distribute the 
  * module on many JVM / servers as needed to scale.
  * @author G.Camargo
