@@ -35,9 +35,9 @@ public class JavaScript implements AsyncService {
     public List<ConfigItemDescriptor> getConfigDescriptors() {
         LinkedList<ConfigItemDescriptor> l = new LinkedList();
         l.add( new ConfigItemDescriptor( "Script", ConfigItemDescriptor.STRING, 
-                "JavaScript source code to execute previous to run"));
+                "JavaScript source code to execute"));
         l.add( new ConfigItemDescriptor( "SourceFile", ConfigItemDescriptor.STRING, 
-                "JavaScript file to execute previous to run"));
+                "File name of JavaScript file to execute"));
         return l;
     }
 
@@ -76,7 +76,7 @@ public class JavaScript implements AsyncService {
     @Override
     public SvcMessage onRequest( SvcRequest req, Configuration cfg) throws Exception {
         setConfiguration( cfg);
-        inv.invokeFunction( "request" + req.getServiceName(), req);
+        inv.invokeFunction( "onRequest_" + req.getServiceName(), req);
         return req;
     }
 
@@ -91,7 +91,7 @@ public class JavaScript implements AsyncService {
     @Override
     public SvcResponse onResponse( SvcResponse resp, Configuration cfg) throws Exception {
         setConfiguration( cfg);
-        inv.invokeFunction( "response" + resp.getRequest().getServiceName(), resp);
+        inv.invokeFunction( "onResponse_" + resp.getRequest().getServiceName(), resp);
         return resp;
     }
     
