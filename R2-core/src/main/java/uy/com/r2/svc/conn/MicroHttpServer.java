@@ -57,7 +57,7 @@ public class MicroHttpServer implements StartableModule {
     }
 
     /** Configure and start the server.
-     * @throws java.lang.Exception 
+     * @throws Exception Unexpected error starting server.
      */
     @Override
     public void start( Configuration cfg) throws Exception {
