@@ -12,7 +12,7 @@ public interface Dispatcher extends Module {
     /** Special service to get the service API reference. */
     public static final String SVC_GETSVCREFERENCE = "GetSvcReference";
 
-    /** Start the execution of a request.
+    /** Start the execution of a request, and wait a response.
      * This method is used by end-point implementation, for example a remote client.
      * The pipeline of services to be executed depends on the Node configuration 
      * in the Dispatcher (Node.XXXX=Pipe1) or the DefaultServicePipeline.
@@ -20,6 +20,16 @@ public interface Dispatcher extends Module {
      * @return SvcResponse or error packed as a response 
      */
     public SvcResponse call( SvcRequest req);   
+ 
+    /** Start the execution of a request in non-blocking mode.
+     * It try to run, if it doesn't have to wait anything then returns a response.
+     * This method is used by end-point asynchronous implementation.
+     * The pipeline of services to be executed depends on the Node configuration 
+     * in the Dispatcher (Node.XXXX=Pipe1) or the DefaultServicePipeline.
+     * @param req Request to dispatch
+     * @return SvcMessage or null
+     */
+    public SvcResponse process( SvcRequest req);   
  
     /** Dispatch the execution of the next service.
      * This method is used by synchronous module implementations (SimpleService)  
