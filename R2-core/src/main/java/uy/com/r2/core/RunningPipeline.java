@@ -40,7 +40,7 @@ public class RunningPipeline {
     }
     
     /** Run one module a time */
-    private void runStep( ) {
+    private boolean runStep( boolean blocking) {
         String moduleName = null;
         try {
             if( index >= moduleNames.length || moduleNames[ index] == null) {
@@ -48,7 +48,7 @@ public class RunningPipeline {
                 if( s.equals( Dispatcher.SVC_GETSERVICESLIST)) {
                     msg = new SvcResponse( "", 0, req0);
                    --index;
-                   return;
+                   return true;
                 }
                 throw new Exception( "Service '" + s + "' not implemented in pipeline");
             }
@@ -60,10 +60,12 @@ public class RunningPipeline {
             }
             msg = mi.processMessage( msg);
             if( msg == null) {  // Nothing to do here, wait some msg
-                synchronized( lock) {
-                    lock.wait();
+                if( blocking) {
+                    synchronized( lock) {
+                        lock.wait();
+                    }
                 }
-                return;
+                return false;
             } else if( msg instanceof SvcRequest) {   // Its a request
                 ++index;
             } else if( msg instanceof SvcResponse) {  // Its a response
@@ -78,6 +80,7 @@ public class RunningPipeline {
                     SvcResponse.RES_CODE_EXCEPTION, x, (SvcRequest)r);
             --index;
         }
+        return true;
     }
     
     /** Process a message from an asynchronous module.
@@ -110,29 +113,29 @@ public class RunningPipeline {
         moduleNames[ index] = moduleName;
     }
     
-    /** Blocking method to get the final response.
+    /** Non blocking method to run, some times can get a response.
      * @return SvcResponse
      */
-    /** Blocking method to get the response from the current service.
+    SvcResponse tryRun( int step) { 
+        int actualIndex = index;
+        while( index >= actualIndex && !stop) {
+            int lastIndex = index;
+            if( !runStep( false)) {
+                if( msg instanceof SvcResponse ) {
+                    return (SvcResponse)msg; 
+                }
+            }
+        }
+        return null;
+    }
+    
+    /** Blocking method to get the response from the current module.
      * @return SvcResponse
      */
     SvcResponse getResponse() {
         int actualIndex = index;
         while( index >= actualIndex && !stop) {
-            runStep();
-        }
-        if( !( msg instanceof SvcResponse )) {
-            Exception x = new Exception( "Cast error running " + toString());
-            LOG.warn( "run failed: " + toString(), x);
-            return new SvcResponse( "Ended running pipe w/o SvcResponse " + toString()
-                    , SvcResponse.RES_CODE_EXCEPTION, new Exception( ""), req0);
-        }
-        return (SvcResponse)msg;
-    }
-    
-    SvcResponse getFinalResponse() {
-        while( index >= 0 && !stop) {
-            runStep();
+            runStep( true);
         }
         if( !( msg instanceof SvcResponse )) {
             Exception x = new Exception( "Cast error running " + toString());

@@ -44,7 +44,7 @@ public class SimpleDispatcher implements Dispatcher, StartableModule {
         }
     }
     
-    /** Start running a service call.
+    /** Start running a service call, and wait a response.
      * @param req Request to dispatch
      * @return SvcResponse or error packed as a response 
      */
@@ -65,8 +65,36 @@ public class SimpleDispatcher implements Dispatcher, StartableModule {
         RunningPipeline rp = new RunningPipeline( "(Default)", modsToRun, req);
         runningPipelines.put( req.getRequestId(), rp);
         // Run to the end
-        SvcResponse resp = rp.getFinalResponse();
+        //SvcResponse resp = rp.getFinalResponse(); // In the past this method forces to wai to the end
+        SvcResponse resp = rp.getResponse();
         runningPipelines.remove( req.getRequestId());
+        return resp;
+    }
+    
+    /** Start the execution of a request in asynchronous mode, w/o waiting its response.
+     * Some-times it may have a response immediately, otherwise it return null.
+     * @param req Request to dispatch
+     * @return SvcResponse or null
+     */
+    @Override
+    public SvcResponse process( SvcRequest req) {
+        // Get the defined pipe to use
+        String modsToRun[] = defaultServicePipeline;
+        String rpn = nodePipes.get( req.getClientNode());
+        if( rpn != null) {   // Defined RunningPipe by name
+            String[] mtr = defPipes.get( rpn);
+            if( mtr == null || mtr.length == 0) {
+                return newExceptionResponse( "RunningPipeline name '" + rpn + "' undefined", req);
+            } else {
+                modsToRun = mtr;
+            }
+        }
+        // Build the Running pipe
+        RunningPipeline rp = new RunningPipeline( "(Default)", modsToRun, req);
+        runningPipelines.put( req.getRequestId(), rp);
+        // Try to run 
+        SvcResponse resp = rp.getResponse();
+        //runningPipelines.remove( req.getRequestId());
         return resp;
     }
     
@@ -166,7 +194,7 @@ public class SimpleDispatcher implements Dispatcher, StartableModule {
      * @throws Exception Unexpected error that must be warned
      */
     @Override
-    public void start( Configuration cfg ) throws Exception {
+    public void start( Configuration cfg) throws Exception {
         defaultServicePipeline = cfg.getString( "DefaultServicePipeline").split( ",");
         LOG.debug( "DefaultServicePipeline " + cfg.getString( "DefaultServicePipeline"));
         defPipes = new ConcurrentHashMap();
