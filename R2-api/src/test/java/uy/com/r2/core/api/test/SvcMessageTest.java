@@ -6,7 +6,7 @@ import static org.junit.Assert.*;
 import uy.com.r2.core.api.SvcMessage;
 
 /**
- *
+ * SvcMessage test methods.
  * @author gustavo
  */
 public class SvcMessageTest {
