@@ -13,23 +13,25 @@ public class SvcResponse extends SvcMessage implements Serializable {
     private static final long serialVersionUID = 1L;
     private static final Logger log = Logger.getLogger( SvcResponse.class);
 
-    /** Unexpected Exception error. */
-    public static final int RES_CODE_EXCEPTION = -10000;
+    /** Time-out error. */
+    public static final int RES_CODE_TIMEOUT = -10000;
     /** Too many active threads error. */
     public static final int RES_CODE_TOPPED = -10001;
-    /** Time-out error. */
-    public static final int RES_CODE_TIMEOUT = -10002;
+    /** Service name not implemented in the module. */
+    public static final int RES_CODE_INVALID_SERVICE = -10002;
     /** Service module not found. */
     public static final int RES_CODE_INVALID_MODULE = -10003;
-    /** Service name not implemented in the module. */
-    public static final int RES_CODE_INVALID_SERVICE = -10004;
+    /** Unexpected Exception error. */
+    public static final int RES_CODE_EXCEPTION = -10004;
     /** Not found. */
     public static final int RES_CODE_NOT_FOUND = 100;
 
-    public static final String MSG_TOPPED = "Too many concurrent ";
     public static final String MSG_TIMEOUT = "Timeout";
+    public static final String MSG_TOPPED = "Too many concurrent ";
+    public static final String MSG_INVALID_SERVICE = "Does not implement service ";
     public static final String MSG_INVALID_MODULE = "Not registered module ";
-    public static final String MSG_INVALID_SERVICE = "Does not implement service named ";
+    public static final String MSG_EXCEPTION = "Not registered module ";
+    public static final String MSG_NOT_FOUND = "Not found";
 
     private final int resultCode;
     private final SvcRequest request;
