@@ -11,12 +11,14 @@ import java.util.Arrays;
 import org.apache.log4j.Logger;
 import uy.com.r2.core.SvcCatalog;
 import uy.com.r2.core.ModuleInfo;
+import uy.com.r2.core.SvcDeployer;
 import uy.com.r2.core.api.SvcRequest;
 import uy.com.r2.core.api.SvcResponse;
 import uy.com.r2.core.api.AsyncService;
 import uy.com.r2.core.api.ConfigItemDescriptor;
 import uy.com.r2.core.api.Configuration;
 import uy.com.r2.core.api.Dispatcher;
+import uy.com.r2.core.api.ServiceReference;
 import uy.com.r2.core.api.SvcMessage;
 import uy.com.r2.svc.conn.HttpClient;
 import uy.com.r2.core.api.StartableModule;
@@ -57,6 +59,7 @@ public class SvcAvailServers implements AsyncService, StartableModule, Runnable 
         SVC_REMOVESERVER, 
         SVC_SETMASTER, 
         SVC_SHUTDOWN, 
+        Dispatcher.SVC_GETSVCREFERENCE
     };
     private static final List<String> COMMANDS = Arrays.asList( SERVICES);
     private static final String SVC_SYNC_LIBS = "Synclibs";
@@ -294,6 +297,51 @@ public class SvcAvailServers implements AsyncService, StartableModule, Runnable 
                 stop = true;
                 notifyAllServers( SVC_REMOVESERVER, localName);
                 catalog.shutdown();
+                break;
+            case Dispatcher.SVC_GETSVCREFERENCE:
+                ServiceReference sr = null;
+                switch( name) {
+                case SVC_ADDSERVER:
+                    sr = new ServiceReference( name);
+                    sr.setDescription( "Add a server to the known server list");
+                    sr.addRequestField( "Name", "Server name", ServiceReference.STRING);
+                    sr.addRequestField( "Url", "External URL to contact server", ServiceReference.STRING);
+                    break;
+                case SVC_GETSERVERSLIST:
+                    sr.setDescription( "Get the known server list");
+                    sr.addResponseField( "_ANY_", "Master server names and its URLs", ServiceReference.STRING);
+                    break;
+                case SVC_REMOVESERVER:
+                    sr = new ServiceReference( name);
+                    sr.setDescription( "Remove a server from the known servers list");
+                    sr.addRequestField( "Name", "Srver name to remove", ServiceReference.STRING);
+                    break;
+                case SVC_GETMASTER:
+                    sr = new ServiceReference( name);
+                    sr.setDescription( "Get the master server");
+                    sr.addResponseField( "MasterName", "Master server name", ServiceReference.STRING);
+                    sr.addResponseField( "MasterUrl", "Master server URL", ServiceReference.STRING);
+                    break;
+                case SVC_SETMASTER:
+                    sr = new ServiceReference( name);
+                    sr.setDescription( "Set the master servert");
+                    sr.addRequestField( "Name", "New master server name", ServiceReference.STRING);
+                    break;
+                case SVC_KEEPALIVE:
+                    sr = new ServiceReference( name);
+                    sr.setDescription( "Test if this server is alive");
+                    sr.addRequestField( "Name", "Master server name", ServiceReference.STRING);
+                    sr.addResponseField( "Name", "Local server name", ServiceReference.STRING);
+                    sr.addResponseField( "Url", "Local server URL", ServiceReference.STRING);
+                    break;
+                case SVC_SHUTDOWN:
+                    sr = new ServiceReference( name);
+                    sr.setDescription( "Shutdown current server");
+                    break;
+                }
+                if( sr != null) {
+                    respMap = sr.getResponse( null).getPayload();
+                }
                 break;
             default:
                 throw new Exception( "Invalid command: " + cmd);

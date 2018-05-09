@@ -17,6 +17,7 @@ import uy.com.r2.core.api.SvcResponse;
 import uy.com.r2.core.api.ConfigItemDescriptor;
 import uy.com.r2.core.api.Configuration;
 import uy.com.r2.core.api.Dispatcher;
+import uy.com.r2.core.api.ServiceReference;
 import uy.com.r2.core.api.SvcMessage;
 
 /** File IO services: ReadFile, WriteFile, ListFiles, ListDirs, RenameFile, GetChkSum.
@@ -168,7 +169,59 @@ public class FileServices implements AsyncService {
                     return r;
                 } catch( Exception xx) {
                     return new SvcResponse( "Failed " + req.getServiceName(), -1, xx, req);
-                }  
+                }
+            case Dispatcher.SVC_GETSVCREFERENCE:
+                ServiceReference sr = null;
+                switch( "" + req.get( "Name")) {
+                case SVC_WRITE:
+                    sr = new ServiceReference( "" + req.get( "Name"));
+                    sr.setDescription( "Write a block to a file");
+                    sr.addRequestField( "Path", "File path (optional)", ServiceReference.STRING);
+                    sr.addRequestField( "File", "File name", ServiceReference.STRING);
+                    sr.addRequestField( "Offset", "File offset where start to write (optional)", ServiceReference.INTEGER);
+                    sr.addRequestField( "Block", "Data to write", ServiceReference.STRING);
+                    break;
+                case SVC_READ:
+                    sr = new ServiceReference( "" + req.get( "Name"));
+                    sr.setDescription( "Read a block from a file");
+                    sr.addRequestField( "Path", "File path (optional)", ServiceReference.STRING);
+                    sr.addRequestField( "File", "File name", ServiceReference.STRING);
+                    sr.addRequestField( "Offset", "File offset where start to read (optional)", ServiceReference.INTEGER);
+                    sr.addRequestField( "Length", "Maximum number of bytes to read from file", ServiceReference.INTEGER);
+                    sr.addResponseField( "Block", "Data readed", ServiceReference.STRING);
+                    break;
+                case SVC_SUM:
+                    sr = new ServiceReference( "" + req.get( "Name"));
+                    sr.setDescription( "Read an calculate MD5 checksum froma file");
+                    sr.addRequestField( "Path", "File path (optional)", ServiceReference.STRING);
+                    sr.addRequestField( "Name", "File name", ServiceReference.STRING);
+                    sr.addResponseField( "ChkSum", "Data readed", ServiceReference.STRING);
+                    break;
+                case SVC_REN:
+                    sr = new ServiceReference( "" + req.get( "Name"));
+                    sr.setDescription( "Rename a file");
+                    sr.addRequestField( "Path", "File path (optional)", ServiceReference.STRING);
+                    sr.addRequestField( "Name", "File name to rename", ServiceReference.STRING);
+                    sr.addRequestField( "NewName", "New file name", ServiceReference.STRING);
+                    break;
+                case SVC_LIST:
+                    sr = new ServiceReference( "" + req.get( "Name"));
+                    sr.setDescription( "List the files from a path");
+                    sr.addRequestField( "Path", "File path (optional)", ServiceReference.STRING);
+                    sr.addResponseField( "_ANY_", "File name", ServiceReference.STRING);
+                    break;
+                case SVC_LISTDIRS:
+                    sr = new ServiceReference( "" + req.get( "Name"));
+                    sr.setDescription( "List the directorys from a path");
+                    sr.addRequestField( "Path", "File path (optional)", ServiceReference.STRING);
+                    sr.addResponseField( "_ANY_", "Directory name", ServiceReference.STRING);
+                    break;
+                }
+                if( sr != null) {
+                    return sr.getResponse( req);
+                } else {
+                    return new SvcResponse( SvcResponse.RES_CODE_NOT_FOUND, req);
+                }
             default:    
                 return req;
         }
