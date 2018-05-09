@@ -13,7 +13,7 @@ import uy.com.r2.core.api.ConfigItemDescriptor;
 import uy.com.r2.core.api.Configuration;
 
 
-/** Test module.
+/** Test service module.
  * @author G.Camargo
  */
 public class Echo implements SimpleService {
