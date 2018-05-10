@@ -128,7 +128,7 @@ public class ServiceReference {
         for( String n :requestFields.keySet()) {
             Map<String,String> m = new TreeMap<>();
             m.put( "Description", requestFields.get( n).description);
-            m.put( "Type", "" + responseFields.get( n).type);
+            m.put( "Type", "" + requestFields.get( n).type);
             rqf.put( n, m);
         }
         resp.put( "Request", rqf);
