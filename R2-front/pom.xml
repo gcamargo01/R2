@@ -16,7 +16,7 @@
   <name>R2 Front-end with Jetty server</name>
 
   <properties>
-    <jettyVersion>9.4.7.v20170914</jettyVersion>
+    <jettyVersion>9.4.16.v20190411</jettyVersion>
   </properties>
 
   <dependencies>
