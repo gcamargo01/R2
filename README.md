@@ -1,11 +1,11 @@
 # R2
 An easy way to expose back-end 24x7 services
 
-A set of interfaces to break down the business critical server in modules, 
-like micro-services, in order to acquire this benefits:
+This is a proof of conept to break down the business critical server in modules, 
+like micro-modules, in order to acquire this benefits:
 
 * Modular approach
-    * Easy to develop, in a pipeline of microservices
+    * Extremly easy to develop, in a pipeline of micromodules
     * Easy to make unitary tests, and to simulate complex situations
     * Easy to detect and diagnose failures
     * Full re-usable modules (no need to compile, just declare to re-use)
@@ -17,7 +17,7 @@ like micro-services, in order to acquire this benefits:
     * Clustering, HA container friendly
     * Secure and robust (modules that avoid hacking)
 * Lightweight
-    * Extremely scalable (more than 1M module executions per second)
+    * Scalable (more than 1M module executions per second)
     * Optional non blocking implementations (asynchronous services)
     * Optional java stand-alone implementation (no container required)
     * Extremely simple to use (just implement a Interface)
